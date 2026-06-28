@@ -1,0 +1,32 @@
+# === Python Cache & Compiled Files ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# === Temporary Files ===
+tmp/*
+
+# === Environment Configuration (CRITICAL Secrets) ===
+.env
+.env.*
+!.env.example
+
+# === IDEs, Editors & OS Clutter ===
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+.DS_Store
+Thumbs.db
+
+# === Ruff Cache ===
+.ruff_cache/

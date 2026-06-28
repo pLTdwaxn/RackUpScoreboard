@@ -1,0 +1,15 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+# Enable Pyflakes (F) and Errant/Style errors (E, W) by default
+select = ["E", "F", "W", "I"] # "I" handles automatic import sorting
+ignore = []
+
+[tool.ruff.lint.isort]
+# Ensures consistent import grouping
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
