@@ -25,9 +25,11 @@ def mock_rackup_client():
 
 @pytest.fixture
 def clean_engine():
-    from app.engine.snooker import room_manager
+    from app.engine import room_manager
+    from app.engine.runtime.connection_registry import connection_registry
 
     room_manager.active_rooms.clear()
+    connection_registry._connections.clear()
     yield room_manager
 
 

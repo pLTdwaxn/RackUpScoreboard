@@ -3,7 +3,10 @@ import json
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from app.engine.snooker import AnonymousParticipant, VerifiedParticipant, room_manager
+from app.engine import AnonymousParticipant, VerifiedParticipant, room_manager
+from app.engine.rules.validator import validate_event
+from app.engine.runtime.broadcast import broadcast_to_connections
+from app.engine.runtime.connection_registry import connection_registry
 from app.services.rackup_client import RackUpServiceClient
 
 router = APIRouter()
@@ -12,26 +15,11 @@ router = APIRouter()
 @router.websocket("/ws/room/")
 async def websocket_endpoint(
     websocket: WebSocket,
-    match_id: str = Query(...),  # Explicitly passed: "match_123" or "tournament_456"
-    # matchroom_id: str,
-    identity_type: str = Query(...),  # Explicitly passed: "verified" or "anonymous"
-    player_id: str = Query(...),  # Acts as either user_id or random guest_slug
-    display_name: str = Query(...),  # Display nickname
+    match_id: str = Query(...),
+    identity_type: str = Query(...),
+    player_id: str = Query(...),
+    display_name: str = Query(...),
 ):
-    # if match_id:
-    #     try:
-    #         match_info = await RackUpServiceClient.fetch_tournament_match(match_id)
-    #         authorized_players = [
-    #             str(match_info["player1_id"]),
-    #             str(match_info["player2_id"]),
-    #         ]
-
-    #         if player_id not in authorized_players:
-    #             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-    #             return
-    #     except Exception:
-    #         await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
-    #         return
 
     if identity_type == "verified":
         current_player = VerifiedParticipant(user_id=player_id, username=display_name)
@@ -46,10 +34,11 @@ async def websocket_endpoint(
     if room.players[0].session_key != current_player.session_key and len(room.players) == 1:
         room.add_opponent(current_player)
 
-    await room.register_connection(current_player.session_key, websocket)
+    await connection_registry.register(match_id, current_player.session_key, websocket)
 
     try:
-        await room.broadcast(
+        await broadcast_to_connections(
+            connection_registry.get(match_id),
             {
                 "type": "game_state",
                 "players": [p.to_dict() for p in room.players],
@@ -57,7 +46,7 @@ async def websocket_endpoint(
                 "current_turn": room.current_turn,
                 "current_break": room.current_break,
                 "match_id": room.match_id,
-            }
+            },
         )
 
         while True:
@@ -68,6 +57,12 @@ async def websocket_endpoint(
                 await websocket.send_text(json.dumps({"error": "It is not your turn to score."}))
                 continue
 
+            try:
+                validate_event(event)
+            except ValueError as exc:
+                await websocket.send_text(json.dumps({"error": str(exc)}))
+                continue
+
             if event.get("action") == "frame_conceded":
                 room.is_finished = True
 
@@ -75,11 +70,12 @@ async def websocket_endpoint(
                     sync_data = room.get_sync_payload()
                     await RackUpServiceClient.sync_final_frame(room.match_id, sync_data)
 
-                await room.broadcast(
+                await broadcast_to_connections(
+                    connection_registry.get(match_id),
                     {
                         "type": "match_complete",
                         "final_snapshot": room.get_sync_payload(),
-                    }
+                    },
                 )
                 room_manager.close_room(room.match_id)
                 break
@@ -90,7 +86,8 @@ async def websocket_endpoint(
 
             room.record_action(current_player.session_key, event)
 
-            await room.broadcast(
+            await broadcast_to_connections(
+                connection_registry.get(match_id),
                 {
                     "type": "game_state",
                     "players": [p.to_dict() for p in room.players],
@@ -98,23 +95,19 @@ async def websocket_endpoint(
                     "current_turn": room.current_turn,
                     "current_break": room.current_break,
                     "match_id": room.match_id,
-                }
+                },
             )
 
     except WebSocketDisconnect:
-        # 1. Safely remove the dropped player connection
-        room.remove_connection(current_player.session_key)
+        connection_registry.remove(match_id, current_player.session_key)
 
-        # 2. If an opponent is still listening, alert them
-        if room.connections:
-            await room.broadcast(
+        active_connections = connection_registry.get(match_id)
+        if active_connections:
+            await broadcast_to_connections(
+                active_connections,
                 {
                     "type": "player_status_change",
-                    "key": current_player.session_key,  # Changed from player_id to key
+                    "key": current_player.session_key,
                     "status": "disconnected",
-                }
+                },
             )
-
-        # 3. Clean up the match tracking state if empty
-        elif not room.is_finished:
-            room_manager.close_room(room.match_id)
