@@ -6,12 +6,12 @@ from fastapi.websockets import WebSocketDisconnect
 
 
 def test_arcade_match_lifecycle(client):
-    p1_params = "identity_type=anonymous&player_identifier=guest123&display_name=CasualRonnie"
+    p1_params = "identity_type=anonymous&player_id=guest123&display_name=CasualRonnie"
     with client.websocket_connect(f"/ws/room/table_one?{p1_params}") as ws1:
         # Consumes: Initial connection frame for Player 1
         _ = ws1.receive_text()
 
-        p2_params = "identity_type=anonymous&player_identifier=guest789&display_name=CasualJudd"
+        p2_params = "identity_type=anonymous&player_id=guest789&display_name=CasualJudd"
         with client.websocket_connect(f"/ws/room/table_one?{p2_params}") as ws2:
             # Consumes: Initial connection frame for Player 2
             _ = ws2.receive_text()
@@ -29,7 +29,7 @@ def test_arcade_match_lifecycle(client):
 
 
 def test_successful_tournament_handshake(client, mock_rackup_client):
-    params = "identity_type=verified&player_identifier=42&display_name=RonnieO&match_id=999"
+    params = "identity_type=verified&player_id=42&display_name=RonnieO&match_id=999"
     with client.websocket_connect(f"/ws/room/tournament_table?{params}") as ws:
         data = json.loads(ws.receive_text())
         assert data["match_id"] == "999"
@@ -41,7 +41,7 @@ def test_successful_tournament_handshake(client, mock_rackup_client):
 
 def test_unauthorized_player_is_rejected(client):
     # User 99 is an invalid player for tournament match 999
-    invalid_params = "identity_type=verified&player_identifier=99&display_name=Impostor&match_id=999"
+    invalid_params = "identity_type=verified&player_id=99&display_name=Impostor&match_id=999"
 
     # Assert that the gateway strictly raises a WebSocketDisconnect close frame
     with pytest.raises(WebSocketDisconnect) as exc_info:

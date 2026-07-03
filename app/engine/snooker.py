@@ -44,8 +44,8 @@ class AnonymousParticipant(Participant):
 class MatchRoom:
     """An in-memory real-time session interacting polymorphically with Participants."""
 
-    def __init__(self, matchroom_id: str, p1: Participant):
-        self.matchroom_id = matchroom_id
+    def __init__(self, match_id: str, p1: Participant):
+        self.match_id = match_id
         self.connections: Dict[str, WebSocket] = {}  # { session_key: WebSocket }
 
         # Array of polymorphic participant instances
@@ -53,10 +53,12 @@ class MatchRoom:
 
         # Unified score tracking bound directly to the unique session keys
         self.scores: Dict[str, int] = {p1.session_key: 0}
+        self.highest_break = 0
         self.current_break = 0
         self.current_turn = p1.session_key
         self.is_finished = False
-        self.match_id: Optional[str] = None
+
+        self.frames_to_win: Optional[int] = 0
 
     def add_opponent(self, p2: Participant):
         if len(self.players) < 2:
@@ -102,14 +104,14 @@ class MatchRoomManager:
     def __init__(self):
         self.active_rooms: Dict[str, MatchRoom] = {}
 
-    def get_or_create_room(self, matchroom_id: str, p1: Participant) -> MatchRoom:
-        if matchroom_id not in self.active_rooms:
-            self.active_rooms[matchroom_id] = MatchRoom(matchroom_id, p1)
-        return self.active_rooms[matchroom_id]
+    def get_or_create_room(self, match_id: str, p1: Participant) -> MatchRoom:
+        if match_id not in self.active_rooms:
+            self.active_rooms[match_id] = MatchRoom(match_id, p1)
+        return self.active_rooms[match_id]
 
-    def close_room(self, matchroom_id: str):
-        if matchroom_id in self.active_rooms:
-            del self.active_rooms[matchroom_id]
+    def close_room(self, match_id: str):
+        if match_id in self.active_rooms:
+            del self.active_rooms[match_id]
 
 
 room_manager = MatchRoomManager()

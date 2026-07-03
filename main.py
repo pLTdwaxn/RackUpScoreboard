@@ -1,7 +1,7 @@
 import json
 from typing import Dict, List
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket
 
 app = FastAPI()
 
@@ -50,36 +50,36 @@ def test_path():
     return {"message": "Uvicorn is definitely reading this exact file!"}
 
 
-@app.websocket("/ws/match/{matchroom_id}")
-async def websocket_endpoint(websocket: WebSocket, matchroom_id: str):
-    accepted = await manager.connect(websocket, matchroom_id)
-    if not accepted:
-        return
+# @app.websocket("/ws/match/{matchroom_id}")
+# async def websocket_endpoint(websocket: WebSocket, matchroom_id: str):
+#     accepted = await manager.connect(websocket, matchroom_id)
+#     if not accepted:
+#         return
 
-    try:
-        await manager.broadcast(
-            matchroom_id,
-            {"type": "system", "message": "A new player has joined the match."},
-        )
+#     try:
+#         await manager.broadcast(
+#             matchroom_id,
+#             {"type": "system", "message": "A new player has joined the match."},
+#         )
 
-        while True:
-            data = await websocket.receive_text()
-            # Expecting data format:
-            # {
-            #   "player": "player_id",
-            #   "action": "pot | safety | escape | other",
-            #   "target": "red",
-            #   "potted": "true",
-            #   "foul": "false",
-            #   "score": 1
-            # }
-            score_update = json.loads(data)
+#         while True:
+#             data = await websocket.receive_text()
+#             # Expecting data format:
+#             # {
+#             #   "player": "player_id",
+#             #   "action": "pot | safety | escape | other",
+#             #   "target": "red",
+#             #   "potted": "true",
+#             #   "foul": "false",
+#             #   "score": 1
+#             # }
+#             score_update = json.loads(data)
 
-            await manager.broadcast(matchroom_id, {"type": "score_update", "data": score_update})
+#             await manager.broadcast(matchroom_id, {"type": "score_update", "data": score_update})
 
-    except WebSocketDisconnect:
-        manager.disconnect(websocket, matchroom_id)
-        await manager.broadcast(
-            matchroom_id,
-            {"type": "system", "message": "Player {name} has left the match."},
-        )
+#     except WebSocketDisconnect:
+#         manager.disconnect(websocket, matchroom_id)
+#         await manager.broadcast(
+#             matchroom_id,
+#             {"type": "system", "message": "Player {name} has left the match."},
+#         )
