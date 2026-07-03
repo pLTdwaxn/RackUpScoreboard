@@ -7,7 +7,6 @@ from app.engine import AnonymousParticipant, VerifiedParticipant, room_manager
 from app.engine.rules.validator import validate_event
 from app.engine.runtime.broadcast import broadcast_to_connections
 from app.engine.runtime.connection_registry import connection_registry
-from app.services.rackup_client import RackUpServiceClient
 
 router = APIRouter()
 
@@ -39,19 +38,23 @@ async def websocket_endpoint(
     try:
         await broadcast_to_connections(
             connection_registry.get(match_id),
-            {
-                "type": "game_state",
-                "players": [p.to_dict() for p in room.players],
-                "scores": room.scores,
-                "current_turn": room.current_turn,
-                "current_break": room.current_break,
-                "match_id": room.match_id,
-            },
+            {"type": "game_state", **room.state_payload()},
         )
 
         while True:
             data = await websocket.receive_text()
             event = json.loads(data)
+
+            if event.get("undo") is True:
+                if not room.undo_last_event():
+                    await websocket.send_text(json.dumps({"error": "No prior message to undo."}))
+                    continue
+
+                await broadcast_to_connections(
+                    connection_registry.get(match_id),
+                    {"type": "game_state", **room.state_payload()},
+                )
+                continue
 
             if room.current_turn != current_player.session_key:
                 await websocket.send_text(json.dumps({"error": "It is not your turn to score."}))
@@ -63,39 +66,11 @@ async def websocket_endpoint(
                 await websocket.send_text(json.dumps({"error": str(exc)}))
                 continue
 
-            if event.get("action") == "frame_conceded":
-                room.is_finished = True
-
-                if room.match_id:
-                    sync_data = room.get_sync_payload()
-                    await RackUpServiceClient.sync_final_frame(room.match_id, sync_data)
-
-                await broadcast_to_connections(
-                    connection_registry.get(match_id),
-                    {
-                        "type": "match_complete",
-                        "final_snapshot": room.get_sync_payload(),
-                    },
-                )
-                room_manager.close_room(room.match_id)
-                break
-
-            if event.get("action") == "link_match_model":
-                room.match_id = event.get("match_id")
-                continue
-
-            room.record_action(current_player.session_key, event)
+            room.apply_event(current_player.session_key, event)
 
             await broadcast_to_connections(
                 connection_registry.get(match_id),
-                {
-                    "type": "game_state",
-                    "players": [p.to_dict() for p in room.players],
-                    "scores": room.scores,
-                    "current_turn": room.current_turn,
-                    "current_break": room.current_break,
-                    "match_id": room.match_id,
-                },
+                {"type": "game_state", **room.state_payload()},
             )
 
     except WebSocketDisconnect:
