@@ -4,7 +4,7 @@ import os
 import httpx
 
 # Grab your Django backend URL from environment configurations
-RACKUP_URL = os.getenv("RACKUP_URL", "http://127.0.0.1:8000")
+RACKUP_URL = os.getenv("RACKUP_URL", "http://127.0.0.1:8001")
 
 
 class RackUpServiceClient:

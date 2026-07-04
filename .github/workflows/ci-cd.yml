@@ -1,0 +1,108 @@
+name: CI/CD Docker Deploy
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest -q
+
+  build_and_push:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: Production
+    env:
+      IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
+      REGISTRY: ${{ vars.VULTR_REGISTRY }}
+    outputs:
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive image tag
+        id: vars
+        run: echo "image_tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Vultr Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}
+
+  deploy_vm:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: build_and_push
+    runs-on: ubuntu-latest
+    environment: Production
+    env:
+      IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
+      REGISTRY: ${{ vars.VULTR_REGISTRY }}
+      CONTAINER_NAME: rackupscoreboard
+      APP_PORT: "8004"
+    steps:
+      - name: Deploy on VM over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ needs.build_and_push.outputs.image_tag }}
+          REGISTRY: ${{ env.REGISTRY }}
+          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
+          APP_PORT: ${{ env.APP_PORT }}
+          VULTR_REGISTRY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          VULTR_REGISTRY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ vars.VM_PORT || 22 }}
+          envs: IMAGE_NAME,IMAGE_TAG,REGISTRY,CONTAINER_NAME,APP_PORT,VULTR_REGISTRY_USERNAME,VULTR_REGISTRY_PASSWORD
+          script: |
+            set -euo pipefail
+
+            echo "$VULTR_REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$VULTR_REGISTRY_USERNAME" --password-stdin
+            docker pull "$IMAGE_NAME:$IMAGE_TAG"
+
+            docker rm -f "$CONTAINER_NAME" || true
+
+            docker run -d \
+              --name "$CONTAINER_NAME" \
+              --restart unless-stopped \
+              -p "$APP_PORT:$APP_PORT" \
+              -e PORT="$APP_PORT" \
+              "$IMAGE_NAME:$IMAGE_TAG"
