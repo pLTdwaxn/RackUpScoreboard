@@ -106,3 +106,10 @@ jobs:
               -p "$APP_PORT:$APP_PORT" \
               -e PORT="$APP_PORT" \
               "$IMAGE_NAME:$IMAGE_TAG"
+
+            docker images "$IMAGE_NAME" --format "{{.Repository}}:{{.Tag}}" \
+              | grep -v ":$IMAGE_TAG$" \
+              | grep -v ":latest$" \
+              | xargs -r docker rmi || true
+
+            docker image prune -f >/dev/null 2>&1 || true
