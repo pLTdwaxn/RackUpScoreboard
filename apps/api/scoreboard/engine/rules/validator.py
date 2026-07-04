@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.engine.rules.messages import BALL_POINTS, ShotMessage
+from scoreboard.engine.rules.messages import BALL_POINTS, ShotMessage
 
 VALID_FACTUAL_FIELDS = {"potted_balls", "foul"}
 

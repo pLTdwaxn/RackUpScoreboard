@@ -1,5 +1,5 @@
-from app.engine.models.participant import AnonymousParticipant, VerifiedParticipant
-from app.engine.models.room_state import MatchRoom
+from scoreboard.engine.models.participant import AnonymousParticipant, VerifiedParticipant
+from scoreboard.engine.models.room_state import MatchRoom
 
 
 def test_match_room_initializes_with_first_player_state():

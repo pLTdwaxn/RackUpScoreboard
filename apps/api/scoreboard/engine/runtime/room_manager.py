@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Dict
 
-from app.engine.models.participant import Participant
-from app.engine.models.room_state import MatchRoom
+from scoreboard.engine.models.participant import Participant
+from scoreboard.engine.models.room_state import MatchRoom
 
 
 class MatchRoomManager:

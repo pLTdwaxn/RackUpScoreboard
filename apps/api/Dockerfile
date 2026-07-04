@@ -12,11 +12,11 @@ RUN apt-get update \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app ./app
+COPY scoreboard ./scoreboard
 
 EXPOSE 8004
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD curl -fsS http://127.0.0.1:${PORT:-8004}/ || exit 1
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8004}"]
+CMD ["sh", "-c", "uvicorn scoreboard.main:app --host 0.0.0.0 --port ${PORT:-8004}"]

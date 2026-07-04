@@ -3,10 +3,10 @@ from __future__ import annotations
 from math import ceil
 from typing import TYPE_CHECKING
 
-from app.engine.rules.messages import BALL_POINTS, COLOUR_ORDER, ShotMessage
+from scoreboard.engine.rules.messages import BALL_POINTS, COLOUR_ORDER, ShotMessage
 
 if TYPE_CHECKING:
-    from app.engine.models.room_state import MatchRoom
+    from scoreboard.engine.models.room_state import MatchRoom
 
 
 class ScoringRules:

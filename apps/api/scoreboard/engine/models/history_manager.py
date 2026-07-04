@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.engine.models.room_state import MatchRoom
+    from scoreboard.engine.models.room_state import MatchRoom
 
 
 class HistoryManager:

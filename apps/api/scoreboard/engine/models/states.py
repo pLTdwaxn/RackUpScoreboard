@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-from app.engine.rules.messages import COLOUR_ORDER, RED_BALL
+from scoreboard.engine.rules.messages import COLOUR_ORDER, RED_BALL
 
 if TYPE_CHECKING:
-    from app.engine.models.participant import Participant
+    from scoreboard.engine.models.participant import Participant
 
 
 @dataclass

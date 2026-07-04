@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from app.engine.rules.messages import COLOUR_ORDER, RED_BALL
+from scoreboard.engine.rules.messages import COLOUR_ORDER, RED_BALL
 
 if TYPE_CHECKING:
-    from app.engine.models.room_state import MatchRoom
+    from scoreboard.engine.models.room_state import MatchRoom
 
 
 class TableProgression:

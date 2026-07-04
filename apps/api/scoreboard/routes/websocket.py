@@ -1,12 +1,12 @@
-# app/api/websocket.py
+# scoreboard/routes/websocket.py
 import json
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from app.engine import AnonymousParticipant, VerifiedParticipant, room_manager
-from app.engine.rules.validator import validate_event
-from app.engine.runtime.broadcast import broadcast_to_connections
-from app.engine.runtime.connection_registry import connection_registry
+from scoreboard.engine import AnonymousParticipant, VerifiedParticipant, room_manager
+from scoreboard.engine.rules.validator import validate_event
+from scoreboard.engine.runtime.broadcast import broadcast_to_connections
+from scoreboard.engine.runtime.connection_registry import connection_registry
 
 router = APIRouter()
 

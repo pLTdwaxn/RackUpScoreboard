@@ -3,12 +3,12 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Dict, List, Optional
 
-from app.engine.models.history_manager import HistoryManager
-from app.engine.models.participant import Participant
-from app.engine.models.scoring_rules import ScoringRules
-from app.engine.models.states import FrameState, MatchState, RoomState
-from app.engine.models.table_progression import TableProgression
-from app.engine.rules.messages import BALL_POINTS, RED_BALL, ShotMessage
+from scoreboard.engine.models.history_manager import HistoryManager
+from scoreboard.engine.models.participant import Participant
+from scoreboard.engine.models.scoring_rules import ScoringRules
+from scoreboard.engine.models.states import FrameState, MatchState, RoomState
+from scoreboard.engine.models.table_progression import TableProgression
+from scoreboard.engine.rules.messages import BALL_POINTS, RED_BALL, ShotMessage
 
 
 class MatchRoom:
