@@ -10,14 +10,17 @@ from scoreboard.engine.models.states import FrameState, MatchState, RoomState
 from scoreboard.engine.models.table_progression import TableProgression
 from scoreboard.engine.rules.messages import BALL_POINTS, RED_BALL, ShotMessage
 
+VALID_SCORE_KEEPERS = {"self", "opp", "ref", "any"}
+
 
 class MatchRoom:
     """Holds match state independent from transport details."""
 
-    def __init__(self, match_id: str, p1: Participant):
+    def __init__(self, match_id: str, p1: Participant, score_keeper: str = "opp"):
         self._history_manager = HistoryManager()
         self._table_progression = TableProgression()
         self._scoring_rules = ScoringRules()
+        self.score_keeper = score_keeper if score_keeper in VALID_SCORE_KEEPERS else "opp"
 
         self.room_state = RoomState(match_id=match_id, players=[p1])
         self.match_state = MatchState()
@@ -170,27 +173,88 @@ class MatchRoom:
         return self._scoring_rules.penalty_points(event, illegal_balls)
 
     def _broadcast_state(self) -> dict:
+        points_remaining = self.points_remaining()
+        snookers_required = self.snooker_required()
+        match_payload = self._match_payload()
+        frame_payload = self._frame_payload(points_remaining, snookers_required)
+        table_payload = self.table_state()
+
         return {
-            "players": [p.to_dict() for p in self.players],
+            "players": self._players_payload(),
             "scores": self.scores,
             "current_turn": self.current_turn,
             "current_break": self.current_break,
             "match_id": self.match_id,
-            "match": {
-                "frames_to_win": self.frames_to_win,
-                "match_type": self.match_type,
-            },
-            "table": self.table_state(),
-            "points_remaining": self.points_remaining(),
-            "snooker_required": self.snooker_required(),
+            "match_importance": match_payload["match_importance"],
+            "winning_condition": match_payload["winning_condition"],
+            "match": match_payload,
+            "frame": frame_payload,
+            "table": table_payload,
+            "points_remaining": points_remaining,
+            "snooker_required": snookers_required,
+            "score_keeper": self.score_keeper,
             "history_depth": len(self.history),
         }
+
+    def can_player_keep_score(self, session_key: str) -> bool:
+        is_at_table = self.current_turn == session_key
+
+        if self.score_keeper == "self":
+            return is_at_table
+        if self.score_keeper == "opp":
+            if len(self.players) < 2:
+                return True
+            return bool(self.current_turn) and not is_at_table
+        if self.score_keeper == "ref":
+            return False
+        if self.score_keeper == "any":
+            return True
+
+        return False
 
     def table_state(self) -> dict:
         return {
             "reds_remaining": self.reds_remaining,
             "colours_on_table": deepcopy(self.colours_on_table),
             "object_ball": self.object_ball,
+            "current_turn": self.current_turn,
+            "current_break": self.current_break,
+            "points_remaining": self.points_remaining(),
+        }
+
+    def _players_payload(self) -> list[dict]:
+        return [
+            {
+                **player.to_dict(),
+                "match_score": 0,
+                "current_frame_score": self.scores.get(player.session_key, 0),
+                "highest_break": None,
+            }
+            for player in self.players
+        ]
+
+    def _match_payload(self) -> dict:
+        frames_to_win = self.frames_to_win if self.frames_to_win and self.frames_to_win > 0 else None
+
+        return {
+            "id": self.match_id,
+            "name": self.match_id,
+            "frames_to_win": frames_to_win,
+            "winning_condition": (f"First to {frames_to_win}" if frames_to_win else "Open frame"),
+            "match_importance": "Practice Match",
+            "highest_break": self.highest_break if self.highest_break > 0 else None,
+        }
+
+    def _frame_payload(self, points_remaining: int, snookers_required: int) -> dict:
+        scores = list(self.scores.values())
+        leading_score = max(scores, default=0)
+        trailing_score = min(scores, default=0)
+
+        return {
+            "points_remaining": points_remaining,
+            "points_gap": leading_score - trailing_score,
+            "snookers_required": snookers_required,
+            "highest_break": self.highest_break if self.highest_break > 0 else None,
         }
 
     def points_remaining(self) -> int:

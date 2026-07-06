@@ -18,6 +18,7 @@ async def websocket_endpoint(
     identity_type: str = Query(...),
     player_id: str = Query(...),
     display_name: str = Query(...),
+    score_keeper: str = Query("opp"),
 ):
 
     if identity_type == "verified":
@@ -25,7 +26,7 @@ async def websocket_endpoint(
     else:
         current_player = AnonymousParticipant(guest_slug=player_id, nickname=display_name)
 
-    room = room_manager.get_or_create_room(match_id, current_player)
+    room = room_manager.get_or_create_room(match_id, current_player, score_keeper)
 
     if match_id and not room.match_id:
         room.match_id = match_id
@@ -47,7 +48,15 @@ async def websocket_endpoint(
 
             if event.get("undo") is True:
                 if not room.undo_last_event():
-                    await websocket.send_text(json.dumps({"error": "No prior message to undo."}))
+                    await websocket.send_text(
+                        json.dumps(
+                            {
+                                "type": "error",
+                                "message": "No prior message to undo.",
+                                "error": "No prior message to undo.",
+                            },
+                        ),
+                    )
                     continue
 
                 await broadcast_to_connections(
@@ -56,17 +65,34 @@ async def websocket_endpoint(
                 )
                 continue
 
-            if room.current_turn != current_player.session_key:
-                await websocket.send_text(json.dumps({"error": "It is not your turn to score."}))
+            if not room.can_player_keep_score(current_player.session_key):
+                await websocket.send_text(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": "You are not allowed to keep score in this turn.",
+                            "error": "You are not allowed to keep score in this turn.",
+                        },
+                    ),
+                )
                 continue
 
             try:
                 validate_event(event)
             except ValueError as exc:
-                await websocket.send_text(json.dumps({"error": str(exc)}))
+                await websocket.send_text(
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": str(exc),
+                            "error": str(exc),
+                        },
+                    ),
+                )
                 continue
 
-            room.apply_event(current_player.session_key, event)
+            scoring_player_key = room.current_turn or current_player.session_key
+            room.apply_event(scoring_player_key, event)
 
             await broadcast_to_connections(
                 connection_registry.get(match_id),
