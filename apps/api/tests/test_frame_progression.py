@@ -109,6 +109,26 @@ def test_process_non_pot_advances_to_next_colour_in_colours_phase():
     assert frame.object_ball == "brown"
 
 
+def test_process_non_pot_on_yellow_in_colours_phase_keeps_yellow_for_next_player():
+    frame = make_frame()
+    frame.reds_remaining = 0
+    frame.phase = FramePhase.COLOURS
+    frame.object_ball = "yellow"
+    frame.colours_on_table = {
+        "yellow": True,
+        "green": True,
+        "brown": True,
+        "blue": True,
+        "pink": True,
+        "black": True,
+    }
+
+    FrameProgression().process_non_pot(frame, ())
+
+    assert frame.current_turn == "p2"
+    assert frame.object_ball == "yellow"
+
+
 def test_process_non_pot_in_respotted_black_phase_finishes_frame():
     frame = make_frame()
     frame.reds_remaining = 0

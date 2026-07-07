@@ -27,6 +27,10 @@ class FrameProgression:
             frame.enter_colours_phase()
             frame.set_object_ball("yellow")
         elif frame.phase == FramePhase.COLOURS:
+            if frame.object_ball != "black" and frame.colours_on_table.get(frame.object_ball, False):
+                frame.set_object_ball(frame.object_ball)
+                return
+
             next_colour = self.remaining_colour_after(frame, frame.object_ball)
             if next_colour:
                 frame.set_object_ball(next_colour)

@@ -10,7 +10,8 @@ if TYPE_CHECKING:
 class HistoryManager:
     def snapshot(self, session: MatchSession) -> dict:
         return {
-            "scores": deepcopy(session.frame.scores),
+            # Persist plain values to avoid deep-copying reactive score objects.
+            "scores": dict(session.frame.scores),
             "highest_break": session.frame.highest_break,
             "current_break": session.frame.current_break,
             "current_turn": session.frame.current_turn,
@@ -18,12 +19,12 @@ class HistoryManager:
             "is_finished": session.match.is_finished,
             "frames_to_win": session.match.frames_to_win,
             "reds_remaining": session.frame.reds_remaining,
-            "colours_on_table": deepcopy(session.frame.colours_on_table),
+            "colours_on_table": dict(session.frame.colours_on_table),
             "object_ball": session.frame.object_ball,
         }
 
     def restore(self, session: MatchSession, snapshot: dict) -> None:
-        session.frame.replace_scores(deepcopy(snapshot["scores"]))
+        session.frame.replace_scores(snapshot["scores"])
         session.frame.highest_break = snapshot["highest_break"]
         session.frame.current_break = snapshot["current_break"]
         session.frame.current_turn = snapshot["current_turn"]
@@ -31,7 +32,7 @@ class HistoryManager:
         session.match.is_finished = snapshot["is_finished"]
         session.match.frames_to_win = snapshot["frames_to_win"]
         session.frame.reds_remaining = snapshot["reds_remaining"]
-        session.frame.colours_on_table = deepcopy(snapshot["colours_on_table"])
+        session.frame.colours_on_table = dict(snapshot["colours_on_table"])
         session.frame.object_ball = snapshot["object_ball"]
         session.frame.recalculate_score_context()
 
