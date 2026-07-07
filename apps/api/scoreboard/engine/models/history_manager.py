@@ -4,47 +4,50 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from scoreboard.engine.models.room_state import MatchRoom
+    from scoreboard.engine.models.match_session import MatchSession
 
 
 class HistoryManager:
-    def snapshot(self, room: MatchRoom) -> dict:
+    def snapshot(self, session: MatchSession) -> dict:
         return {
-            "scores": deepcopy(room.scores),
-            "highest_break": room.highest_break,
-            "current_break": room.current_break,
-            "current_turn": room.current_turn,
-            "is_finished": room.is_finished,
-            "frames_to_win": room.frames_to_win,
-            "reds_remaining": room.reds_remaining,
-            "colours_on_table": deepcopy(room.colours_on_table),
-            "object_ball": room.object_ball,
+            "scores": deepcopy(session.frame.scores),
+            "highest_break": session.frame.highest_break,
+            "current_break": session.frame.current_break,
+            "current_turn": session.frame.current_turn,
+            "frame_phase": session.frame.phase.value,
+            "is_finished": session.match.is_finished,
+            "frames_to_win": session.match.frames_to_win,
+            "reds_remaining": session.frame.reds_remaining,
+            "colours_on_table": deepcopy(session.frame.colours_on_table),
+            "object_ball": session.frame.object_ball,
         }
 
-    def restore(self, room: MatchRoom, snapshot: dict) -> None:
-        room.scores = deepcopy(snapshot["scores"])
-        room.highest_break = snapshot["highest_break"]
-        room.current_break = snapshot["current_break"]
-        room.current_turn = snapshot["current_turn"]
-        room.is_finished = snapshot["is_finished"]
-        room.frames_to_win = snapshot["frames_to_win"]
-        room.reds_remaining = snapshot["reds_remaining"]
-        room.colours_on_table = deepcopy(snapshot["colours_on_table"])
-        room.object_ball = snapshot["object_ball"]
+    def restore(self, session: MatchSession, snapshot: dict) -> None:
+        session.frame.replace_scores(deepcopy(snapshot["scores"]))
+        session.frame.highest_break = snapshot["highest_break"]
+        session.frame.current_break = snapshot["current_break"]
+        session.frame.current_turn = snapshot["current_turn"]
+        session.frame.phase = session.frame.phase.__class__(snapshot["frame_phase"])
+        session.match.is_finished = snapshot["is_finished"]
+        session.match.frames_to_win = snapshot["frames_to_win"]
+        session.frame.reds_remaining = snapshot["reds_remaining"]
+        session.frame.colours_on_table = deepcopy(snapshot["colours_on_table"])
+        session.frame.object_ball = snapshot["object_ball"]
+        session.frame.recalculate_score_context()
 
-    def push(self, room: MatchRoom, actor_session_key: str, event: dict) -> None:
-        room.history.append(
+    def push(self, session: MatchSession, actor_session_key: str, event: dict) -> None:
+        session.frame.history.append(
             {
                 "actor": actor_session_key,
                 "event": deepcopy(event),
-                "state_before": self.snapshot(room),
+                "state_before": self.snapshot(session),
             }
         )
 
-    def undo(self, room: MatchRoom) -> bool:
-        if not room.history:
+    def undo(self, session: MatchSession) -> bool:
+        if not session.frame.history:
             return False
 
-        last_entry = room.history.pop()
-        self.restore(room, last_entry["state_before"])
+        last_entry = session.frame.history.pop()
+        self.restore(session, last_entry["state_before"])
         return True

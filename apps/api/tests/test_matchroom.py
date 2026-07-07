@@ -43,10 +43,11 @@ def test_arcade_match_lifecycle(client):
             ws2.send_text(
                 json.dumps(
                     {
-                        "player": "player1",
-                        "potted": True,
-                        "potted_balls": ["red"],
-                        "foul": 0,
+                        "action": "shot",
+                        "data": {
+                            "potted_balls": ["red"],
+                            "foul": 0,
+                        },
                     }
                 )
             )
@@ -99,10 +100,11 @@ def test_reconnect_restores_existing_match_state(client):
         ws1.send_text(
             json.dumps(
                 {
-                    "player": "player1",
-                    "potted": True,
-                    "potted_balls": ["red"],
-                    "foul": 0,
+                    "action": "shot",
+                    "data": {
+                        "potted_balls": ["red"],
+                        "foul": 0,
+                    },
                 }
             )
         )
@@ -137,10 +139,11 @@ def test_score_keeper_opp_blocks_player_at_table(client):
             ws1.send_text(
                 json.dumps(
                     {
-                        "player": "player1",
-                        "potted": True,
-                        "potted_balls": ["red"],
-                        "foul": 0,
+                        "action": "shot",
+                        "data": {
+                            "potted_balls": ["red"],
+                            "foul": 0,
+                        },
                     }
                 )
             )
@@ -165,10 +168,11 @@ def test_score_keeper_self_allows_player_at_table(client):
             ws1.send_text(
                 json.dumps(
                     {
-                        "player": "player1",
-                        "potted": True,
-                        "potted_balls": ["red"],
-                        "foul": 0,
+                        "action": "shot",
+                        "data": {
+                            "potted_balls": ["red"],
+                            "foul": 0,
+                        },
                     }
                 )
             )
@@ -193,10 +197,11 @@ def test_score_keeper_ref_blocks_both_players(client):
             ws1.send_text(
                 json.dumps(
                     {
-                        "player": "player1",
-                        "potted": True,
-                        "potted_balls": ["red"],
-                        "foul": 0,
+                        "action": "shot",
+                        "data": {
+                            "potted_balls": ["red"],
+                            "foul": 0,
+                        },
                     }
                 )
             )
@@ -206,10 +211,11 @@ def test_score_keeper_ref_blocks_both_players(client):
             ws2.send_text(
                 json.dumps(
                     {
-                        "player": "player2",
-                        "potted": True,
-                        "potted_balls": ["red"],
-                        "foul": 0,
+                        "action": "shot",
+                        "data": {
+                            "potted_balls": ["red"],
+                            "foul": 0,
+                        },
                     }
                 )
             )
@@ -221,9 +227,9 @@ def test_action_payload_with_points_is_rejected(client):
     params = "match_id=points_validation&identity_type=anonymous&player_id=guestA&display_name=Breaker"
     with client.websocket_connect(f"/ws/room/?{params}") as ws:
         _ = ws.receive_text()
-        ws.send_text(json.dumps({"action": "pot", "points": "7"}))
+        ws.send_text(json.dumps({"action": "shot", "data": {"points": "7"}}))
         err = json.loads(ws.receive_text())
-        assert err["error"].startswith("Unsupported action")
+        assert err["error"].startswith("Unsupported shot payload fields")
 
 
 def test_disconnect_notifies_remaining_opponent(client):
@@ -250,15 +256,16 @@ def test_factual_shot_message_updates_table_and_can_be_undone(client):
         initial = json.loads(ws.receive_text())
         assert initial["table"]["object_ball"] == "red"
         assert initial["points_remaining"] == 147
-        assert initial["snooker_required"] == 0
+        assert initial["snookers_required"] == 0
 
         ws.send_text(
             json.dumps(
                 {
-                    "player": "player1",
-                    "potted": True,
-                    "potted_balls": ["red"],
-                    "foul": 0,
+                    "action": "shot",
+                    "data": {
+                        "potted_balls": ["red"],
+                        "foul": 0,
+                    },
                 }
             )
         )
@@ -268,19 +275,19 @@ def test_factual_shot_message_updates_table_and_can_be_undone(client):
         assert update["table"]["reds_remaining"] == 14
         assert update["table"]["object_ball"] == "colour"
         assert update["points_remaining"] == 146
-        assert update["snooker_required"] == 0
+        assert update["snookers_required"] == 0
         assert update["history_depth"] == 1
         assert update["frame"]["points_remaining"] == 146
         assert update["frame"]["snookers_required"] == 0
         assert update["players"][0]["current_frame_score"] == 1
 
-        ws.send_text(json.dumps({"undo": True}))
+        ws.send_text(json.dumps({"action": "undo", "data": {}}))
         undone = json.loads(ws.receive_text())
         assert undone["scores"]["anon_guest123"] == 0
         assert undone["table"]["reds_remaining"] == 15
         assert undone["table"]["object_ball"] == "red"
         assert undone["points_remaining"] == 147
-        assert undone["snooker_required"] == 0
+        assert undone["snookers_required"] == 0
         assert undone["history_depth"] == 0
         assert undone["frame"]["points_remaining"] == 147
         assert undone["players"][0]["current_frame_score"] == 0

@@ -6,10 +6,9 @@ from scoreboard.engine.rules.validator import validate_event
 @pytest.mark.parametrize(
     "event",
     [
-        {"potted": True, "potted_balls": ["red"], "foul": 0},
-        {"potted": False, "potted_balls": [], "foul": 0},
-        {"player": "player2", "potted": False, "potted_balls": [], "foul": 0},
-        {"undo": True},
+        {"action": "shot", "data": {"potted_balls": ["red"], "foul": 0}},
+        {"action": "shot", "data": {"potted_balls": [], "foul": 0}},
+        {"action": "undo", "data": {}},
     ],
 )
 def test_validate_event_accepts_supported_messages(event):
@@ -19,9 +18,12 @@ def test_validate_event_accepts_supported_messages(event):
 @pytest.mark.parametrize(
     "event, expected_error",
     [
-        ({"action": "invalid_action"}, "Unsupported action: invalid_action"),
-        ({"action": None}, "Unsupported action: None"),
-        ({}, "Unsupported message shape."),
+        (
+            {"action": "invalid_action", "data": {}},
+            "Unsupported action: invalid_action",
+        ),
+        ({"action": None, "data": {}}, "Unsupported action: None"),
+        ({}, "Unsupported action: None"),
     ],
 )
 def test_validate_event_rejects_legacy_or_empty_messages(event, expected_error):
@@ -32,12 +34,12 @@ def test_validate_event_rejects_legacy_or_empty_messages(event, expected_error):
 @pytest.mark.parametrize(
     "event",
     [
-        {"undo": True, "action": "pot"},
-        {"undo": True, "player": "player1"},
+        {"action": "undo", "data": {"player": "player1"}},
+        {"action": "undo", "data": {"action": "shot"}},
     ],
 )
 def test_validate_event_rejects_undo_with_extra_fields(event):
-    with pytest.raises(ValueError, match="Undo message cannot include legacy action fields."):
+    with pytest.raises(ValueError, match="Undo action does not accept payload data."):
         validate_event(event)
 
 
@@ -46,15 +48,17 @@ def test_validate_event_rejects_undo_with_extra_fields(event):
     [
         (
             {
-                "potted": True,
-                "potted_balls": ["purple"],
-                "foul": 0,
+                "action": "shot",
+                "data": {
+                    "potted_balls": ["purple"],
+                    "foul": 0,
+                },
             },
             "Unsupported potted ball: purple",
         ),
         (
-            {"potted": True, "potted_balls": "red", "foul": 0},
-            "Factual event requires list 'potted_balls'.",
+            {"action": "shot", "data": {"potted_balls": "red", "foul": 0}},
+            "Shot payload requires list 'potted_balls'.",
         ),
     ],
 )

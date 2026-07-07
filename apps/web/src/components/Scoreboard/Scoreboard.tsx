@@ -159,30 +159,36 @@ export default function Scoreboard() {
 
   const sendPot = (ball: string) => {
     sendEvent({
-      player: currentPlayerKey,
-      potted_balls: [ball],
-      foul: 0,
+      action: "shot",
+      data: {
+        potted_balls: [ball],
+        foul: 0,
+      },
     });
   };
 
   const sendFoul = () => {
     sendEvent({
-      player: currentPlayerKey,
-      potted_balls: [],
-      foul: 4,
+      action: "shot",
+      data: {
+        potted_balls: [],
+        foul: 4,
+      },
     });
   };
 
   const sendEndTurn = () => {
     sendEvent({
-      player: currentPlayerKey,
-      potted_balls: [],
-      foul: 0,
+      action: "shot",
+      data: {
+        potted_balls: [],
+        foul: 0,
+      },
     });
   };
 
   const sendUndo = () => {
-    sendEvent({ undo: true });
+    sendEvent({ action: "undo", data: {} });
   };
 
   const currentPlayerKey =

@@ -25,12 +25,12 @@ def mock_rackup_client():
 
 @pytest.fixture
 def clean_engine():
-    from scoreboard.engine import room_manager
+    from scoreboard.engine import session_manager
     from scoreboard.engine.runtime.connection_registry import connection_registry
 
-    room_manager.active_rooms.clear()
+    session_manager.active_sessions.clear()
     connection_registry._connections.clear()
-    yield room_manager
+    yield session_manager
 
 
 @pytest.fixture

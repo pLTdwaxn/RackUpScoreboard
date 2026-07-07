@@ -1,38 +1,53 @@
 from __future__ import annotations
 
-from scoreboard.engine.rules.messages import BALL_POINTS, ShotMessage
+from scoreboard.engine.rules.messages import ShotMessage
 
-VALID_FACTUAL_FIELDS = {"potted_balls", "foul"}
+from ..rules import BALL_POINTS
+
+VALID_ACTIONS = {"shot", "undo"}
+VALID_SHOT_FIELDS = {"potted_balls", "foul"}
 
 
 def validate_event(event: dict) -> None:
-    if event.get("undo") is True:
-        if set(event.keys()) - {"undo"}:
-            raise ValueError("Undo message cannot include legacy action fields.")
+    if not isinstance(event, dict):
+        raise ValueError("Message must be a JSON object.")
+
+    if set(event.keys()) - {"action", "data"}:
+        raise ValueError("Message envelope accepts only 'action' and 'data'.")
+
+    action = event.get("action")
+    if action not in VALID_ACTIONS:
+        raise ValueError(f"Unsupported action: {action}")
+
+    data = event.get("data", {})
+    if not isinstance(data, dict):
+        raise ValueError("Action payload requires object 'data'.")
+
+    if action == "undo":
+        if data:
+            raise ValueError("Undo action does not accept payload data.")
         return
 
-    if "action" in event:
-        raise ValueError(f"Unsupported action: {event.get('action')}")
-
-    if not VALID_FACTUAL_FIELDS.intersection(event.keys()):
-        raise ValueError("Unsupported message shape.")
-
-    validate_factual_event(event)
+    validate_shot_data(data)
 
 
-def validate_factual_event(event: dict) -> None:
-    if not VALID_FACTUAL_FIELDS.issubset(event.keys()):
-        missing = sorted(VALID_FACTUAL_FIELDS - set(event.keys()))
-        raise ValueError(f"Missing factual event fields: {', '.join(missing)}")
+def validate_shot_data(data: dict) -> None:
+    extra_fields = set(data.keys()) - VALID_SHOT_FIELDS
+    if extra_fields:
+        raise ValueError(f"Unsupported shot payload fields: {', '.join(sorted(extra_fields))}")
 
-    shot = ShotMessage.from_dict(event)
+    if not VALID_SHOT_FIELDS.issubset(data.keys()):
+        missing = sorted(VALID_SHOT_FIELDS - set(data.keys()))
+        raise ValueError(f"Missing shot payload fields: {', '.join(missing)}")
 
-    if not isinstance(event.get("potted_balls"), list):
-        raise ValueError("Factual event requires list 'potted_balls'.")
+    if not isinstance(data.get("potted_balls"), list):
+        raise ValueError("Shot payload requires list 'potted_balls'.")
+
+    shot = ShotMessage.from_dict(data)
 
     for ball in shot.potted_balls:
         if ball not in BALL_POINTS:
             raise ValueError(f"Unsupported potted ball: {ball}")
 
     if not isinstance(shot.foul, int) or shot.foul < 0:
-        raise ValueError("Factual event requires non-negative integer 'foul'.")
+        raise ValueError("Shot payload requires non-negative integer 'foul'.")
