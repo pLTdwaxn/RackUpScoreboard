@@ -1,20 +1,24 @@
 import { Card } from "@heroui/react";
 
 import { Match, Player as PlayerType } from "@/types";
+import { Frame } from "@/types";
 
 import { Player } from ".";
 import { resolvePlayerPair } from "./playerIdentity";
 
 export default function MatchOverview({
   match,
+  frame,
   players,
   currentPlayerKey,
 }: {
   match: Match;
+  frame: Frame;
   players: PlayerType[];
   currentPlayerKey: string;
 }) {
   const { me, opponent } = resolvePlayerPair(players, currentPlayerKey);
+  const winningPlayerKey = frame.status === "finished" ? frame.winner_key : null;
 
   return (
     <Card
@@ -25,8 +29,19 @@ export default function MatchOverview({
         <h2>{match.match_importance}</h2>
       </Card.Header>
       <Card.Content className="flex flex-row gap-2">
-        {opponent ? <Player player={opponent} /> : null}
-        {me ? <Player player={me} direction="rtl" /> : null}
+        {opponent ? (
+          <Player
+            player={opponent}
+            isFrameWinner={opponent.key === winningPlayerKey}
+          />
+        ) : null}
+        {me ? (
+          <Player
+            player={me}
+            direction="rtl"
+            isFrameWinner={me.key === winningPlayerKey}
+          />
+        ) : null}
       </Card.Content>
     </Card>
   );

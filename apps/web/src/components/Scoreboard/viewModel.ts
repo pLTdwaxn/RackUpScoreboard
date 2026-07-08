@@ -10,10 +10,12 @@ export const DEFAULT_MATCH: Match = {
 };
 
 export const DEFAULT_FRAME: Frame = {
+  status: "ready",
   points_remaining: 0,
   points_gap: 0,
   snookers_required: 0,
   highest_break: null,
+  winner_key: null,
 };
 
 export const DEFAULT_TABLE: TableState = {

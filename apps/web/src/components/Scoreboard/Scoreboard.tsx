@@ -118,6 +118,7 @@ export default function Scoreboard() {
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2">
           <MatchOverview
             match={viewModel.match}
+            frame={viewModel.frame}
             players={viewModel.players}
             currentPlayerKey={currentPlayerKey}
           />

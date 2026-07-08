@@ -43,10 +43,12 @@ export type Match = {
 };
 
 export type Frame = {
+  status: "ready" | "active" | "finished";
   points_remaining: number;
   points_gap: number;
   snookers_required: number;
   highest_break: number | null;
+  winner_key: string | null;
 };
 
 export type Player = {

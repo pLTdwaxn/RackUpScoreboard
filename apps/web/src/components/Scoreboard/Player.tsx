@@ -31,9 +31,11 @@ function nameToColor(name: string): string {
 export default function Player({
   player,
   direction = "ltr",
+  isFrameWinner = false,
 }: {
   player: PlayerType;
   direction?: "ltr" | "rtl";
+  isFrameWinner?: boolean;
 }) {
   const getInitials = (displayName: string): string => {
     const parts = displayName.trim().split(/\s+/).filter(Boolean);
@@ -58,7 +60,10 @@ export default function Player({
         }`}
       >
         <BadgeAnchor>
-          <Avatar size="lg">
+          <Avatar
+            size="lg"
+            className={isFrameWinner ? "winner-avatar-glow" : ""}
+          >
             <Avatar.Image />
             <Avatar.Fallback
               className="font-sans font-medium text-lg transition-colors duration-500"
