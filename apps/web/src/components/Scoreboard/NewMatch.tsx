@@ -24,15 +24,13 @@ type NewMatchProps = {
 export default function NewMatch({ onConnected }: NewMatchProps) {
   const searchParams = useSearchParams();
   const [displayName, setDisplayName] = useState("");
-  const [matchroomId, setMatchroomId] = useState("");
+  const [matchroomId, setMatchroomId] = useState(
+    searchParams.get("matchroom") ?? "".trim(),
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const matchroomFromUrl = (searchParams.get("matchroom") ?? "").trim();
-  const isMatchroomLocked = matchroomFromUrl.length > 0;
-  const effectiveMatchroomId = isMatchroomLocked
-    ? matchroomFromUrl
-    : matchroomId;
+  // const matchroomFromUrl = (searchParams.get("matchroom") ?? "").trim();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,7 +54,7 @@ export default function NewMatch({ onConnected }: NewMatchProps) {
         },
         body: JSON.stringify({
           display_name: trimmedName,
-          matchroom_id: effectiveMatchroomId.trim() || undefined,
+          matchroom_id: matchroomId.trim() || undefined,
         }),
       });
 
@@ -114,26 +112,13 @@ export default function NewMatch({ onConnected }: NewMatchProps) {
               onChange={(event) => setDisplayName(event.target.value)}
             />
           </TextField>
-          <TextField className="space-y-2">
-            <Label>
-              {isMatchroomLocked
-                ? "Matchroom ID (from invite link)"
-                : "Matchroom ID (optional)"}
-            </Label>
-            <Input
-              placeholder={
-                isMatchroomLocked
-                  ? "Matchroom from invite"
-                  : "Leave empty to create room"
-              }
-              value={effectiveMatchroomId}
-              disabled={isMatchroomLocked}
-              onChange={(event) => {
-                if (!isMatchroomLocked) {
-                  setMatchroomId(event.target.value);
-                }
-              }}
-            />
+          <TextField
+            className="space-y-2"
+            value={matchroomId}
+            onChange={setMatchroomId}
+          >
+            <Label>Matchroom ID</Label>
+            <Input placeholder={"Leave empty to create room"} />
           </TextField>
           {error ? <p className="text-sm text-danger">{error}</p> : null}
           <Button
