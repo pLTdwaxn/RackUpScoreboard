@@ -37,5 +37,12 @@ export function useGameActions(
     });
   };
 
-  return { sendShot, sendEndTurn, sendUndo };
+  const sendConcede = () => {
+    sendEvent({ action: "concede", data: {} });
+    toast.warning(`${turnPlayerName} conceded the frame`, {
+      timeout: 2000,
+    });
+  };
+
+  return { sendShot, sendEndTurn, sendUndo, sendConcede };
 }

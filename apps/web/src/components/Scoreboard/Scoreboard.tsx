@@ -83,7 +83,7 @@ export default function Scoreboard() {
     players.find((player) => player.key === turnPlayerKey)?.name ??
     currentPlayerName;
 
-  const { sendShot, sendEndTurn, sendUndo } = useGameActions(
+  const { sendShot, sendEndTurn, sendUndo, sendConcede } = useGameActions(
     sendEvent,
     turnPlayerName,
   );
@@ -139,6 +139,7 @@ export default function Scoreboard() {
           sendShot={sendShot}
           sendEndTurn={sendEndTurn}
           sendUndo={sendUndo}
+          sendConcede={sendConcede}
         />
       ) : null}
       {socketError ? toast.danger(socketError, { timeout: 1000 }) : null}

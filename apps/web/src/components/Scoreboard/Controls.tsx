@@ -2,7 +2,7 @@
 
 import { ReactNode, useMemo, useRef, useState } from "react";
 
-import { Button, ButtonGroup, Chip, Surface } from "@heroui/react";
+import { AlertDialog, Button, ButtonGroup, Chip, Surface } from "@heroui/react";
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 
 import { GameStateMessage, TableState } from "@/types";
@@ -23,6 +23,7 @@ type ControlsProps = {
   sendShot: (pottedBalls: string[], foul?: number) => void;
   sendEndTurn: () => void;
   sendUndo: () => void;
+  sendConcede: () => void;
 };
 
 type BallName =
@@ -128,10 +129,12 @@ export default function Controls({
   sendShot,
   sendEndTurn,
   sendUndo,
+  sendConcede,
 }: ControlsProps) {
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
   const [showAdvancedContent, setShowAdvancedContent] = useState(false);
+  const [isConcedeDialogOpen, setIsConcedeDialogOpen] = useState(false);
   const [multiPotBalls, setMultiPotBalls] = useState<BallName[]>([]);
   const [foulBall, setFoulBall] = useState<BallName | null>(null);
   const [selectionMode, setSelectionMode] = useState<"pots" | "foul">("pots");
@@ -345,6 +348,7 @@ export default function Controls({
   const simpleActionsRow = (
     <SimpleBottomActions
       canKeepScore={canKeepScore}
+      onConcede={() => setIsConcedeDialogOpen(true)}
       onEnterAdvancedMode={() => {
         enterAdvancedMode(() => {
           setSelectionMode("pots");
@@ -419,6 +423,42 @@ export default function Controls({
           />
         }
       />
+
+      <AlertDialog
+        isOpen={isConcedeDialogOpen}
+        onOpenChange={setIsConcedeDialogOpen}
+      >
+        <AlertDialog.Backdrop variant="blur">
+          <AlertDialog.Container>
+            <AlertDialog.Dialog>
+              <AlertDialog.CloseTrigger />
+              <AlertDialog.Header>
+                <AlertDialog.Heading>Conceding Frame</AlertDialog.Heading>
+              </AlertDialog.Header>
+              <AlertDialog.Body>
+                Are you sure you want to concede the frame?
+              </AlertDialog.Body>
+              <AlertDialog.Footer>
+                <Button
+                  variant="secondary"
+                  onPress={() => setIsConcedeDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onPress={() => {
+                    sendConcede();
+                    setIsConcedeDialogOpen(false);
+                  }}
+                >
+                  Concede
+                </Button>
+              </AlertDialog.Footer>
+            </AlertDialog.Dialog>
+          </AlertDialog.Container>
+        </AlertDialog.Backdrop>
+      </AlertDialog>
     </Surface>
   );
 }

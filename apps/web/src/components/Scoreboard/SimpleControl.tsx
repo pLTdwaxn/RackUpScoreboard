@@ -166,6 +166,7 @@ export default function SimpleControl({
 
 export type SimpleBottomActionsProps = {
   canKeepScore: boolean;
+  onConcede: () => void;
   onEnterAdvancedMode: () => void;
   onDeclareFoul: () => void;
   onEndTurn: () => void;
@@ -174,6 +175,7 @@ export type SimpleBottomActionsProps = {
 
 export function SimpleBottomActions({
   canKeepScore,
+  onConcede,
   onEnterAdvancedMode,
   onDeclareFoul,
   onEndTurn,
@@ -181,7 +183,7 @@ export function SimpleBottomActions({
 }: SimpleBottomActionsProps) {
   return (
     <div className="flex w-full flex-row items-center justify-between gap-4">
-      <Button isIconOnly variant="danger" size="sm" onPress={onUndo}>
+      <Button isIconOnly variant="danger" size="sm" onPress={onConcede}>
         <IconFlagFilled stroke={2} />
       </Button>
 
