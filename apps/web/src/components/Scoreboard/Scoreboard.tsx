@@ -83,10 +83,8 @@ export default function Scoreboard() {
     players.find((player) => player.key === turnPlayerKey)?.name ??
     currentPlayerName;
 
-  const { sendShot, sendEndTurn, sendUndo, sendConcede } = useGameActions(
-    sendEvent,
-    turnPlayerName,
-  );
+  const { sendShot, sendEndTurn, sendUndo, sendConcede, sendNextFrame } =
+    useGameActions(sendEvent, turnPlayerName);
 
   const viewModel = buildScoreboardViewModel({
     gameState,
@@ -134,6 +132,8 @@ export default function Scoreboard() {
 
       {viewModel.roomReady ? (
         <Controls
+          frameStatus={viewModel.frame.status}
+          nextFrameConfirmations={gameState?.next_frame_confirmations ?? []}
           table={viewModel.table}
           scoreKeeper={viewModel.scoreKeeper}
           currentPlayerKey={currentPlayerKey}
@@ -141,6 +141,7 @@ export default function Scoreboard() {
           sendEndTurn={sendEndTurn}
           sendUndo={sendUndo}
           sendConcede={sendConcede}
+          sendNextFrame={sendNextFrame}
         />
       ) : null}
       {socketError ? toast.danger(socketError, { timeout: 1000 }) : null}

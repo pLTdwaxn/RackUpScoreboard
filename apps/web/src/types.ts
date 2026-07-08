@@ -6,6 +6,7 @@ export type GameStateMessage = {
   frame: Frame;
   score_keeper: "self" | "opp" | "ref" | "any";
   history_depth?: number;
+  next_frame_confirmations?: string[];
 };
 
 export type ErrorMessage = {

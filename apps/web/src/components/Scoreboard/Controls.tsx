@@ -17,6 +17,8 @@ import SimpleControl, {
 } from "./SimpleControl";
 
 type ControlsProps = {
+  frameStatus: GameStateMessage["frame"]["status"];
+  nextFrameConfirmations: string[];
   table: TableState;
   scoreKeeper: GameStateMessage["score_keeper"];
   currentPlayerKey: string;
@@ -24,6 +26,7 @@ type ControlsProps = {
   sendEndTurn: () => void;
   sendUndo: () => void;
   sendConcede: () => void;
+  sendNextFrame: () => void;
 };
 
 type BallName =
@@ -123,6 +126,8 @@ function foulPointsForBall(ball: BallName): number {
 }
 
 export default function Controls({
+  frameStatus,
+  nextFrameConfirmations,
   table,
   scoreKeeper,
   currentPlayerKey,
@@ -130,6 +135,7 @@ export default function Controls({
   sendEndTurn,
   sendUndo,
   sendConcede,
+  sendNextFrame,
 }: ControlsProps) {
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
@@ -140,6 +146,9 @@ export default function Controls({
   const [selectionMode, setSelectionMode] = useState<"pots" | "foul">("pots");
   const panelTransitionMs = 200;
   const panelTimeouts = useRef<number[]>([]);
+  const isFrameFinished = frameStatus === "finished";
+  const hasConfirmedNextFrame =
+    nextFrameConfirmations.includes(currentPlayerKey);
 
   const redsRemaining = table.reds_remaining;
   const coloursOnTable = table.colours_on_table;
@@ -405,60 +414,79 @@ export default function Controls({
         isPanelExpanded ? "min-h-52" : "min-h-0",
       ].join(" ")}
     >
-      <TransitionSlot
-        isAdvancedMode={showAdvancedContent}
-        simpleContent={
-          <SimpleControl
-            messageRow={null}
-            ballRow={simpleBallRow}
-            actionsRow={simpleActionsRow}
+      {isFrameFinished ? (
+        <div className="flex w-full flex-col items-center justify-center gap-3 py-2">
+          <p className="font-mono text-sm tracking-wide uppercase text-muted">
+            Frame Finished
+          </p>
+          {hasConfirmedNextFrame ? (
+            <p className="font-mono text-sm tracking-wide uppercase text-muted">
+              Waiting for your opponent
+            </p>
+          ) : (
+            <Button variant="primary" onPress={sendNextFrame}>
+              Start Next Frame
+            </Button>
+          )}
+        </div>
+      ) : (
+        <>
+          <TransitionSlot
+            isAdvancedMode={showAdvancedContent}
+            simpleContent={
+              <SimpleControl
+                messageRow={null}
+                ballRow={simpleBallRow}
+                actionsRow={simpleActionsRow}
+              />
+            }
+            advancedContent={
+              <AdvancedControl
+                messageRow={advancedMessageRow}
+                ballRow={advancedBallRow}
+                redsRow={advancedRedsRow}
+                actionsRow={advancedActionsRow}
+              />
+            }
           />
-        }
-        advancedContent={
-          <AdvancedControl
-            messageRow={advancedMessageRow}
-            ballRow={advancedBallRow}
-            redsRow={advancedRedsRow}
-            actionsRow={advancedActionsRow}
-          />
-        }
-      />
 
-      <AlertDialog
-        isOpen={isConcedeDialogOpen}
-        onOpenChange={setIsConcedeDialogOpen}
-      >
-        <AlertDialog.Backdrop variant="blur">
-          <AlertDialog.Container>
-            <AlertDialog.Dialog>
-              <AlertDialog.CloseTrigger />
-              <AlertDialog.Header>
-                <AlertDialog.Heading>Conceding Frame</AlertDialog.Heading>
-              </AlertDialog.Header>
-              <AlertDialog.Body>
-                Are you sure you want to concede the frame?
-              </AlertDialog.Body>
-              <AlertDialog.Footer>
-                <Button
-                  variant="secondary"
-                  onPress={() => setIsConcedeDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  onPress={() => {
-                    sendConcede();
-                    setIsConcedeDialogOpen(false);
-                  }}
-                >
-                  Concede
-                </Button>
-              </AlertDialog.Footer>
-            </AlertDialog.Dialog>
-          </AlertDialog.Container>
-        </AlertDialog.Backdrop>
-      </AlertDialog>
+          <AlertDialog
+            isOpen={isConcedeDialogOpen}
+            onOpenChange={setIsConcedeDialogOpen}
+          >
+            <AlertDialog.Backdrop variant="blur">
+              <AlertDialog.Container>
+                <AlertDialog.Dialog>
+                  <AlertDialog.CloseTrigger />
+                  <AlertDialog.Header>
+                    <AlertDialog.Heading>Conceding Frame</AlertDialog.Heading>
+                  </AlertDialog.Header>
+                  <AlertDialog.Body>
+                    Are you sure you want to concede the frame?
+                  </AlertDialog.Body>
+                  <AlertDialog.Footer>
+                    <Button
+                      variant="secondary"
+                      onPress={() => setIsConcedeDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onPress={() => {
+                        sendConcede();
+                        setIsConcedeDialogOpen(false);
+                      }}
+                    >
+                      Concede
+                    </Button>
+                  </AlertDialog.Footer>
+                </AlertDialog.Dialog>
+              </AlertDialog.Container>
+            </AlertDialog.Backdrop>
+          </AlertDialog>
+        </>
+      )}
     </Surface>
   );
 }

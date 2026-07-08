@@ -44,5 +44,12 @@ export function useGameActions(
     });
   };
 
-  return { sendShot, sendEndTurn, sendUndo, sendConcede };
+  const sendNextFrame = () => {
+    sendEvent({ action: "next_frame", data: {} });
+    toast.info("Confirmed: ready for the next frame", {
+      timeout: 2000,
+    });
+  };
+
+  return { sendShot, sendEndTurn, sendUndo, sendConcede, sendNextFrame };
 }

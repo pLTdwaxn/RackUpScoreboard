@@ -50,6 +50,7 @@ export function useRoomSocket(
     socket.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data) as RoomSocketMessage;
+        console.log("Received room update:", payload);
 
         if (!payload || typeof payload !== "object" || !("type" in payload)) {
           setSocketError("Received invalid room update.");
