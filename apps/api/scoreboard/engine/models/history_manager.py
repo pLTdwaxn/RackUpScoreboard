@@ -12,9 +12,12 @@ class HistoryManager:
         return {
             # Persist plain values to avoid deep-copying reactive score objects.
             "scores": dict(session.frame.scores),
+            "match_scores": dict(session.match.match_scores),
             "highest_break": session.frame.highest_break,
             "current_break": session.frame.current_break,
             "current_turn": session.frame.current_turn,
+            "opening_turn": session.frame.opening_turn,
+            "winner_key": session.frame.winner_key,
             "frame_phase": session.frame.phase.value,
             "is_finished": session.match.is_finished,
             "frames_to_win": session.match.frames_to_win,
@@ -25,9 +28,12 @@ class HistoryManager:
 
     def restore(self, session: MatchSession, snapshot: dict) -> None:
         session.frame.replace_scores(snapshot["scores"])
+        session.match.match_scores = dict(snapshot["match_scores"])
         session.frame.highest_break = snapshot["highest_break"]
         session.frame.current_break = snapshot["current_break"]
         session.frame.current_turn = snapshot["current_turn"]
+        session.frame._opening_turn = snapshot["opening_turn"]
+        session.frame.winner_key = snapshot["winner_key"]
         session.frame.phase = session.frame.phase.__class__(snapshot["frame_phase"])
         session.match.is_finished = snapshot["is_finished"]
         session.match.frames_to_win = snapshot["frames_to_win"]

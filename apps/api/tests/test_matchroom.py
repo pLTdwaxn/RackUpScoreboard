@@ -291,3 +291,38 @@ def test_factual_shot_message_updates_table_and_can_be_undone(client):
         assert undone["history_depth"] == 0
         assert undone["frame"]["points_remaining"] == 147
         assert undone["players"][0]["current_frame_score"] == 0
+
+
+def test_concede_finishes_frame_and_rotates_next_frame_opening_turn(client):
+    p1_params = "match_id=concede_table&identity_type=anonymous&player_id=guest123&display_name=CasualRonnie"
+    p2_params = "match_id=concede_table&identity_type=anonymous&player_id=guest789&display_name=CasualJudd"
+
+    with client.websocket_connect(f"/ws/room/?{p1_params}") as ws1:
+        _ = ws1.receive_text()
+
+        with client.websocket_connect(f"/ws/room/?{p2_params}") as ws2:
+            _ = ws2.receive_text()
+            _ = ws1.receive_text()
+
+            ws1.send_text(json.dumps({"action": "concede", "data": {}}))
+            update = json.loads(ws1.receive_text())
+
+            assert update["frame"]["winner_key"] == "anon_guest789"
+            assert update["frame"]["status"] == "finished"
+            assert update["match"]["status"] == "in_progress"
+            assert update["players"][1]["match_score"] == 1
+
+            ws1.send_text(json.dumps({"action": "next_frame", "data": {}}))
+            first_confirmation = json.loads(ws1.receive_text())
+            assert first_confirmation["frame"]["winner_key"] == "anon_guest789"
+            assert first_confirmation["next_frame_confirmations"] == ["anon_guest123"]
+
+            _ = json.loads(ws2.receive_text())
+            _ = json.loads(ws2.receive_text())
+
+            ws2.send_text(json.dumps({"action": "next_frame", "data": {}}))
+            next_frame = json.loads(ws2.receive_text())
+            assert next_frame["frame"]["winner_key"] is None
+            assert next_frame["frame"]["opening_turn"] == "anon_guest789"
+            assert next_frame["current_turn"] == "anon_guest789"
+            assert next_frame["next_frame_confirmations"] == []

@@ -20,6 +20,7 @@ class MatchStateProjector:
         players_payload = PlayerModel.payload(
             session.matchroom.players,
             session.frame.scores,
+            session.match.match_scores,
         )
         match_payload = session.match.payload(
             session.matchroom.match_id,
@@ -50,4 +51,5 @@ class MatchStateProjector:
             "history_depth": len(session.frame.history),
             "frame_phase": session.frame.phase.value,
             "is_finished": session.match.is_finished,
+            "next_frame_confirmations": sorted(session.pending_next_frame_confirmations),
         }

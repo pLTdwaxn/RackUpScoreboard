@@ -4,7 +4,7 @@ from scoreboard.engine.rules.messages import ShotMessage
 
 from ..rules import BALL_POINTS
 
-VALID_ACTIONS = {"shot", "undo"}
+VALID_ACTIONS = {"shot", "undo", "concede", "next_frame"}
 VALID_SHOT_FIELDS = {"potted_balls", "foul"}
 
 
@@ -26,6 +26,11 @@ def validate_event(event: dict) -> None:
     if action == "undo":
         if data:
             raise ValueError("Undo action does not accept payload data.")
+        return
+
+    if action in {"concede", "next_frame"}:
+        if data:
+            raise ValueError(f"{action} action does not accept payload data.")
         return
 
     validate_shot_data(data)

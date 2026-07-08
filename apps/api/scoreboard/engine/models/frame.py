@@ -25,14 +25,23 @@ class FramePhase(str, Enum):
 class FrameModel:
     scores: MutableMapping[str, int]
     _current_turn: str = ""
+    _opening_turn: str = ""
+    winner_key: str | None = None
 
-    def __init__(self, scores: MutableMapping[str, int], current_turn: str = "") -> None:
+    def __init__(
+        self,
+        scores: MutableMapping[str, int],
+        current_turn: str = "",
+        opening_turn: str = "",
+    ) -> None:
         self._snooker_calculator = SnookerCalculator()
         self._current_turn = ""
+        self._opening_turn = opening_turn or current_turn
 
         self.current_break = 0
         self.highest_break = 0
         self.status = FrameStatus.READY
+        self.winner_key = None
 
         self.phase = FramePhase.REDS
         self.points_remaining = 147
@@ -48,7 +57,7 @@ class FrameModel:
         self.scores = ObservableScores(dict(scores), self.recalculate_score_context)
 
         # Use the public setter so current-turn changes are also reactive.
-        self.current_turn = current_turn
+        self.current_turn = current_turn or self._opening_turn
 
     @property
     def current_turn(self) -> str:
@@ -58,6 +67,10 @@ class FrameModel:
     def current_turn(self, value: str) -> None:
         self._current_turn = value
         self.recalculate_score_context()
+
+    @property
+    def opening_turn(self) -> str:
+        return self._opening_turn
 
     current_break: int = 0
     highest_break: int = 0
@@ -177,11 +190,14 @@ class FrameModel:
 
     def payload(self) -> dict:
         return {
+            "status": self.status.value,
             "phase": self.phase.value,
             "points_remaining": self.points_remaining,
             "points_gap": self.points_gap(),
             "snookers_required": self.snookers_required,
             "highest_break": self.highest_break if self.highest_break > 0 else None,
+            "opening_turn": self._opening_turn,
+            "winner_key": self.winner_key,
         }
 
 

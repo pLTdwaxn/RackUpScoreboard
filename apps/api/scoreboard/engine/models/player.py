@@ -8,11 +8,15 @@ if TYPE_CHECKING:
 
 class PlayerModel:
     @staticmethod
-    def payload(players: list[Participant], scores: Mapping[str, int]) -> list[dict]:
+    def payload(
+        players: list[Participant],
+        scores: Mapping[str, int],
+        match_scores: Mapping[str, int],
+    ) -> list[dict]:
         return [
             {
                 **player.to_dict(),
-                "match_score": 0,
+                "match_score": match_scores.get(player.session_key, 0),
                 "current_frame_score": scores.get(player.session_key, 0),
                 "highest_break": None,
             }

@@ -9,6 +9,8 @@ from scoreboard.engine.rules.validator import validate_event
         {"action": "shot", "data": {"potted_balls": ["red"], "foul": 0}},
         {"action": "shot", "data": {"potted_balls": [], "foul": 0}},
         {"action": "undo", "data": {}},
+        {"action": "concede", "data": {}},
+        {"action": "next_frame", "data": {}},
     ],
 )
 def test_validate_event_accepts_supported_messages(event):

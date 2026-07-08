@@ -3,6 +3,7 @@ from __future__ import annotations
 from statemachine import State, StateMachine
 from statemachine.exceptions import TransitionNotAllowed
 
+from scoreboard.engine.action_handlers import ConcedeActionHandler, NextFrameActionHandler
 from scoreboard.engine.models.frame import FrameModel
 from scoreboard.engine.models.frame_progression import FrameProgression
 from scoreboard.engine.models.history_manager import HistoryManager
@@ -33,6 +34,7 @@ class MatchSession:
         self._frame_progression = FrameProgression()
         self._state_projector = MatchStateProjector()
         self._phase_machine = FrameStatusStateMachine()
+        self.pending_next_frame_confirmations: set[str] = set()
         normalized_score_keeper = score_keeper if score_keeper in VALID_SCORE_KEEPERS else "opp"
 
         self.matchroom = MatchroomModel(
@@ -41,15 +43,18 @@ class MatchSession:
             score_keeper=normalized_score_keeper,
         )
         self.match = MatchModel()
+        self.match.match_scores = {p1.session_key: 0}
         self.frame = FrameModel(
             scores={p1.session_key: 0},
             current_turn=p1.session_key,
+            opening_turn=p1.session_key,
         )
 
     def add_opponent(self, p2: Participant) -> None:
         if len(self.matchroom.players) < 2:
             self.matchroom.add_player(p2)
             self.frame.scores[p2.session_key] = 0
+            self.match.match_scores[p2.session_key] = 0
 
     def _opponent_key(self, session_key: str) -> str:
         return next(p.session_key for p in self.matchroom.players if p.session_key != session_key)
@@ -134,6 +139,12 @@ class MatchSession:
 
         return True, None
 
+    def _handle_concede_action(self, session_key: str) -> tuple[bool, str | None]:
+        return ConcedeActionHandler().handle(self, session_key)
+
+    def _handle_next_frame_action(self, session_key: str) -> tuple[bool, str | None]:
+        return NextFrameActionHandler().handle(self, session_key)
+
     def process_event(self, session_key: str, event: dict) -> tuple[bool, str | None]:
         try:
             validate_event(event)
@@ -150,6 +161,10 @@ class MatchSession:
                 return self._handle_shot_action(session_key, data)
             case "undo":
                 return self._handle_undo_action()
+            case "concede":
+                return self._handle_concede_action(session_key)
+            case "next_frame":
+                return self._handle_next_frame_action(session_key)
             case _:
                 return False, f"Unsupported action: {action}"
 
