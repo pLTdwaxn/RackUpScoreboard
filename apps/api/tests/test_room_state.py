@@ -50,15 +50,24 @@ def test_add_opponent_adds_second_player_once_only():
     assert "user_42" not in room.frame.scores
 
 
-def test_get_sync_payload_has_expected_shape():
+def test_state_payload_has_expected_shape():
     p1 = VerifiedParticipant(user_id="42", username="RonnieO")
     room = MatchSession(match_id="table_six", p1=p1)
 
-    payload = room.get_sync_payload()
+    payload = room.state_payload()
 
     assert payload["match_id"] == "table_six"
     assert payload["scores"] == {"user_42": 0}
-    assert payload["players"] == [{"key": "user_42", "name": "RonnieO", "type": "verified"}]
+    assert payload["players"] == [
+        {
+            "key": "user_42",
+            "name": "RonnieO",
+            "type": "verified",
+            "match_score": 0,
+            "current_frame_score": 0,
+            "highest_break": None,
+        }
+    ]
 
 
 def test_apply_factual_event_updates_table_state_and_points_remaining():

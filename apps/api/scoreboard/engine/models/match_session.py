@@ -159,12 +159,5 @@ class MatchSession:
             raise ValueError(error)
         return handled
 
-    def get_sync_payload(self) -> dict:
-        return {
-            "match_id": self.matchroom.match_id,
-            "scores": dict(self.frame.scores),
-            "players": [p.to_dict() for p in self.matchroom.players],
-        }
-
     def state_payload(self) -> dict:
         return self._state_projector.state_payload(self)
