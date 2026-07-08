@@ -1,15 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Surface, toast } from "@heroui/react";
 
-import {
-  ConnectedInstance,
-  GameStateMessage,
-  Player,
-  RoomSocketMessage,
-} from "@/types";
+import { ConnectedInstance } from "@/types";
 
 import {
   Controls,
@@ -19,31 +14,25 @@ import {
   MatchroomOverview,
   Menu,
   NewMatch,
+  ThemeToggle,
   TopRow,
 } from ".";
 import { buildScoreboardViewModel } from "./viewModel";
+import { useGameActions } from "./useGameActions";
+import { useRoomSocket } from "./useRoomSocket";
 
 const INSTANCE_STORAGE_KEY = "scoreboard.instance";
 const MATCHROOM_STORAGE_KEY = "scoreboard.matchroom";
 
-function toWebsocketUrl(
-  apiBase: string,
-  query: Record<string, string>,
-): string {
-  const parsed = new URL(apiBase);
-  const protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
-  const params = new URLSearchParams(query);
-  return `${protocol}//${parsed.host}/ws/room/?${params.toString()}`;
-}
-
 export default function Scoreboard() {
   const [instance, setInstance] = useState<ConnectedInstance | null>(null);
   const [matchroomId, setMatchroomId] = useState<string | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [gameState, setGameState] = useState<GameStateMessage | null>(null);
-  const [socketError, setSocketError] = useState<string | null>(null);
   const [hasHydrated, setHasHydrated] = useState(false);
-  const socketRef = useRef<WebSocket | null>(null);
+
+  const { gameState, players, socketError, sendEvent } = useRoomSocket(
+    instance,
+    matchroomId,
+  );
 
   useEffect(() => {
     try {
@@ -62,66 +51,6 @@ export default function Scoreboard() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!instance || !matchroomId) {
-      return;
-    }
-
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8004";
-    const websocketUrl = toWebsocketUrl(apiBase, {
-      match_id: matchroomId,
-      identity_type: "anonymous",
-      player_id: instance.instanceId,
-      display_name: instance.displayName,
-    });
-
-    const socket = new WebSocket(websocketUrl);
-    socketRef.current = socket;
-
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as RoomSocketMessage;
-
-        if (!payload || typeof payload !== "object" || !("type" in payload)) {
-          setSocketError("Received invalid room update.");
-          return;
-        }
-
-        switch (payload.type) {
-          case "error": {
-            setSocketError(payload.message);
-            return;
-          }
-          case "player_status_change": {
-            // Presence events are informational and do not carry state snapshots.
-            return;
-          }
-          case "game_state": {
-            setSocketError(null);
-            setGameState(payload);
-            setPlayers(payload.players);
-            return;
-          }
-          default: {
-            setSocketError("Received invalid room update.");
-            return;
-          }
-        }
-      } catch {
-        setSocketError("Failed to parse room update.");
-      }
-    };
-
-    socket.onerror = () => {
-      setSocketError("Room connection failed.");
-    };
-
-    return () => {
-      socketRef.current = null;
-      socket.close();
-    };
-  }, [instance, matchroomId]);
-
   const handleConnected = (payload: {
     instance: ConnectedInstance;
     matchroomId: string;
@@ -133,66 +62,32 @@ export default function Scoreboard() {
     localStorage.setItem(MATCHROOM_STORAGE_KEY, payload.matchroomId);
     setInstance(payload.instance);
     setMatchroomId(payload.matchroomId);
-    setGameState(null);
-    setSocketError(null);
   };
 
   const resetRoom = () => {
     localStorage.removeItem(MATCHROOM_STORAGE_KEY);
-    setMatchroomId(null);
-    setPlayers([]);
-    setGameState(null);
-    setSocketError(null);
     localStorage.removeItem(INSTANCE_STORAGE_KEY);
+    setMatchroomId(null);
     setInstance(null);
-  };
-
-  const sendEvent = (payload: Record<string, unknown>) => {
-    const socket = socketRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      setSocketError("Room connection not ready.");
-      return;
-    }
-
-    socket.send(JSON.stringify(payload));
-  };
-
-  const sendPot = (ball: string) => {
-    sendEvent({
-      action: "shot",
-      data: {
-        potted_balls: [ball],
-        foul: 0,
-      },
-    });
-  };
-
-  const sendFoul = () => {
-    sendEvent({
-      action: "shot",
-      data: {
-        potted_balls: [],
-        foul: 4,
-      },
-    });
-  };
-
-  const sendEndTurn = () => {
-    sendEvent({
-      action: "shot",
-      data: {
-        potted_balls: [],
-        foul: 0,
-      },
-    });
-  };
-
-  const sendUndo = () => {
-    sendEvent({ action: "undo", data: {} });
   };
 
   const currentPlayerKey =
     instance?.playerKey ?? `anon_${instance?.instanceId ?? ""}`;
+
+  const currentPlayerName =
+    players.find((player) => player.key === currentPlayerKey)?.name ??
+    currentPlayerKey;
+
+  const turnPlayerKey = gameState?.table.current_turn || currentPlayerKey;
+  const turnPlayerName =
+    players.find((player) => player.key === turnPlayerKey)?.name ??
+    currentPlayerName;
+
+  const { sendShot, sendEndTurn, sendUndo } = useGameActions(
+    sendEvent,
+    turnPlayerName,
+  );
+
   const viewModel = buildScoreboardViewModel({
     gameState,
     players,
@@ -204,22 +99,23 @@ export default function Scoreboard() {
 
   return (
     <Surface
-      variant="transparent"
-      className="mx-auto flex h-dvh w-full max-w-md flex-col gap-2 overflow-hidden bg-[var(--background)] p-2 text-[var(--foreground)]"
+      variant="tertiary"
+      className="mx-auto flex h-dvh w-full max-w-md flex-col gap-2 overflow-hidden p-0"
     >
       <TopRow>
         <Menu />
         <MatchroomOverview
           roomReady={viewModel.roomReady}
           matchroomId={matchroomId || ""}
+          match={viewModel.match}
           resetRoom={resetRoom}
         />
-        {/* <MatchLog /> */}
+        <ThemeToggle />
       </TopRow>
       {!instance || !matchroomId ? (
         <NewMatch onConnected={handleConnected} />
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2">
           <MatchOverview
             match={viewModel.match}
             players={viewModel.players}
@@ -240,13 +136,12 @@ export default function Scoreboard() {
           table={viewModel.table}
           scoreKeeper={viewModel.scoreKeeper}
           currentPlayerKey={currentPlayerKey}
-          sendPot={sendPot}
-          sendFoul={sendFoul}
+          sendShot={sendShot}
           sendEndTurn={sendEndTurn}
           sendUndo={sendUndo}
         />
       ) : null}
-      {socketError ? toast.danger(socketError) : null}
+      {socketError ? toast.danger(socketError, { timeout: 1000 }) : null}
     </Surface>
   );
 }

@@ -100,7 +100,7 @@ export default function NewMatch({ onConnected }: NewMatchProps) {
   };
 
   return (
-    <Card variant="transparent" className="w-full max-w-md bg-slate-500">
+    <Card className="w-full max-w-md">
       <Card.Header className="flex-col items-start gap-1">
         <h1>New Match</h1>
       </Card.Header>

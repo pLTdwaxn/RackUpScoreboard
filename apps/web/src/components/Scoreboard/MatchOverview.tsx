@@ -19,12 +19,10 @@ export default function MatchOverview({
   return (
     <Card
       variant="transparent"
-      className="flex flex-col w-full p-0 max-w-md rounded-xl gap-2"
+      className="flex flex-col w-full p-0 max-w-md rounded-3xl gap-2"
     >
       <Card.Header className="items-center uppercase text-sm font-bold tracking-widest">
-        <h2>
-          {match.match_importance} - {match.winning_condition}
-        </h2>
+        <h2>{match.match_importance}</h2>
       </Card.Header>
       <Card.Content className="flex flex-row gap-2">
         {opponent ? <Player player={opponent} /> : null}

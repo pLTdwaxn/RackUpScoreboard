@@ -25,74 +25,56 @@ export default function FrameOverview({
   const myCurrentBreak = isMyTurn ? currentBreak : 0;
   const opponentCurrentBreak = isOpponentTurn ? currentBreak : 0;
 
-  const opponentScoreboardClass = !isMyTurn
-    ? "scoreboard-digital-screen scoreboard-digital-screen-active"
-    : "scoreboard-digital-screen";
-  const activeScoreboardClass = isMyTurn
-    ? "scoreboard-digital-screen scoreboard-digital-screen-active"
-    : "scoreboard-digital-screen";
-
   const OpponentFrameScoreBoard = (
-    <Card variant="transparent" className={opponentScoreboardClass}>
-      <Card.Content className="scoreboard-digital-number-wrap">
-        <span className="scoreboard-digital-number">{opponentFrameScore}</span>
+    <Card variant="default" className="w-full p-2">
+      <Card.Content className="flex flex-col items-center">
+        <span className="score-primary">{opponentFrameScore}</span>
+        <h3 className="score-label">Current Break</h3>
+        <span className="score-secondary">{opponentCurrentBreak}</span>
       </Card.Content>
-      <Card.Footer className="scoreboard-digital-footer">
-        <h3 className="scoreboard-digital-label">Current Break</h3>
-        <p className="scoreboard-digital-break">{opponentCurrentBreak}</p>
-      </Card.Footer>
     </Card>
   );
 
   const MyFrameScoreBoard = (
-    <Card variant="transparent" className={activeScoreboardClass}>
-      <Card.Content className="scoreboard-digital-number-wrap">
-        <span className="scoreboard-digital-number">{myFrameScore}</span>
+    <Card variant="default" className="w-full p-2">
+      <Card.Content className="flex flex-col items-center">
+        <span className="score-primary"> {myFrameScore}</span>
+        <h3 className="score-label">Current Break</h3>
+        <span className="score-secondary">{myCurrentBreak}</span>
       </Card.Content>
-      <Card.Footer className="scoreboard-digital-footer">
-        <h3 className="scoreboard-digital-label">Current Break</h3>
-        <p className="scoreboard-digital-break">{myCurrentBreak}</p>
-      </Card.Footer>
     </Card>
   );
 
   const FrameStats = (
-    <Card
-      variant="transparent"
-      className="scoreboard-frame-stats-card scoreboard-digital-screen"
-    >
-      <Card.Content className="scoreboard-frame-stats-grid">
-        <div className="flex min-w-0 flex-col items-center justify-between gap-1">
-          <h3 className="scoreboard-digital-label">Remaining</h3>
-          <p className="scoreboard-frame-stat-value">
-            {frame.points_remaining}
-          </p>
+    <Card variant="default" className="w-full p-2">
+      <Card.Content className="flex flex-row justify-between">
+        <div className="flex flex-1 flex-col items-center gap-1">
+          <h3 className="score-label">Remaining</h3>
+          <p className="score-secondary">{frame.points_remaining}</p>
         </div>
-        <div className="flex min-w-0 flex-col items-center justify-between gap-1">
-          <h3 className="scoreboard-digital-label">Gap</h3>
-          <p className="scoreboard-frame-stat-value">{frame.points_gap}</p>
+        <div className="flex flex-1 flex-col items-center gap-1">
+          <h3 className="score-label">Gap</h3>
+          <p className="score-secondary">{frame.points_gap}</p>
         </div>
-        <div className="flex min-w-0 flex-col items-center justify-between gap-1">
-          <h3 className="scoreboard-digital-label">Snookers Needed</h3>
-          <p className="scoreboard-frame-stat-value">
-            {frame.snookers_required}
-          </p>
+        <div className="flex flex-1 flex-col items-center gap-1">
+          <h3 className="score-label">Snks Needed</h3>
+          <p className="score-secondary">{frame.snookers_required}</p>
         </div>
       </Card.Content>
     </Card>
   );
 
   const Scoreboard = (
-    <div className="scoreboard-frame-score-grid">
+    <div className="flex flex-row items-center justify-between gap-2">
       {OpponentFrameScoreBoard}
       {MyFrameScoreBoard}
     </div>
   );
 
   return (
-    <div className="scoreboard-frame-root">
-      {FrameStats}
+    <div className="flex flex-col items-stretch gap-2">
       {Scoreboard}
+      {FrameStats}
     </div>
   );
 }

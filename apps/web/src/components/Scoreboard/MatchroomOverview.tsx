@@ -11,16 +11,19 @@ import {
   IconLogout,
   IconQrcode,
 } from "@tabler/icons-react";
+import { Match } from "@/types";
 
 type MatchroomOverviewProps = {
   roomReady: boolean;
   matchroomId: string;
+  match: Match | null;
   resetRoom: () => void;
 };
 
 export default function MatchroomOverview({
   roomReady,
   matchroomId,
+  match,
   resetRoom,
 }: MatchroomOverviewProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,16 +65,22 @@ export default function MatchroomOverview({
     <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
       <Button
         slot="trigger"
-        variant="secondary"
+        variant="ghost"
         className="flex w-auto items-center justify-between"
       >
         <IconQrcode stroke={2} />
-        <span>{roomReady ? "Matchroom" : "Waiting for Opponent..."}</span>
-        <span className="min-w-0 flex-1 truncate font-mono">{matchroomId}</span>
+        {match ? (
+          <span className="ml-2">{match.winning_condition}</span>
+        ) : (
+          <span>
+            {roomReady ? `Matchroom ${matchroomId}` : "Waiting for Opponent..."}
+          </span>
+        )}
+
         {isOpen ? <IconChevronUp stroke={2} /> : <IconChevronDown stroke={2} />}
       </Button>
 
-      <Popover.Content>
+      <Popover.Content placement="bottom" className="w-80">
         <Popover.Dialog className="flex flex-col items-center text-center gap-2 ">
           <p>
             Invite your opponent to join the matchroom by sharing the QR code or
@@ -86,7 +95,7 @@ export default function MatchroomOverview({
                 width={256}
                 height={256}
                 unoptimized={true}
-                className="h-48 w-48 rounded-2xl bg-white p-3"
+                className="h-48 w-48 rounded-2xl  p-3"
               />
             ) : qrCodeError ? (
               <p className="text-sm text-danger">{qrCodeError}</p>

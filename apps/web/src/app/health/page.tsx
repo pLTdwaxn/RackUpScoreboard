@@ -49,7 +49,7 @@ export default async function HealthPage() {
         </CardHeader>
         <CardContent className="gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-sm text-default-500">Connection</span>
+            <span className="text-sm">Connection</span>
             <Chip color={health.ok ? "success" : "danger"} variant="primary">
               {health.ok ? "Online" : "Offline"}
             </Chip>
@@ -58,12 +58,10 @@ export default async function HealthPage() {
           {health.ok ? (
             <div className="space-y-1 text-sm">
               <p>
-                <span className="text-default-500">Service:</span>{" "}
-                {health.service}
+                <span className="">Service:</span> {health.service}
               </p>
               <p>
-                <span className="text-default-500">Status:</span>{" "}
-                {health.status}
+                <span className="">Status:</span> {health.status}
               </p>
             </div>
           ) : (

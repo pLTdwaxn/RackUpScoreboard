@@ -1,8 +1,8 @@
 export { default as Scoreboard } from "./Scoreboard";
+export { default as ThemeToggle } from "./ThemeToggle";
 export { default as NewMatch } from "./NewMatch";
 export { default as Controls } from "./Controls";
 export { default as Player } from "./Player";
-export { default as BallButtons } from "./BallButtons";
 export { default as MatchOverview } from "./MatchOverview";
 export { default as FrameOverview } from "./FrameOverview";
 export { default as MatchroomOverview } from "./MatchroomOverview";

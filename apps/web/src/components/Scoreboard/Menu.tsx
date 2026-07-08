@@ -5,7 +5,7 @@ import { IconDotsFilled } from "@tabler/icons-react";
 export default function Menu() {
   return (
     <Drawer>
-      <Button isIconOnly={true} variant="secondary" className="rounded-full">
+      <Button isIconOnly={true} variant="ghost" className="rounded-full">
         <IconDotsFilled />
       </Button>
       <Drawer.Backdrop variant="blur">

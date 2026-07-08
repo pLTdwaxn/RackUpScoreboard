@@ -2,6 +2,18 @@
 @import "@heroui/react/styles";
 
 :root {
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --background: #fafafa;
+  --foreground: #171717;
+  --scoreboard-screen-bg: #f0f4f0;
+  --scoreboard-screen-border: rgba(74, 120, 14, 0.25);
+  --scoreboard-screen-glow: rgba(74, 120, 14, 0.06);
+  --scoreboard-screen-number: #3a6e0a;
+  --scoreboard-screen-label: #4a6830;
+  --scoreboard-screen-accent: rgba(16, 130, 80, 0.18);
+}
+
+.dark {
   --background: #0a0a0a;
   --foreground: #ededed;
   --scoreboard-screen-bg: #040c06;
@@ -19,14 +31,25 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  min-height: 100%;
+  background: var(--background);
+}
+
 body {
+  min-height: 100%;
   min-height: 100dvh;
   background: var(--background);
   color: var(--foreground);
-  color-scheme: dark;
   font-family: var(--font-sans);
   margin: 0;
   overflow-x: hidden;
+}
+
+.scoreboard-shell {
+  min-height: 100svh;
+  height: 100dvh;
+  padding-bottom: max(0.5rem, var(--safe-area-bottom));
 }
 
 @media (min-width: 640px) {
@@ -48,124 +71,29 @@ label {
   color: var(--foreground);
 }
 
-.scoreboard-frame-root {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  gap: 0.4rem;
-}
-
-.scoreboard-frame-stats-card {
-  flex: 1;
-  border-radius: 1rem;
-  padding: 0.5rem;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-}
-
-.scoreboard-frame-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-  text-align: center;
-}
-
-.scoreboard-digital-screen {
-  width: 100%;
-  min-width: 0;
-  border-radius: 1rem;
-  border: 1px solid var(--scoreboard-screen-border);
-  background: var(--scoreboard-screen-bg);
-  padding: 0.75rem;
-  box-shadow: inset 0 0 28px var(--scoreboard-screen-glow),
-    0 0 18px rgba(0, 0, 0, 0.35);
-}
-
-.scoreboard-digital-screen-active {
-  box-shadow: inset 0 0 28px rgba(132, 204, 22, 0.18),
-    0 0 28px var(--scoreboard-screen-accent);
-  outline: 2px solid rgba(52, 211, 153, 0.9);
-}
-
-.scoreboard-digital-number-wrap {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0;
-}
-
-.scoreboard-digital-number {
-  font-family: var(--font-geist-mono);
-  font-size: clamp(3.25rem, 10vw, 4.5rem);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0.12em;
+/* text-6xl font-bold font-mono */
+.score-primary {
   color: var(--scoreboard-screen-number);
-  text-shadow: 0 0 8px rgba(163, 230, 53, 0.55);
+  font-size: 6rem;
+  font-weight: bold;
+  font-family: var(--font-mono);
+  line-height: 1;
 }
 
-.scoreboard-digital-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  text-align: center;
+/* text-2xl font-bold font-mono */
+.score-secondary {
+  color: var(--scoreboard-screen-number);
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: var(--font-mono);
+  line-height: 0.8;
 }
 
-.scoreboard-digital-label {
-  white-space: nowrap;
-  font-size: 0.64rem;
+/* text-sm text-muted font-mono tracking-wide uppercase */
+.score-label {
+  color: var(--scoreboard-screen-label);
+  font-size: 0.875rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--scoreboard-screen-label);
-}
-
-.scoreboard-digital-break {
-  font-family: var(--font-geist-mono);
-  font-size: clamp(1.25rem, 4vw, 2.25rem);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--scoreboard-screen-label);
-}
-
-.scoreboard-frame-stat-panel {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.35rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--scoreboard-screen-border);
-  background: color-mix(in oklab, var(--scoreboard-screen-bg) 90%, black 10%);
-  padding: 0.5rem;
-  box-shadow: inset 0 0 16px rgba(132, 204, 22, 0.1);
-}
-
-.scoreboard-frame-stat-value {
-  font-family: var(--font-geist-mono);
-  font-size: clamp(1.25rem, 5vw, 1.75rem);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 0.1em;
-  color: var(--scoreboard-screen-number);
-  text-shadow: 0 0 6px rgba(163, 230, 53, 0.4);
-}
-
-.scoreboard-frame-score-grid {
-  display: grid;
-  width: 100%;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-@media (min-width: 640px) {
-  .scoreboard-frame-root {
-    gap: 1rem;
-  }
-
-  .scoreboard-digital-label {
-    font-size: 0.84rem;
-  }
 }

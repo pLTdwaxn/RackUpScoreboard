@@ -4,7 +4,7 @@ export const DEFAULT_MATCH: Match = {
   id: "",
   name: "",
   frames_to_win: null,
-  winning_condition: "Open frame",
+  winning_condition: "Open Frames",
   match_importance: "Practice Match",
   highest_break: null,
 };
