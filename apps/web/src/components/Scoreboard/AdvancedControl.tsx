@@ -1,20 +1,12 @@
 import type { ReactNode } from "react";
 
-import { Badge, Button, ButtonGroup } from "@heroui/react";
-import { IconChevronsDown, IconCheck } from "@tabler/icons-react";
+import { Badge, Button } from "@heroui/react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 
 import { TableState } from "@/types";
 
 import ControlPanelLayout from "./ControlPanelLayout";
-
-type BallName =
-  | "red"
-  | "yellow"
-  | "green"
-  | "brown"
-  | "blue"
-  | "pink"
-  | "black";
+import { BALL_BY_NAME, BALL_NAMES, BallName } from "./controlPanelShared";
 
 const BALL_CLASS: Record<BallName, string> = {
   red: "bg-gradient-to-br from-red-300 to-red-500 hover:from-red-400 hover:to-red-600",
@@ -30,15 +22,7 @@ const BALL_CLASS: Record<BallName, string> = {
     "bg-gradient-to-br from-slate-700 to-slate-950 hover:from-slate-800 hover:to-black",
 };
 
-const ALL_BALLS: BallName[] = [
-  "red",
-  "yellow",
-  "green",
-  "brown",
-  "blue",
-  "pink",
-  "black",
-];
+const ALL_BALLS = BALL_NAMES;
 
 function isBallLegal(
   ball: BallName,
@@ -68,9 +52,10 @@ type AdvancedBallRailProps = {
   canKeepScore: boolean;
   redSelections: number;
   selectedBalls: BallName[];
-  foulBall?: BallName | null;
   onBallTap: (ball: BallName) => void;
   showFoulPoints?: boolean;
+  foulMode: boolean;
+  comboIsFoul?: boolean;
 };
 
 export function AdvancedBallRail({
@@ -80,9 +65,9 @@ export function AdvancedBallRail({
   canKeepScore,
   redSelections,
   selectedBalls,
-  foulBall,
   onBallTap,
-  showFoulPoints,
+  foulMode,
+  comboIsFoul,
 }: AdvancedBallRailProps) {
   const selectedBallCounts = selectedBalls.reduce<Record<string, number>>(
     (acc, ball) => {
@@ -108,25 +93,54 @@ export function AdvancedBallRail({
             : !coloursOnTable[ball];
         const isDisabled = !canKeepScore || unavailable;
 
-        const badgeColor = picked
-          ? legal
-            ? "success"
-            : "danger"
-          : unavailable
-            ? "default"
-            : legal
-              ? "success"
-              : "warning";
+        const badgeColor = () => {
+          if (foulMode) {
+            if (picked) {
+              return "danger";
+            }
+            return "warning";
+          }
 
-        const foulPoints =
-          ball === "blue" ? 5 : ball === "pink" ? 6 : ball === "black" ? 7 : 4;
-        const badgeLabel = showFoulPoints
-          ? ball === foulBall
-            ? foulPoints
-            : !legal
-              ? 4
-              : ""
-          : "";
+          if (comboIsFoul) {
+            if (picked) {
+              return "danger";
+            }
+            return "warning";
+          }
+
+          if (picked) {
+            return legal ? "accent" : "danger";
+          }
+
+          if (unavailable) {
+            return "default";
+          }
+
+          return legal ? "success" : "warning";
+        };
+
+        const foulPoints = BALL_BY_NAME[ball].penaltyPoints;
+        const potPoints = BALL_BY_NAME[ball].points;
+
+        const badgeLabel = () => {
+          if (foulMode) {
+            return foulPoints;
+          }
+
+          if (comboIsFoul) {
+            return foulPoints;
+          }
+
+          if (picked) {
+            return legal ? potPoints : foulPoints;
+          }
+
+          if (unavailable) {
+            return "";
+          }
+
+          return legal ? potPoints : foulPoints;
+        };
 
         return (
           <Badge.Anchor key={ball}>
@@ -145,9 +159,9 @@ export function AdvancedBallRail({
               className="font-bold"
               placement="bottom-right"
               size="sm"
-              color={badgeColor}
+              color={badgeColor()}
             >
-              {badgeLabel}
+              {badgeLabel()}
             </Badge>
           </Badge.Anchor>
         );
@@ -159,21 +173,18 @@ export function AdvancedBallRail({
 type AdvancedControlProps = {
   messageRow: ReactNode;
   ballRow: ReactNode;
-  redsRow: ReactNode;
   actionsRow: ReactNode;
 };
 
 export default function AdvancedControl({
   messageRow,
   ballRow,
-  redsRow,
   actionsRow,
 }: AdvancedControlProps) {
   return (
     <ControlPanelLayout
       messageRow={messageRow}
       ballRow={ballRow}
-      redsRow={redsRow}
       actionsRow={actionsRow}
     />
   );
@@ -181,60 +192,54 @@ export default function AdvancedControl({
 
 export type AdvancedBottomActionsProps = {
   canKeepScore: boolean;
-  selectionMode: "pots" | "foul";
-  comboIsFoul: boolean;
+  foulMode: boolean;
   hasSelectedBalls: boolean;
   onExitAdvancedMode: () => void;
-  onChangeSelectionMode: (mode: "pots" | "foul") => void;
+  onChangeFoulMode: (isFoulMode: boolean) => void;
   onSubmit: () => void;
 };
 
 export function AdvancedBottomActions({
   canKeepScore,
-  selectionMode,
-  comboIsFoul,
+  foulMode,
   hasSelectedBalls,
   onExitAdvancedMode,
-  onChangeSelectionMode,
+  onChangeFoulMode,
   onSubmit,
 }: AdvancedBottomActionsProps) {
   return (
     <div className="flex w-full flex-row items-center justify-between gap-4">
-      <Button
-        isIconOnly
-        variant={selectionMode === "foul" || comboIsFoul ? "danger" : "primary"}
-        isDisabled={!canKeepScore || !hasSelectedBalls}
-        onPress={onSubmit}
-        size="sm"
-      >
-        <IconCheck stroke={2} />
-      </Button>
-
-      <ButtonGroup variant="secondary" size="sm">
+      <div>
         <Button
-          variant={selectionMode === "pots" ? "primary" : "secondary"}
-          onPress={() => onChangeSelectionMode("pots")}
+          variant={foulMode ? "danger" : "danger-soft"}
+          onPress={() => {
+            onChangeFoulMode(!foulMode);
+          }}
+          size="sm"
         >
-          Pot
+          {foulMode ? "Foul Declaring On" : "Foul Declaring Off"}
+        </Button>
+      </div>
+      <div></div>
+      <div className="flex flex-wrap gap-1">
+        <Button
+          isIconOnly
+          variant={foulMode ? "danger" : "primary"}
+          isDisabled={!canKeepScore || !hasSelectedBalls}
+          onPress={onSubmit}
+          size="sm"
+        >
+          <IconCheck stroke={2} />
         </Button>
         <Button
-          variant={
-            selectionMode === "foul" || comboIsFoul ? "danger" : "danger-soft"
-          }
-          onPress={() => onChangeSelectionMode("foul")}
+          isIconOnly
+          variant="secondary"
+          onPress={onExitAdvancedMode}
+          size="sm"
         >
-          Foul
+          <IconX stroke={2} />
         </Button>
-      </ButtonGroup>
-
-      <Button
-        isIconOnly
-        variant="secondary"
-        onPress={onExitAdvancedMode}
-        size="sm"
-      >
-        <IconChevronsDown stroke={2} />
-      </Button>
+      </div>
     </div>
   );
 }

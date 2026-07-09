@@ -3,24 +3,16 @@ import type { ReactNode } from "react";
 import { Badge, Button, ButtonGroup } from "@heroui/react";
 import {
   IconArrowBackUp,
+  IconAdjustmentsAlt,
+  IconArrowsRightLeft,
   IconBan,
-  IconChevronsUp,
   IconFlagFilled,
-  IconRefresh,
 } from "@tabler/icons-react";
 
 import { TableState } from "@/types";
 
 import ControlPanelLayout from "./ControlPanelLayout";
-
-type BallName =
-  | "red"
-  | "yellow"
-  | "green"
-  | "brown"
-  | "blue"
-  | "pink"
-  | "black";
+import { BALL_BY_NAME, BALL_NAMES, BallName } from "./controlPanelShared";
 
 const BALL_CLASS: Record<BallName, string> = {
   red: "bg-gradient-to-br from-red-300 to-red-500 hover:from-red-400 hover:to-red-600",
@@ -36,15 +28,7 @@ const BALL_CLASS: Record<BallName, string> = {
     "bg-gradient-to-br from-slate-700 to-slate-950 hover:from-slate-800 hover:to-black",
 };
 
-const ALL_BALLS: BallName[] = [
-  "red",
-  "yellow",
-  "green",
-  "brown",
-  "blue",
-  "pink",
-  "black",
-];
+const ALL_BALLS = BALL_NAMES;
 
 function isBallLegal(
   ball: BallName,
@@ -115,6 +99,7 @@ export function SimpleBallRail({
             : legal
               ? "success"
               : "warning";
+        const penaltyPoints = BALL_BY_NAME[ball].penaltyPoints;
 
         return (
           <Badge.Anchor key={ball}>
@@ -135,7 +120,7 @@ export function SimpleBallRail({
               size="sm"
               color={badgeColor}
             >
-              {picked && !legal ? 4 : ""}
+              {picked && !legal ? penaltyPoints : ""}
             </Badge>
           </Badge.Anchor>
         );
@@ -189,7 +174,7 @@ export function SimpleBottomActions({
 
       <ButtonGroup variant="secondary" size="sm" className="mb-0">
         <Button isIconOnly isDisabled={!canKeepScore} onPress={onEndTurn}>
-          <IconRefresh stroke={2} />
+          <IconArrowsRightLeft stroke={2} />
         </Button>
         <Button isIconOnly size="sm" onPress={onUndo}>
           <ButtonGroup.Separator />
@@ -213,7 +198,7 @@ export function SimpleBottomActions({
         onPress={onEnterAdvancedMode}
         size="sm"
       >
-        <IconChevronsUp stroke={2} />
+        <IconAdjustmentsAlt stroke={2} />
       </Button>
     </div>
   );

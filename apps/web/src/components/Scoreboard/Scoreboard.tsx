@@ -127,23 +127,25 @@ export default function Scoreboard() {
             table={viewModel.table}
           />
           <MatchLog />
+          <Controls
+            frameStatus={viewModel.frame.status}
+            frameWinnerKey={viewModel.frame.winner_key}
+            nextFrameConfirmations={gameState?.next_frame_confirmations ?? []}
+            table={viewModel.table}
+            scoreKeeper={viewModel.scoreKeeper}
+            currentPlayerKey={currentPlayerKey}
+            sendShot={sendShot}
+            sendEndTurn={sendEndTurn}
+            sendUndo={sendUndo}
+            sendConcede={sendConcede}
+            sendNextFrame={sendNextFrame}
+          />
         </div>
       )}
 
-      {viewModel.roomReady ? (
-        <Controls
-          frameStatus={viewModel.frame.status}
-          nextFrameConfirmations={gameState?.next_frame_confirmations ?? []}
-          table={viewModel.table}
-          scoreKeeper={viewModel.scoreKeeper}
-          currentPlayerKey={currentPlayerKey}
-          sendShot={sendShot}
-          sendEndTurn={sendEndTurn}
-          sendUndo={sendUndo}
-          sendConcede={sendConcede}
-          sendNextFrame={sendNextFrame}
-        />
-      ) : null}
+      {/* {viewModel.roomReady ? (
+
+      ) : null} */}
       {socketError ? toast.danger(socketError, { timeout: 1000 }) : null}
     </Surface>
   );
