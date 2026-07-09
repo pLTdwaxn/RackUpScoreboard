@@ -16,7 +16,7 @@ class FrameProgression:
         if colour == "black" and frame.points_gap() == 0:
             frame.respot_black()
         else:
-            frame.finish()
+            frame.finish_with_resolved_winner()
 
     def _advance_after_turn_change(self, frame: FrameModel) -> None:
         if frame.reds_remaining > 0:
@@ -37,7 +37,7 @@ class FrameProgression:
             else:
                 self._finish_or_respot_black(frame, frame.object_ball)
         elif frame.phase == FramePhase.RESPOTTED_BLACK:
-            frame.finish()
+            frame.finish_with_resolved_winner()
 
     def process_shot(
         self,
@@ -95,8 +95,6 @@ class FrameProgression:
         next_colour = self.remaining_colour_after(frame, colour)
         if next_colour:
             frame.set_object_ball(next_colour)
-            if next_colour == "black" and frame.points_gap() > 7:
-                frame.finish()
         else:
             self._finish_or_respot_black(frame, colour)
 
@@ -132,11 +130,11 @@ class FrameProgression:
                 if frame.points_gap() == 0:
                     frame.respot_black()
                     return
-                frame.finish()
+                frame.finish_with_resolved_winner()
                 return
 
             if frame.phase == FramePhase.RESPOTTED_BLACK:
-                frame.finish()
+                frame.finish_with_resolved_winner()
                 return
 
         frame.switch_turn()

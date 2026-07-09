@@ -5,6 +5,24 @@ from scoreboard.engine.models.participant import (
 )
 
 
+def apply_shot(room: MatchSession, session_key: str, potted_balls: list[str], foul: int = 0) -> None:
+    actor_key = session_key
+    if (
+        room.matchroom.score_keeper == "opp"
+        and len(room.matchroom.players) >= 2
+        and room.frame.current_turn == actor_key
+    ):
+        player_keys = [player.session_key for player in room.matchroom.players]
+        actor_key = next((key for key in player_keys if key != session_key), session_key)
+
+    handled, error = room.process_event(
+        actor_key,
+        {"action": "shot", "data": {"potted_balls": potted_balls, "foul": foul}},
+    )
+    assert handled is True
+    assert error is None
+
+
 def test_match_room_initializes_with_first_player_state():
     p1 = AnonymousParticipant(guest_slug="guest123", nickname="CasualRonnie")
     room = MatchSession(match_id="table_one", p1=p1)
@@ -76,10 +94,7 @@ def test_apply_factual_event_updates_table_state_and_points_remaining():
     room = MatchSession(match_id="table_seven", p1=p1)
     room.add_opponent(p2)
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"player": "player1", "potted": True, "potted_balls": ["red"], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", ["red"], foul=0)
 
     assert room.frame.scores["anon_guest123"] == 1
     assert room.frame.reds_remaining == 14
@@ -87,10 +102,7 @@ def test_apply_factual_event_updates_table_state_and_points_remaining():
     assert room.frame.points_remaining == 146
     assert len(room.frame.history) == 1
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"player": "player1", "potted": True, "potted_balls": ["blue"], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", ["blue"], foul=0)
 
     assert room.frame.scores["anon_guest123"] == 6
     assert room.frame.colours_on_table["blue"] is True
@@ -105,17 +117,11 @@ def test_points_remaining_drops_after_miss_on_colour_turn():
     room = MatchSession(match_id="table_miss", p1=p1)
     room.add_opponent(p2)
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"player": "player1", "potted": True, "potted_balls": ["red"], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", ["red"], foul=0)
     assert room.frame.points_remaining == 146
     assert room.frame.object_ball == "colour"
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"player": "player1", "potted": False, "potted_balls": [], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", [], foul=0)
     assert room.frame.current_turn == "anon_guest789"
     assert room.frame.object_ball == "red"
     assert room.frame.points_remaining == 139
@@ -127,15 +133,7 @@ def test_apply_factual_event_records_foul_and_switches_turn():
     room = MatchSession(match_id="table_eight", p1=p1)
     room.add_opponent(p2)
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {
-            "player": "player1",
-            "potted": True,
-            "potted_balls": ["red", "pink"],
-            "foul": 6,
-        },
-    )
+    apply_shot(room, "anon_guest123", ["red", "pink"], foul=6)
 
     assert room.frame.scores["anon_guest789"] == 6
     assert room.frame.current_turn == "anon_guest789"
@@ -151,18 +149,9 @@ def test_colour_is_respotted_when_reds_remain():
     room = MatchSession(match_id="table_respot", p1=p1)
     room.add_opponent(p2)
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"potted": True, "potted_balls": ["red"], "foul": 0},
-    )
-    room.apply_factual_event(
-        "anon_guest123",
-        {"potted": True, "potted_balls": ["brown"], "foul": 0},
-    )
-    room.apply_factual_event(
-        "anon_guest123",
-        {"potted": True, "potted_balls": ["red"], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", ["red"], foul=0)
+    apply_shot(room, "anon_guest123", ["brown"], foul=0)
+    apply_shot(room, "anon_guest123", ["red"], foul=0)
 
     assert room.frame.object_ball == "colour"
     assert room.frame.colours_on_table["brown"] is True
@@ -178,17 +167,11 @@ def test_last_red_then_black_is_legal_and_starts_colour_sequence():
     room.frame.reds_remaining = 1
     room.frame.object_ball = "red"
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"potted": True, "potted_balls": ["red"], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", ["red"], foul=0)
     assert room.frame.reds_remaining == 0
     assert room.frame.object_ball == "colour"
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"potted": True, "potted_balls": ["black"], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", ["black"], foul=0)
 
     assert room.frame.scores["anon_guest123"] == 8
     assert room.frame.scores["anon_guest789"] == 0
@@ -200,14 +183,13 @@ def test_undo_last_event_restores_previous_state():
     p1 = AnonymousParticipant(guest_slug="guest123", nickname="CasualRonnie")
     room = MatchSession(match_id="table_nine", p1=p1)
 
-    room.apply_factual_event(
-        "anon_guest123",
-        {"player": "player1", "potted": True, "potted_balls": ["red"], "foul": 0},
-    )
+    apply_shot(room, "anon_guest123", ["red"], foul=0)
     assert room.frame.scores["anon_guest123"] == 1
     assert room.frame.object_ball == "colour"
 
-    assert room.undo_last_event() is True
+    handled, error = room.process_event("anon_guest123", {"action": "undo", "data": {}})
+    assert handled is True
+    assert error is None
     assert room.frame.scores["anon_guest123"] == 0
     assert room.frame.reds_remaining == 15
     assert room.frame.object_ball == "red"
@@ -275,3 +257,70 @@ def test_snookers_required_uses_four_point_baseline_when_no_reds_remain():
 
     assert room.frame.points_remaining == 6
     assert room.frame.snookers_required == 9
+
+
+def test_apply_factual_event_finishing_frame_sets_winner_and_match_score():
+    p1 = AnonymousParticipant(guest_slug="guest123", nickname="CasualRonnie")
+    p2 = AnonymousParticipant(guest_slug="guest789", nickname="CasualJudd")
+    room = MatchSession(match_id="table_finish_score", p1=p1)
+    room.add_opponent(p2)
+
+    room.frame.phase = room.frame.phase.__class__.COLOURS
+    room.frame.reds_remaining = 0
+    room.frame.object_ball = "black"
+    room.frame.colours_on_table = {
+        "yellow": False,
+        "green": False,
+        "brown": False,
+        "blue": False,
+        "pink": False,
+        "black": True,
+    }
+    room.frame.scores["anon_guest123"] = 10
+    room.frame.scores["anon_guest789"] = 0
+
+    apply_shot(room, "anon_guest123", ["black"], foul=0)
+
+    assert room.frame.status.value == "finished"
+    assert room.frame.winner_key == "anon_guest123"
+    assert room.match.match_scores["anon_guest123"] == 1
+
+
+def test_next_frame_succeeds_after_natural_finish_with_resolved_winner():
+    p1 = AnonymousParticipant(guest_slug="guest123", nickname="CasualRonnie")
+    p2 = AnonymousParticipant(guest_slug="guest789", nickname="CasualJudd")
+    room = MatchSession(match_id="table_finish_next", p1=p1)
+    room.add_opponent(p2)
+
+    room.frame.phase = room.frame.phase.__class__.COLOURS
+    room.frame.reds_remaining = 0
+    room.frame.object_ball = "black"
+    room.frame.colours_on_table = {
+        "yellow": False,
+        "green": False,
+        "brown": False,
+        "blue": False,
+        "pink": False,
+        "black": True,
+    }
+    room.frame.scores["anon_guest123"] = 10
+    room.frame.scores["anon_guest789"] = 0
+
+    handled, error = room.process_event(
+        "anon_guest789",
+        {"action": "shot", "data": {"potted_balls": ["black"], "foul": 0}},
+    )
+    assert handled is True
+    assert error is None
+    assert room.frame.winner_key == "anon_guest123"
+
+    handled, error = room.process_event("anon_guest123", {"action": "next_frame", "data": {}})
+    assert handled is True
+    assert error is None
+    assert room.pending_next_frame_confirmations == {"anon_guest123"}
+
+    handled, error = room.process_event("anon_guest789", {"action": "next_frame", "data": {}})
+    assert handled is True
+    assert error is None
+    assert room.frame.winner_key is None
+    assert room.pending_next_frame_confirmations == set()

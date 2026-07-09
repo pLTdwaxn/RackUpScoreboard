@@ -87,6 +87,7 @@ def test_process_shot_last_black_in_colours_with_gap_finishes_frame():
     FrameProgression().process_shot(frame, ("black",), foul_points=0)
 
     assert frame.status == FrameStatus.FINISHED
+    assert frame.winner_key == "p1"
 
 
 def test_process_non_pot_advances_to_next_colour_in_colours_phase():
@@ -138,6 +139,7 @@ def test_process_non_pot_in_respotted_black_phase_finishes_frame():
     FrameProgression().process_non_pot(frame, ())
 
     assert frame.status == FrameStatus.FINISHED
+    assert frame.winner_key is None
 
 
 def test_process_foul_on_black_in_colours_with_tie_respots_without_switching_turn():
@@ -168,6 +170,7 @@ def test_process_foul_on_black_in_colours_with_gap_finishes_without_switching_tu
     FrameProgression().process_foul(frame, (), foul_points=4)
 
     assert frame.status == FrameStatus.FINISHED
+    assert frame.winner_key == "p2"
     assert frame.current_turn == "p1"
 
 
@@ -227,7 +230,7 @@ def test_process_shot_specific_colour_mismatch_is_foul():
     assert frame.object_ball == "red"
 
 
-def test_process_shot_sets_black_then_finishes_when_gap_exceeds_seven():
+def test_process_shot_non_pot_on_final_black_then_finishes_when_gap_exceeds_seven():
     frame = make_frame()
     frame.phase = FramePhase.COLOURS
     frame.reds_remaining = 0
@@ -244,9 +247,11 @@ def test_process_shot_sets_black_then_finishes_when_gap_exceeds_seven():
     }
 
     FrameProgression().process_shot(frame, ("pink",), foul_points=0)
+    FrameProgression().process_non_pot(frame, ())
 
     assert frame.object_ball == "black"
     assert frame.status == FrameStatus.FINISHED
+    assert frame.winner_key == "p1"
 
 
 def test_process_foul_on_black_in_respotted_black_phase_finishes_immediately():
@@ -258,4 +263,5 @@ def test_process_foul_on_black_in_respotted_black_phase_finishes_immediately():
     FrameProgression().process_foul(frame, (), foul_points=4)
 
     assert frame.status == FrameStatus.FINISHED
+    assert frame.winner_key == "p2"
     assert frame.current_turn == "p1"

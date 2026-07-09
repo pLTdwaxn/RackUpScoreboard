@@ -119,6 +119,20 @@ class FrameModel:
     def finish(self) -> None:
         self.status = FrameStatus.FINISHED
 
+    def determine_winner_key(self) -> str | None:
+        if not self.scores:
+            return None
+
+        highest_score = max(self.scores.values())
+        leaders = [player_key for player_key, score in self.scores.items() if score == highest_score]
+        if len(leaders) != 1:
+            return None
+        return leaders[0]
+
+    def finish_with_resolved_winner(self) -> None:
+        self.status = FrameStatus.FINISHED
+        self.winner_key = self.determine_winner_key()
+
     def respot_black(self) -> None:
         self.phase = FramePhase.RESPOTTED_BLACK
         self.object_ball = "black"
