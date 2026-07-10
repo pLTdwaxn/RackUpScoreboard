@@ -70,7 +70,9 @@ export default function MatchroomOverview({
       >
         <IconQrcode stroke={2} />
         {match ? (
-          <span className="ml-2">{match.winning_condition}</span>
+          <>
+            <span className="ml-2">{match.match_importance}</span>
+          </>
         ) : (
           <span>
             {roomReady ? `Matchroom ${matchroomId}` : "Waiting for Opponent..."}

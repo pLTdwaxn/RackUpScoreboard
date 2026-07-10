@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 import { Badge, Button } from "@heroui/react";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -53,6 +53,7 @@ type AdvancedBallRailProps = {
   redSelections: number;
   selectedBalls: BallName[];
   onBallTap: (ball: BallName) => void;
+  onRedLongPress: () => void;
   showFoulPoints?: boolean;
   foulMode: boolean;
   comboIsFoul?: boolean;
@@ -66,9 +67,38 @@ export function AdvancedBallRail({
   redSelections,
   selectedBalls,
   onBallTap,
+  onRedLongPress,
   foulMode,
   comboIsFoul,
 }: AdvancedBallRailProps) {
+  const redPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const redLongPressTriggeredRef = useRef(false);
+
+  const clearRedPressTimer = () => {
+    if (redPressTimerRef.current) {
+      clearTimeout(redPressTimerRef.current);
+      redPressTimerRef.current = null;
+    }
+  };
+
+  const handleRedPointerDown = () => {
+    redLongPressTriggeredRef.current = false;
+    clearRedPressTimer();
+    redPressTimerRef.current = setTimeout(() => {
+      redLongPressTriggeredRef.current = true;
+      onRedLongPress();
+    }, 450);
+  };
+
+  const handleBallPress = (ball: BallName) => {
+    if (ball === "red" && redLongPressTriggeredRef.current) {
+      redLongPressTriggeredRef.current = false;
+      return;
+    }
+
+    onBallTap(ball);
+  };
+
   const selectedBallCounts = selectedBalls.reduce<Record<string, number>>(
     (acc, ball) => {
       acc[ball] = (acc[ball] ?? 0) + 1;
@@ -86,7 +116,10 @@ export function AdvancedBallRail({
           redsRemaining,
           coloursOnTable,
         );
-        const picked = (selectedBallCounts[ball] ?? 0) > 0;
+        const picked =
+          ball === "red"
+            ? redSelections > 0
+            : (selectedBallCounts[ball] ?? 0) > 0;
         const unavailable =
           ball === "red"
             ? redsRemaining <= 0 || redSelections >= redsRemaining
@@ -148,12 +181,16 @@ export function AdvancedBallRail({
               aria-label={ball}
               isIconOnly
               isDisabled={isDisabled}
-              onPress={() => onBallTap(ball)}
+              onPress={() => handleBallPress(ball)}
+              onPointerDown={ball === "red" ? handleRedPointerDown : undefined}
+              onPointerUp={ball === "red" ? clearRedPressTimer : undefined}
+              onPointerLeave={ball === "red" ? clearRedPressTimer : undefined}
+              onPointerCancel={ball === "red" ? clearRedPressTimer : undefined}
               size="lg"
               type="button"
               className={BALL_CLASS[ball]}
             >
-              {ball === "red" && redsRemaining}
+              {ball === "red" ? redSelections : null}
             </Button>
             <Badge
               className="font-bold"
@@ -193,6 +230,7 @@ export default function AdvancedControl({
 export type AdvancedBottomActionsProps = {
   canKeepScore: boolean;
   foulMode: boolean;
+  comboIsFoul: boolean;
   hasSelectedBalls: boolean;
   onExitAdvancedMode: () => void;
   onChangeFoulMode: (isFoulMode: boolean) => void;
@@ -202,44 +240,48 @@ export type AdvancedBottomActionsProps = {
 export function AdvancedBottomActions({
   canKeepScore,
   foulMode,
+  comboIsFoul,
   hasSelectedBalls,
   onExitAdvancedMode,
   onChangeFoulMode,
   onSubmit,
 }: AdvancedBottomActionsProps) {
   return (
-    <div className="flex w-full flex-row items-center justify-between gap-4">
-      <div>
-        <Button
-          variant={foulMode ? "danger" : "danger-soft"}
-          onPress={() => {
-            onChangeFoulMode(!foulMode);
-          }}
-          size="sm"
-        >
-          {foulMode ? "Foul Declaring On" : "Foul Declaring Off"}
-        </Button>
+    console.log("comboIsFoul:", comboIsFoul),
+    (
+      <div className="flex w-full flex-row items-center justify-between gap-4">
+        <div>
+          <Button
+            variant={foulMode ? "danger" : "danger-soft"}
+            onPress={() => {
+              onChangeFoulMode(!foulMode);
+            }}
+            size="sm"
+          >
+            {foulMode ? "Foul Declaring On" : "Foul Declaring Off"}
+          </Button>
+        </div>
+        <div></div>
+        <div className="flex flex-wrap gap-1">
+          <Button
+            isIconOnly
+            variant={foulMode || comboIsFoul ? "danger" : "primary"}
+            isDisabled={!canKeepScore || !hasSelectedBalls}
+            onPress={onSubmit}
+            size="sm"
+          >
+            <IconCheck stroke={2} />
+          </Button>
+          <Button
+            isIconOnly
+            variant="secondary"
+            onPress={onExitAdvancedMode}
+            size="sm"
+          >
+            <IconX stroke={2} />
+          </Button>
+        </div>
       </div>
-      <div></div>
-      <div className="flex flex-wrap gap-1">
-        <Button
-          isIconOnly
-          variant={foulMode ? "danger" : "primary"}
-          isDisabled={!canKeepScore || !hasSelectedBalls}
-          onPress={onSubmit}
-          size="sm"
-        >
-          <IconCheck stroke={2} />
-        </Button>
-        <Button
-          isIconOnly
-          variant="secondary"
-          onPress={onExitAdvancedMode}
-          size="sm"
-        >
-          <IconX stroke={2} />
-        </Button>
-      </div>
-    </div>
+    )
   );
 }

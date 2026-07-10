@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import {
-  ConnectedInstance,
-  GameStateMessage,
-  Player,
-  RoomSocketMessage,
-} from "@/types";
+import { GameStateMessage, Player, RoomSocketMessage } from "@/types";
 
 function toWebsocketUrl(
   apiBase: string,
@@ -18,7 +13,7 @@ function toWebsocketUrl(
 }
 
 export function useRoomSocket(
-  instance: ConnectedInstance | null,
+  playerKey: string,
   matchroomId: string | null,
 ): {
   gameState: GameStateMessage | null;
@@ -32,16 +27,14 @@ export function useRoomSocket(
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (!instance || !matchroomId) {
+    if (!matchroomId) {
       return;
     }
 
     const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8004";
     const websocketUrl = toWebsocketUrl(apiBase, {
-      match_id: matchroomId,
-      identity_type: "anonymous",
-      player_id: instance.instanceId,
-      display_name: instance.displayName,
+      matchroom_id: matchroomId,
+      session_key: playerKey,
     });
 
     const socket = new WebSocket(websocketUrl);
@@ -50,7 +43,6 @@ export function useRoomSocket(
     socket.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data) as RoomSocketMessage;
-        console.log("Received room update:", payload);
 
         if (!payload || typeof payload !== "object" || !("type" in payload)) {
           setSocketError("Received invalid room update.");
@@ -93,7 +85,7 @@ export function useRoomSocket(
       setPlayers([]);
       setSocketError(null);
     };
-  }, [instance, matchroomId]);
+  }, [matchroomId, playerKey]);
 
   const sendEvent = (payload: Record<string, unknown>) => {
     const socket = socketRef.current;
@@ -105,9 +97,9 @@ export function useRoomSocket(
   };
 
   return {
-    gameState: instance && matchroomId ? gameState : null,
-    players: instance && matchroomId ? players : [],
-    socketError: instance && matchroomId ? socketError : null,
+    gameState: matchroomId ? gameState : null,
+    players: matchroomId ? players : [],
+    socketError: matchroomId ? socketError : null,
     sendEvent,
   };
 }

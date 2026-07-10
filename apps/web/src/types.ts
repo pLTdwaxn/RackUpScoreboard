@@ -1,9 +1,12 @@
 export type GameStateMessage = {
   type: "game_state";
+  matchroom: Matchroom;
   players: Player[];
-  table: TableState;
+  // table: TableState;
+  scores: Record<string, number>;
+  match_scores: Record<string, number>;
   match: Match;
-  frame: Frame;
+  current_frame: Frame;
   score_keeper: "self" | "opp" | "ref" | "any";
   history_depth?: number;
   next_frame_confirmations?: string[];
@@ -34,18 +37,31 @@ export type TableState = {
   points_remaining: number;
 };
 
+export type Matchroom = {
+  id: string;
+  roomCode: string;
+  clubId: string;
+  scoreKeepingMode: "self" | "opp" | "ref" | "any";
+  status: "pending" | "active" | "finished";
+};
+
 export type Match = {
   id: string;
   name: string;
   frames_to_win: number | null;
-  winning_condition: string;
   match_importance: string;
   highest_break: number | null;
 };
 
 export type Frame = {
   status: "ready" | "active" | "finished";
+  scores: Record<string, number>;
+  current_turn: string;
+  current_break: number;
   points_remaining: number;
+  reds_remaining: number;
+  colours_on_table: Record<string, boolean>;
+  object_ball: string;
   points_gap: number;
   snookers_required: number;
   highest_break: number | null;
@@ -53,7 +69,7 @@ export type Frame = {
 };
 
 export type Player = {
-  key: string;
+  session_key: string;
   name: string;
   type: string;
   match_score: number;
@@ -64,8 +80,9 @@ export type Player = {
 
 type Decoration = "defending_champion" | "title_challenger";
 
-export type ConnectedInstance = {
-  instanceId: string;
+export type MatchroomConnection = {
+  matchroomId: string;
+  playerKey: string;
   displayName: string;
-  playerKey?: string;
+  identityType: "verified" | "anonymous";
 };

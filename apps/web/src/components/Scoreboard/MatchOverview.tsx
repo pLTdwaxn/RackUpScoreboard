@@ -1,9 +1,9 @@
-import { Card } from "@heroui/react";
+import { Card, Description } from "@heroui/react";
 
-import { Match, Player as PlayerType } from "@/types";
+import { Match, Player } from "@/types";
 import { Frame } from "@/types";
 
-import { Player } from ".";
+import { PlayerCard } from ".";
 import { resolvePlayerPair } from "./playerIdentity";
 
 export default function MatchOverview({
@@ -14,32 +14,34 @@ export default function MatchOverview({
 }: {
   match: Match;
   frame: Frame;
-  players: PlayerType[];
+  players: Player[];
   currentPlayerKey: string;
 }) {
   const { me, opponent } = resolvePlayerPair(players, currentPlayerKey);
-  const winningPlayerKey = frame.status === "finished" ? frame.winner_key : null;
+  const winningPlayerKey =
+    frame.status === "finished" ? frame.winner_key : null;
 
   return (
     <Card
       variant="transparent"
       className="flex flex-col w-full p-0 max-w-md rounded-3xl gap-2"
     >
-      <Card.Header className="items-center uppercase text-sm font-bold tracking-widest">
+      {/* <Card.Header className="items-center uppercase text-sm font-bold tracking-widest">
         <h2>{match.match_importance}</h2>
-      </Card.Header>
+        <Description>First to {match.frames_to_win}</Description>
+      </Card.Header> */}
       <Card.Content className="flex flex-row gap-2">
         {opponent ? (
-          <Player
+          <PlayerCard
             player={opponent}
-            isFrameWinner={opponent.key === winningPlayerKey}
+            isFrameWinner={opponent.session_key === winningPlayerKey}
           />
         ) : null}
         {me ? (
-          <Player
+          <PlayerCard
             player={me}
             direction="rtl"
-            isFrameWinner={me.key === winningPlayerKey}
+            isFrameWinner={me.session_key === winningPlayerKey}
           />
         ) : null}
       </Card.Content>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Surface, toast } from "@heroui/react";
 
-import { ConnectedInstance } from "@/types";
+import { MatchroomConnection } from "@/types";
 
 import {
   Controls,
@@ -21,66 +21,78 @@ import { buildScoreboardViewModel } from "./viewModel";
 import { useGameActions } from "./useGameActions";
 import { useRoomSocket } from "./useRoomSocket";
 
-const INSTANCE_STORAGE_KEY = "scoreboard.instance";
 const MATCHROOM_STORAGE_KEY = "scoreboard.matchroom";
 
 export default function Scoreboard() {
-  const [instance, setInstance] = useState<ConnectedInstance | null>(null);
-  const [matchroomId, setMatchroomId] = useState<string | null>(null);
+  const [matchroom, setMatchroom] = useState<MatchroomConnection | null>(null);
   const [hasHydrated, setHasHydrated] = useState(false);
 
+  const currentPlayerKey = matchroom?.playerKey ?? "";
+
   const { gameState, players, socketError, sendEvent } = useRoomSocket(
-    instance,
-    matchroomId,
+    currentPlayerKey,
+    matchroom?.matchroomId ?? "",
   );
+
+  console.log("gameState:", gameState);
 
   useEffect(() => {
     try {
-      const savedInstance = localStorage.getItem(INSTANCE_STORAGE_KEY);
       const savedRoom = localStorage.getItem(MATCHROOM_STORAGE_KEY);
 
-      if (savedInstance) {
-        setInstance(JSON.parse(savedInstance) as ConnectedInstance);
-      }
-
       if (savedRoom) {
-        setMatchroomId(savedRoom);
+        try {
+          const parsed = JSON.parse(savedRoom) as Partial<MatchroomConnection>;
+          const hasValidConnection =
+            typeof parsed.matchroomId === "string" &&
+            parsed.matchroomId.length > 0 &&
+            typeof parsed.playerKey === "string" &&
+            parsed.playerKey.length > 0 &&
+            typeof parsed.displayName === "string" &&
+            (parsed.identityType === "verified" ||
+              parsed.identityType === "anonymous");
+
+          if (hasValidConnection) {
+            setMatchroom(parsed as MatchroomConnection);
+          } else {
+            localStorage.removeItem(MATCHROOM_STORAGE_KEY);
+          }
+        } catch {
+          localStorage.removeItem(MATCHROOM_STORAGE_KEY);
+        }
       }
     } finally {
       setHasHydrated(true);
     }
   }, []);
 
-  const handleConnected = (payload: {
-    instance: ConnectedInstance;
-    matchroomId: string;
-  }) => {
-    localStorage.setItem(
-      INSTANCE_STORAGE_KEY,
-      JSON.stringify(payload.instance),
-    );
-    localStorage.setItem(MATCHROOM_STORAGE_KEY, payload.matchroomId);
-    setInstance(payload.instance);
-    setMatchroomId(payload.matchroomId);
+  useEffect(() => {
+    if (!socketError) {
+      return;
+    }
+
+    toast.danger(socketError, { timeout: 1000 });
+  }, [socketError]);
+
+  const handleConnected = (payload: MatchroomConnection) => {
+    localStorage.setItem(MATCHROOM_STORAGE_KEY, JSON.stringify(payload));
+    setMatchroom(payload);
   };
 
   const resetRoom = () => {
     localStorage.removeItem(MATCHROOM_STORAGE_KEY);
-    localStorage.removeItem(INSTANCE_STORAGE_KEY);
-    setMatchroomId(null);
-    setInstance(null);
+    setMatchroom(null);
   };
 
-  const currentPlayerKey =
-    instance?.playerKey ?? `anon_${instance?.instanceId ?? ""}`;
-
   const currentPlayerName =
-    players.find((player) => player.key === currentPlayerKey)?.name ??
+    players.find((player) => player.session_key === currentPlayerKey)?.name ??
     currentPlayerKey;
 
-  const turnPlayerKey = gameState?.table.current_turn || currentPlayerKey;
+  const turnPlayerKey =
+    gameState?.current_frame.current_turn || currentPlayerKey;
+
   const turnPlayerName =
-    players.find((player) => player.key === turnPlayerKey)?.name ??
+    players.find((player) => player.session_key === turnPlayerKey)?.name ??
     currentPlayerName;
 
   const { sendShot, sendEndTurn, sendUndo, sendConcede, sendNextFrame } =
@@ -88,7 +100,6 @@ export default function Scoreboard() {
 
   const viewModel = buildScoreboardViewModel({
     gameState,
-    players,
   });
 
   if (!hasHydrated) {
@@ -98,19 +109,19 @@ export default function Scoreboard() {
   return (
     <Surface
       variant="tertiary"
-      className="mx-auto flex h-dvh w-full max-w-md flex-col gap-2 overflow-hidden p-0"
+      className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden p-0"
     >
       <TopRow>
         <Menu />
         <MatchroomOverview
           roomReady={viewModel.roomReady}
-          matchroomId={matchroomId || ""}
+          matchroomId={matchroom?.matchroomId || ""}
           match={viewModel.match}
           resetRoom={resetRoom}
         />
         <ThemeToggle />
       </TopRow>
-      {!instance || !matchroomId ? (
+      {!matchroom ? (
         <NewMatch onConnected={handleConnected} />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-2">
@@ -121,19 +132,16 @@ export default function Scoreboard() {
             currentPlayerKey={currentPlayerKey}
           />
           <FrameOverview
+            frame={viewModel.frame}
             players={viewModel.players}
             currentPlayerKey={currentPlayerKey}
-            frame={viewModel.frame}
-            table={viewModel.table}
           />
           <MatchLog />
           <Controls
-            frameStatus={viewModel.frame.status}
-            frameWinnerKey={viewModel.frame.winner_key}
-            nextFrameConfirmations={gameState?.next_frame_confirmations ?? []}
-            table={viewModel.table}
-            scoreKeeper={viewModel.scoreKeeper}
+            frame={viewModel.frame}
             currentPlayerKey={currentPlayerKey}
+            nextFrameConfirmations={gameState?.next_frame_confirmations ?? []}
+            scoreKeeper={viewModel.scoreKeeper}
             sendShot={sendShot}
             sendEndTurn={sendEndTurn}
             sendUndo={sendUndo}
@@ -142,11 +150,6 @@ export default function Scoreboard() {
           />
         </div>
       )}
-
-      {/* {viewModel.roomReady ? (
-
-      ) : null} */}
-      {socketError ? toast.danger(socketError, { timeout: 1000 }) : null}
     </Surface>
   );
 }

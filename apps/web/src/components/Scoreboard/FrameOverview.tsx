@@ -1,27 +1,27 @@
 import { Card } from "@heroui/react";
 
-import { Frame, Player, TableState } from "@/types";
+import { Frame, Player } from "@/types";
 import { resolvePlayerPair } from "./playerIdentity";
 
 export default function FrameOverview({
   players,
   currentPlayerKey,
   frame,
-  table,
 }: {
   players: Player[];
   currentPlayerKey: string;
   frame: Frame;
-  table: TableState;
 }) {
   const { me, opponent } = resolvePlayerPair(players, currentPlayerKey);
-  const isMyTurn = table.current_turn === currentPlayerKey;
+  const isMyTurn = frame.current_turn === currentPlayerKey;
   const isOpponentTurn = Boolean(
-    opponent && table.current_turn === opponent.key,
+    opponent && frame.current_turn === opponent.session_key,
   );
-  const myFrameScore = me?.current_frame_score ?? 0;
-  const opponentFrameScore = opponent?.current_frame_score ?? 0;
-  const currentBreak = table.current_break ?? 0;
+  const myFrameScore = frame.scores[currentPlayerKey] ?? 0;
+  const opponentFrameScore = opponent
+    ? (frame.scores[opponent.session_key] ?? 0)
+    : 0;
+  const currentBreak = frame.current_break ?? 0;
   const myCurrentBreak = isMyTurn ? currentBreak : 0;
   const opponentCurrentBreak = isOpponentTurn ? currentBreak : 0;
 

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { Surface } from "@heroui/react";
 
-import { GameStateMessage, TableState } from "@/types";
+import { GameStateMessage, Frame } from "@/types";
 
 import AdvancedScoringPanel from "./AdvancedScoringPanel";
 import ConcedeFrameDialog from "./ConcedeFrameDialog";
@@ -14,13 +14,11 @@ import { BALL_BY_NAME, BallName } from "./controlPanelShared";
 import { useControlPanel } from "./useControlPanel";
 
 type ControlsProps = {
-  frameStatus: GameStateMessage["frame"]["status"];
-  frameWinnerKey: GameStateMessage["frame"]["winner_key"];
+  frame: Frame;
   nextFrameConfirmations: string[];
-  table: TableState;
   scoreKeeper: GameStateMessage["score_keeper"];
   currentPlayerKey: string;
-  sendShot: (pottedBalls: string[], foul?: number) => void;
+  sendShot: (pottedBalls: BallName[], foul?: number) => void;
   sendEndTurn: () => void;
   sendUndo: () => void;
   sendConcede: () => void;
@@ -29,7 +27,7 @@ type ControlsProps = {
 
 function isLegalShot(
   pottedBalls: BallName[],
-  objectBall: string,
+  objectBall: Frame["object_ball"],
   redsRemaining: number,
 ): boolean {
   if (pottedBalls.length === 0) {
@@ -62,10 +60,9 @@ function summarizeBalls(pottedBalls: BallName[]): string {
 }
 
 export default function Controls({
-  frameStatus,
-  frameWinnerKey,
+  frame,
   nextFrameConfirmations,
-  table,
+  // table,
   scoreKeeper,
   currentPlayerKey,
   sendShot,
@@ -88,8 +85,8 @@ export default function Controls({
     coloursOnTable,
     objectBall,
   } = useControlPanel(
-    frameStatus,
-    table,
+    frame,
+    // table,
     scoreKeeper,
     currentPlayerKey,
     nextFrameConfirmations,
@@ -141,13 +138,12 @@ export default function Controls({
     });
   };
 
+  const resetRedSelections = () => {
+    setRedCount(0);
+  };
+
   const toggleMultiBall = (ball: BallName) => {
     if (ball === "red") {
-      if (redSelections > 0) {
-        setRedCount(redSelections - 1);
-        return;
-      }
-
       if (redSelections >= redsRemaining) {
         return;
       }
@@ -171,6 +167,11 @@ export default function Controls({
     }
 
     if (isAdvancedMode) {
+      if (ball === "red") {
+        toggleMultiBall(ball);
+        return;
+      }
+
       if (foulMode) {
         setFoulBall((prev) => (prev === ball ? null : ball));
         return;
@@ -237,7 +238,7 @@ export default function Controls({
     >
       {isFrameFinished ? (
         <FinishedFramePanel
-          winnerKey={frameWinnerKey}
+          winnerKey={frame.winner_key}
           currentPlayerKey={currentPlayerKey}
           hasConfirmedNextFrame={hasConfirmedNextFrame}
           onNextFrame={sendNextFrame}
@@ -260,6 +261,7 @@ export default function Controls({
               comboIsFoul={comboIsFoul}
               hasSelectedBalls={hasSelectedBalls}
               onBallTap={handleBallTap}
+              onResetRedSelections={resetRedSelections}
               onExitAdvancedMode={cancelAdvancedMode}
               onChangeFoulMode={toggleFoulMode}
               onSubmit={submitComposer}

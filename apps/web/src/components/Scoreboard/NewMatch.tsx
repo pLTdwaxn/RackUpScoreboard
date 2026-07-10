@@ -5,20 +5,10 @@ import { useSearchParams } from "next/navigation";
 
 import { Button, Card, Form, Input, Label, TextField } from "@heroui/react";
 
-import { ConnectedInstance } from "@/types";
-
-type ConnectResponse = {
-  instance_id: string;
-  display_name: string;
-  matchroom_id: string;
-  identity_type?: string;
-};
+import { MatchroomConnection } from "@/types";
 
 type NewMatchProps = {
-  onConnected: (payload: {
-    instance: ConnectedInstance;
-    matchroomId: string;
-  }) => void;
+  onConnected: (connection: MatchroomConnection) => void;
 };
 
 export default function NewMatch({ onConnected }: NewMatchProps) {
@@ -59,14 +49,16 @@ export default function NewMatch({ onConnected }: NewMatchProps) {
       });
 
       const payload = (await response.json()) as
-        | ConnectResponse
+        | MatchroomConnection
         | { detail?: string };
 
       if (
         !response.ok ||
-        !("instance_id" in payload) ||
+        !("matchroom_id" in payload) ||
         !("display_name" in payload) ||
-        !("matchroom_id" in payload)
+        !("player_key" in payload) ||
+        !("identity_type" in payload)
+        // !("instance_id" in payload) ||
       ) {
         throw new Error(
           "detail" in payload && payload.detail
@@ -76,15 +68,13 @@ export default function NewMatch({ onConnected }: NewMatchProps) {
       }
 
       onConnected({
-        instance: {
-          instanceId: payload.instance_id,
-          displayName: payload.display_name,
-          playerKey:
-            payload.identity_type === "verified"
-              ? `user_${payload.instance_id}`
-              : `anon_${payload.instance_id}`,
-        },
-        matchroomId: payload.matchroom_id,
+        matchroomId: String(payload.matchroom_id),
+        displayName: String(payload.display_name),
+        playerKey: String(payload.player_key),
+        identityType:
+          String(payload.identity_type) === "verified"
+            ? "verified"
+            : "anonymous",
       });
     } catch (submitError) {
       setError(

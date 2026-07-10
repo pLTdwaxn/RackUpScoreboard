@@ -1,24 +1,23 @@
-import { GameStateMessage, TableState } from "@/types";
+import { GameStateMessage, Frame } from "@/types";
 
 export function useControlPanel(
-  frameStatus: GameStateMessage["frame"]["status"],
-  table: TableState,
+  frame: Frame,
   scoreKeeper: GameStateMessage["score_keeper"],
   currentPlayerKey: string,
   nextFrameConfirmations: string[],
 ) {
-  const isFrameFinished = frameStatus === "finished";
+  const isFrameFinished = frame.status === "finished";
   const hasConfirmedNextFrame =
     nextFrameConfirmations.includes(currentPlayerKey);
 
-  const isAtTable = table.current_turn === currentPlayerKey;
+  const isAtTable = frame.current_turn === currentPlayerKey;
 
   const canKeepScore = (() => {
     switch (scoreKeeper) {
       case "self":
         return isAtTable;
       case "opp":
-        return Boolean(table.current_turn) && !isAtTable;
+        return Boolean(frame.current_turn) && !isAtTable;
       case "ref":
         return false;
       case "any":
@@ -28,9 +27,9 @@ export function useControlPanel(
     }
   })();
 
-  const redsRemaining = table.reds_remaining;
-  const coloursOnTable = table.colours_on_table;
-  const objectBall = table.object_ball;
+  const redsRemaining = frame.reds_remaining;
+  const coloursOnTable = frame.colours_on_table;
+  const objectBall = frame.object_ball;
 
   return {
     isFrameFinished,

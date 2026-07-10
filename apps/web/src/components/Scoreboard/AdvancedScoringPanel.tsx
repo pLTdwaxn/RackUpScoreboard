@@ -21,6 +21,7 @@ type AdvancedScoringPanelProps = {
   comboIsFoul: boolean;
   hasSelectedBalls: boolean;
   onBallTap: (ball: BallName) => void;
+  onResetRedSelections: () => void;
   onExitAdvancedMode: () => void;
   onChangeFoulMode: (isFoulMode: boolean) => void;
   onSubmit: () => void;
@@ -39,6 +40,7 @@ export default function AdvancedScoringPanel({
   comboIsFoul,
   hasSelectedBalls,
   onBallTap,
+  onResetRedSelections,
   onExitAdvancedMode,
   onChangeFoulMode,
   onSubmit,
@@ -71,12 +73,14 @@ export default function AdvancedScoringPanel({
           foulMode={foulMode}
           comboIsFoul={comboIsFoul}
           onBallTap={onBallTap}
+          onRedLongPress={onResetRedSelections}
         />
       }
       actionsRow={
         <AdvancedBottomActions
           canKeepScore={canKeepScore}
           foulMode={foulMode}
+          comboIsFoul={comboIsFoul}
           hasSelectedBalls={hasSelectedBalls}
           onExitAdvancedMode={onExitAdvancedMode}
           onChangeFoulMode={onChangeFoulMode}

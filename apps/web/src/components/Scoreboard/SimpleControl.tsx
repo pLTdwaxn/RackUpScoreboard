@@ -9,7 +9,7 @@ import {
   IconFlagFilled,
 } from "@tabler/icons-react";
 
-import { TableState } from "@/types";
+import { Frame } from "@/types";
 
 import ControlPanelLayout from "./ControlPanelLayout";
 import { BALL_BY_NAME, BALL_NAMES, BallName } from "./controlPanelShared";
@@ -32,9 +32,9 @@ const ALL_BALLS = BALL_NAMES;
 
 function isBallLegal(
   ball: BallName,
-  objectBall: string,
+  objectBall: Frame["object_ball"],
   redsRemaining: number,
-  coloursOnTable: TableState["colours_on_table"],
+  coloursOnTable: Frame["colours_on_table"],
 ): boolean {
   if (ball === "red") {
     return objectBall === "red" && redsRemaining > 0;
@@ -53,8 +53,8 @@ function isBallLegal(
 
 type SimpleBallRailProps = {
   redsRemaining: number;
-  coloursOnTable: TableState["colours_on_table"];
-  objectBall: string;
+  coloursOnTable: Frame["colours_on_table"];
+  objectBall: Frame["object_ball"];
   canKeepScore: boolean;
   selectedBalls: BallName[];
   onBallTap: (ball: BallName) => void;

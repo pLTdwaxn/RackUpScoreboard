@@ -28,7 +28,7 @@ function nameToColor(name: string): string {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]!;
 }
 
-export default function Player({
+export default function PlayerCard({
   player,
   direction = "ltr",
   isFrameWinner = false,
