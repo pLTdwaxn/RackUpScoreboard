@@ -14,7 +14,7 @@ ENV/
 .coverage*
 
 # === Temporary Files ===
-tmp/
+tmp/*
 
 # === Environment Configuration (CRITICAL Secrets) ===
 .env
