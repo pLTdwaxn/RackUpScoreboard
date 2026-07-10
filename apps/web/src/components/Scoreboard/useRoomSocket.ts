@@ -12,6 +12,18 @@ function toWebsocketUrl(
   return `${protocol}//${parsed.host}/ws/room/?${params.toString()}`;
 }
 
+function getApiBase(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE) {
+    return process.env.NEXT_PUBLIC_API_BASE;
+  }
+
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:8004`;
+  }
+
+  return "http://127.0.0.1:8004";
+}
+
 export function useRoomSocket(
   playerKey: string,
   matchroomId: string | null,
@@ -31,7 +43,7 @@ export function useRoomSocket(
       return;
     }
 
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8004";
+    const apiBase = getApiBase();
     const websocketUrl = toWebsocketUrl(apiBase, {
       matchroom_id: matchroomId,
       session_key: playerKey,

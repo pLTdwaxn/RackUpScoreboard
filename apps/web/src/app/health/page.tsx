@@ -1,3 +1,5 @@
+import { headers } from "next/headers";
+
 import { Card, CardContent, CardHeader, Chip, Code } from "@heroui/react";
 
 type HealthResponse = {
@@ -6,7 +8,14 @@ type HealthResponse = {
 };
 
 async function getHealth() {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8004";
+  const headerStore = await headers();
+  const host = headerStore.get("host");
+  const forwardedProto = headerStore.get("x-forwarded-proto");
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_BASE ??
+    (host
+      ? `${forwardedProto ?? "http"}://${host.split(":")[0]}:8004`
+      : "http://127.0.0.1:8004");
   const url = `${apiBase}/health`;
 
   try {

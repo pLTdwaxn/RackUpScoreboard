@@ -11,6 +11,18 @@ type NewMatchProps = {
   onConnected: (connection: MatchroomConnection) => void;
 };
 
+function getApiBase(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE) {
+    return process.env.NEXT_PUBLIC_API_BASE;
+  }
+
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:8004`;
+  }
+
+  return "http://127.0.0.1:8004";
+}
+
 export default function NewMatch({ onConnected }: NewMatchProps) {
   const searchParams = useSearchParams();
   const [displayName, setDisplayName] = useState("");
@@ -35,8 +47,7 @@ export default function NewMatch({ onConnected }: NewMatchProps) {
     setError(null);
 
     try {
-      const apiBase =
-        process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8004";
+      const apiBase = getApiBase();
       const response = await fetch(`${apiBase}/connect`, {
         method: "POST",
         headers: {
