@@ -3,12 +3,13 @@ from scoreboard.engine.runtime.connection_registry import (
     MatchConnectionRegistry,
     connection_registry,
 )
-from scoreboard.engine.runtime.room_manager import MatchSessionManager, session_manager
+from scoreboard.engine.services.matchroom_manager import (
+    matchroom_manager,
+)
 
 __all__ = [
     "broadcast_to_connections",
     "MatchConnectionRegistry",
     "connection_registry",
-    "MatchSessionManager",
-    "session_manager",
+    "matchroom_manager",
 ]

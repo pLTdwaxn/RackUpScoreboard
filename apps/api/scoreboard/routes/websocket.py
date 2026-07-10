@@ -3,40 +3,21 @@ import json
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from scoreboard.engine import AnonymousParticipant, VerifiedParticipant, session_manager
+from scoreboard.engine.models.matchroom import MatchroomModel
 from scoreboard.engine.runtime.broadcast import broadcast_to_connections
 from scoreboard.engine.runtime.connection_registry import connection_registry
+from scoreboard.engine.services.matchroom_action_dispatcher import (
+    matchroom_action_dispatcher,
+)
+from scoreboard.engine.services.matchroom_manager import matchroom_manager
 
 router = APIRouter()
 
 
-def build_current_player(identity_type: str, player_id: str, display_name: str):
-    if identity_type == "verified":
-        return VerifiedParticipant(user_id=player_id, username=display_name)
-
-    return AnonymousParticipant(guest_slug=player_id, nickname=display_name)
-
-
-def ensure_session(match_id: str, current_player, score_keeper: str):
-    session = session_manager.get_or_create_session(
-        match_id,
-        current_player,
-        score_keeper,
-    )
-
-    if match_id and not session.matchroom.match_id:
-        session.matchroom.match_id = match_id
-
-    if session.matchroom.players[0].session_key != current_player.session_key and len(session.matchroom.players) == 1:
-        session.add_opponent(current_player)
-
-    return session
-
-
-async def send_game_state(match_id: str, session):
+async def send_game_state(match_id: str, matchroom: MatchroomModel):
     await broadcast_to_connections(
         connection_registry.get(match_id),
-        {"type": "game_state", **session.state_payload()},
+        {"type": "game_state", **matchroom.state_payload()},
     )
 
 
@@ -52,17 +33,23 @@ async def send_error(websocket: WebSocket, message: str):
     )
 
 
-async def handle_client_event(websocket: WebSocket, match_id: str, session, current_player, event: dict):
-    handled, error = session.process_event(current_player.session_key, event)
+async def handle_client_event(
+    websocket: WebSocket,
+    match_id: str,
+    matchroom: MatchroomModel,
+    session_key: str,
+    event: dict,
+):
+    handled, error = matchroom_action_dispatcher.dispatch(matchroom, session_key, event)
     if not handled:
         await send_error(websocket, error or "Unable to process message.")
         return
 
-    await send_game_state(match_id, session)
+    await send_game_state(match_id, matchroom)
 
 
-async def handle_disconnect(match_id: str, current_player):
-    connection_registry.remove(match_id, current_player.session_key)
+async def handle_disconnect(match_id: str, session_key: str):
+    connection_registry.remove(match_id, session_key)
 
     active_connections = connection_registry.get(match_id)
     if active_connections:
@@ -70,7 +57,7 @@ async def handle_disconnect(match_id: str, current_player):
             active_connections,
             {
                 "type": "player_status_change",
-                "key": current_player.session_key,
+                "key": session_key,
                 "status": "disconnected",
             },
         )
@@ -79,24 +66,26 @@ async def handle_disconnect(match_id: str, current_player):
 @router.websocket("/ws/room/")
 async def websocket_endpoint(
     websocket: WebSocket,
-    match_id: str = Query(...),
-    identity_type: str = Query(...),
-    player_id: str = Query(...),
-    display_name: str = Query(...),
-    score_keeper: str = Query("opp"),
+    matchroom_id: str = Query(...),
+    session_key: str = Query(...),
 ):
-    current_player = build_current_player(identity_type, player_id, display_name)
-    session = ensure_session(match_id, current_player, score_keeper)
+    matchroom = matchroom_manager.get_matchroom(matchroom_id)
 
-    await connection_registry.register(match_id, current_player.session_key, websocket)
+    if matchroom is None:
+        await websocket.accept()
+        await send_error(websocket, "Matchroom not found.")
+        await websocket.close(code=4404)
+        return
+
+    await connection_registry.register(matchroom_id, session_key, websocket)
 
     try:
-        await send_game_state(match_id, session)
+        await send_game_state(matchroom_id, matchroom)
 
         while True:
             data = await websocket.receive_text()
             event = json.loads(data)
-            await handle_client_event(websocket, match_id, session, current_player, event)
+            await handle_client_event(websocket, matchroom_id, matchroom, session_key, event)
 
     except WebSocketDisconnect:
-        await handle_disconnect(match_id, current_player)
+        await handle_disconnect(matchroom_id, session_key)

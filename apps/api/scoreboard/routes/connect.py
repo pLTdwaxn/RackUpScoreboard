@@ -3,6 +3,8 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from scoreboard.engine.services.matchroom_manager import matchroom_manager
+
 router = APIRouter()
 
 
@@ -12,10 +14,11 @@ class ConnectRequest(BaseModel):
 
 
 class ConnectResponse(BaseModel):
-    instance_id: str
-    display_name: str
+    # instance_id: str
     matchroom_id: str
-    identity_type: str = "anonymous"
+    display_name: str
+    player_key: str
+    identity_type: str = "anonymous"  # Not needed for now.
 
 
 @router.post("/connect", response_model=ConnectResponse)
@@ -24,11 +27,19 @@ def connect_player(payload: ConnectRequest) -> ConnectResponse:
     if not display_name:
         raise HTTPException(status_code=400, detail="Display name is required.")
 
-    submitted_matchroom = (payload.matchroom_id or "").strip()
-    matchroom_id = submitted_matchroom or uuid4().hex[:8]
+    session_key = uuid4().hex[:8]
+
+    matchroom = matchroom_manager.get_or_create_matchroom(
+        {"id": (payload.matchroom_id or "").strip()},
+        {"id": "", "session_key": session_key, "display_name": display_name},
+        {"id": "", "match_importance": "practice match", "frames_to_win": 3},
+    )
+
+    print("matchroom", matchroom)
 
     return ConnectResponse(
-        instance_id=uuid4().hex,
+        # instance_id=uuid4().hex[:8],
         display_name=display_name,
-        matchroom_id=matchroom_id,
+        matchroom_id=matchroom.id,
+        player_key=session_key,
     )

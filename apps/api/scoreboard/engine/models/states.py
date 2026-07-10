@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional
 from ..rules import COLOUR_BALLS, RED_BALL
 
 if TYPE_CHECKING:
-    from scoreboard.engine.models.participant import Participant
+    from scoreboard.engine.models.player import PlayerModel
 
 
 class FrameStatus(str, Enum):
@@ -19,7 +19,7 @@ class FrameStatus(str, Enum):
 @dataclass
 class RoomState:
     match_id: str
-    players: List[Participant]
+    players: List["PlayerModel"]
 
 
 @dataclass

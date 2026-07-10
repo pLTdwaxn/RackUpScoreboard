@@ -4,7 +4,12 @@ from scoreboard.engine.models.states import FrameStatus
 
 
 def make_frame() -> FrameModel:
-    return FrameModel(scores={"p1": 0, "p2": 0}, current_turn="p1")
+    return FrameModel(
+        id="frame-test",
+        match_id="match-test",
+        scores={"p1": 0, "p2": 0},
+        current_turn="p1",
+    )
 
 
 def test_process_shot_without_pot_with_declared_foul_updates_break_and_turn():

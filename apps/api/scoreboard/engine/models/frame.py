@@ -23,6 +23,8 @@ class FramePhase(str, Enum):
 
 @dataclass(init=False)
 class FrameModel:
+    id: str
+    match_id: str
     scores: MutableMapping[str, int]
     _current_turn: str = ""
     _opening_turn: str = ""
@@ -30,10 +32,14 @@ class FrameModel:
 
     def __init__(
         self,
+        id: str,
+        match_id: str,
         scores: MutableMapping[str, int],
         current_turn: str = "",
         opening_turn: str = "",
     ) -> None:
+        self.id = id
+        self.match_id = match_id
         self._snooker_calculator = SnookerCalculator()
         self._current_turn = ""
         self._opening_turn = opening_turn or current_turn
@@ -192,20 +198,19 @@ class FrameModel:
         # No colours remaining, return black and decide if respotting is needed
         return "black"
 
-    def table_payload(self) -> dict:
+    def history_depth(self) -> int:
+        return len(self.history)
+
+    def payload(self) -> dict:
         return {
+            "status": self.status.value,
+            "scores": dict(self.scores),
+            "phase": self.phase.value,
             "reds_remaining": self.reds_remaining,
             "colours_on_table": dict(self.colours_on_table),
             "object_ball": self.object_ball,
             "current_turn": self.current_turn,
             "current_break": self.current_break,
-            "points_remaining": self.points_remaining,
-        }
-
-    def payload(self) -> dict:
-        return {
-            "status": self.status.value,
-            "phase": self.phase.value,
             "points_remaining": self.points_remaining,
             "points_gap": self.points_gap(),
             "snookers_required": self.snookers_required,
