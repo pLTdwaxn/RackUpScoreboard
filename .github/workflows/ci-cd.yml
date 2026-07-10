@@ -104,6 +104,8 @@ jobs:
         with:
           context: ./apps/web
           file: ./apps/web/Dockerfile
+          build-args: |
+            NEXT_PUBLIC_API_BASE=${{ vars.WEB_API_BASE || 'http://207.148.83.4:8004' }}
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest
@@ -120,6 +122,7 @@ jobs:
       API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
       WEB_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}-web
       REGISTRY: ${{ vars.VULTR_REGISTRY }}
+      CORS_ALLOW_ORIGINS: ${{ vars.CORS_ALLOW_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,http://207.148.83.4' }}
       API_CONTAINER_NAME: rackupscoreboard-api
       WEB_CONTAINER_NAME: rackupscoreboard-web
       API_PORT: "8004"
@@ -136,6 +139,7 @@ jobs:
           WEB_CONTAINER_NAME: ${{ env.WEB_CONTAINER_NAME }}
           API_PORT: ${{ env.API_PORT }}
           WEB_PORT: ${{ env.WEB_PORT }}
+          CORS_ALLOW_ORIGINS: ${{ env.CORS_ALLOW_ORIGINS }}
           VULTR_REGISTRY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
           VULTR_REGISTRY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
         with:
@@ -143,7 +147,7 @@ jobs:
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           port: ${{ vars.VM_PORT || 22 }}
-          envs: API_IMAGE_NAME,WEB_IMAGE_NAME,IMAGE_TAG,REGISTRY,API_CONTAINER_NAME,WEB_CONTAINER_NAME,API_PORT,WEB_PORT,VULTR_REGISTRY_USERNAME,VULTR_REGISTRY_PASSWORD
+          envs: API_IMAGE_NAME,WEB_IMAGE_NAME,IMAGE_TAG,REGISTRY,CORS_ALLOW_ORIGINS,API_CONTAINER_NAME,WEB_CONTAINER_NAME,API_PORT,WEB_PORT,VULTR_REGISTRY_USERNAME,VULTR_REGISTRY_PASSWORD
           script: |
             set -euo pipefail
 
@@ -159,6 +163,7 @@ jobs:
               --restart unless-stopped \
               -p "$API_PORT:$API_PORT" \
               -e PORT="$API_PORT" \
+              -e CORS_ALLOW_ORIGINS="$CORS_ALLOW_ORIGINS" \
               "$API_IMAGE_NAME:$IMAGE_TAG"
 
             docker run -d \
