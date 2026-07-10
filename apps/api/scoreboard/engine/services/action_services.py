@@ -3,6 +3,7 @@ from __future__ import annotations
 from statemachine import StateMachine
 from statemachine.exceptions import TransitionNotAllowed
 
+from scoreboard.engine.factories.frame_factory import FrameFactory
 from scoreboard.engine.models.frame import FrameModel
 from scoreboard.engine.models.match import MatchModel
 from scoreboard.engine.models.matchroom import MatchroomModel
@@ -67,7 +68,12 @@ class MatchResultService:
 
 
 class NextFrameService:
-    def start_next_frame(self, frame: FrameModel, matchroom: MatchroomModel) -> None:
+    def start_next_frame(
+        self,
+        frame: FrameModel,
+        match: MatchModel,
+        matchroom: MatchroomModel,
+    ) -> None:
         current_opening_turn = frame.opening_turn or frame.current_turn
         player_keys = [player.session_key for player in matchroom.players]
         next_opening_turn = next(
@@ -75,10 +81,13 @@ class NextFrameService:
             current_opening_turn,
         )
 
-        fresh_frame = FrameModel(
-            scores={player.session_key: 0 for player in matchroom.players},
-            current_turn=next_opening_turn,
-            opening_turn=next_opening_turn,
+        fresh_frame = FrameFactory.create_frame(
+            {
+                "opening_turn": next_opening_turn,
+                "current_turn": next_opening_turn,
+            },
+            match.id,
+            player_keys,
         )
-        frame.__dict__.clear()
-        frame.__dict__.update(fresh_frame.__dict__)
+        match.frames[fresh_frame.id] = fresh_frame
+        matchroom.current_frame_id = fresh_frame.id

@@ -131,6 +131,6 @@ class NextFrameActionHandler:
         if len(context.pending_next_frame_confirmations) < len(context.matchroom.players):
             return True, None
 
-        context.next_frame_service.start_next_frame(context.frame, context.matchroom)
+        context.next_frame_service.start_next_frame(context.frame, context.match, context.matchroom)
         context.pending_next_frame_confirmations.clear()
         return True, None

@@ -147,3 +147,43 @@ def test_dispatch_concede_marks_winner_and_match_score() -> None:
     assert frame.winner_key == "p2"
     assert frame.status.value == "finished"
     assert room.match.match_scores["p2"] == 1
+
+
+def test_dispatch_next_frame_creates_new_frame_and_rotates_opening_turn() -> None:
+    manager = MatchroomManager()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(manager, "room_next_frame")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+
+    first_frame_id = room.current_frame_id
+    first_frame = room.match.frames[first_frame_id]
+
+    handled, error = dispatcher.dispatch(room, "p1", {"action": "concede", "data": {}})
+    assert handled is True
+    assert error is None
+    assert first_frame.status.value == "finished"
+
+    handled, error = dispatcher.dispatch(room, "p1", {"action": "next_frame", "data": {}})
+    assert handled is True
+    assert error is None
+    assert room.current_frame_id == first_frame_id
+
+    handled, error = dispatcher.dispatch(room, "p2", {"action": "next_frame", "data": {}})
+    assert handled is True
+    assert error is None
+
+    assert room.current_frame_id is not None
+    assert room.current_frame_id != first_frame_id
+    assert room.match is not None
+    assert len(room.match.frames) == 2
+
+    next_frame = room.match.frames[room.current_frame_id]
+    assert next_frame.opening_turn == "p2"
+    assert next_frame.current_turn == "p2"
+    assert next_frame.scores == {"p1": 0, "p2": 0}
+    assert next_frame.status.value == "ready"
+    assert next_frame.winner_key is None
+    assert next_frame.history == []
+    assert room.pending_next_frame_confirmations == set()

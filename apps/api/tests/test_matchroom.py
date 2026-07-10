@@ -76,6 +76,58 @@ def test_shot_event_updates_state_for_both_connections(client):
         assert update["current_frame"]["object_ball"] == "colour"
 
 
+def test_next_frame_flow_updates_state_over_websocket_for_both_players(client):
+    p1 = _connect(client, "Player One")
+    p2 = _connect(client, "Player Two", matchroom_id=p1["matchroom_id"])
+
+    p1_params = f"matchroom_id={p1['matchroom_id']}&session_key={p1['player_key']}"
+    p2_params = f"matchroom_id={p2['matchroom_id']}&session_key={p2['player_key']}"
+
+    with client.websocket_connect(f"/ws/room/?{p1_params}") as ws1:
+        initial_p1 = json.loads(ws1.receive_text())
+
+        with client.websocket_connect(f"/ws/room/?{p2_params}") as ws2:
+            _ = json.loads(ws2.receive_text())
+            _ = json.loads(ws1.receive_text())
+
+            ws1.send_text(json.dumps({"action": "concede", "data": {}}))
+            conceded_p1 = json.loads(ws1.receive_text())
+            conceded_p2 = json.loads(ws2.receive_text())
+
+            ws1.send_text(json.dumps({"action": "next_frame", "data": {}}))
+            first_confirm_p1 = json.loads(ws1.receive_text())
+            first_confirm_p2 = json.loads(ws2.receive_text())
+
+            ws2.send_text(json.dumps({"action": "next_frame", "data": {}}))
+            next_frame_p1 = json.loads(ws1.receive_text())
+            next_frame_p2 = json.loads(ws2.receive_text())
+
+    assert initial_p1["type"] == "game_state"
+    assert initial_p1["current_frame"]["current_turn"] == p1["player_key"]
+
+    for update in (conceded_p1, conceded_p2):
+        assert update["type"] == "game_state"
+        assert update["current_frame"]["status"] == "finished"
+        assert update["current_frame"]["winner_key"] == p2["player_key"]
+
+    for update in (first_confirm_p1, first_confirm_p2):
+        assert update["type"] == "game_state"
+        assert update["current_frame"]["status"] == "finished"
+        assert update["next_frame_confirmations"] == [p1["player_key"]]
+
+    for update in (next_frame_p1, next_frame_p2):
+        assert update["type"] == "game_state"
+        assert update["current_frame"]["status"] == "ready"
+        assert update["current_frame"]["current_turn"] == p2["player_key"]
+        assert update["current_frame"]["opening_turn"] == p2["player_key"]
+        assert update["current_frame"]["scores"] == {
+            p1["player_key"]: 0,
+            p2["player_key"]: 0,
+        }
+        assert update["current_frame"]["winner_key"] is None
+        assert update["next_frame_confirmations"] == []
+
+
 def test_invalid_action_is_rejected_over_websocket(client):
     p1 = _connect(client, "Breaker")
     params = f"matchroom_id={p1['matchroom_id']}&session_key={p1['player_key']}"
