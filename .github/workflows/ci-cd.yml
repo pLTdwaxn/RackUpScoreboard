@@ -67,6 +67,8 @@ jobs:
           context: ./apps/api
           file: ./apps/api/Dockerfile
           push: true
+          provenance: false
+          sbom: false
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}
@@ -107,6 +109,8 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_BASE=${{ vars.WEB_API_BASE || 'http://207.148.83.4:8004' }}
           push: true
+          provenance: false
+          sbom: false
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}
