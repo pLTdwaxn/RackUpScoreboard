@@ -252,7 +252,7 @@ export function AdvancedBottomActions({
       <div className="flex w-full flex-row items-center justify-between gap-4">
         <div>
           <Button
-            variant={foulMode ? "danger" : "danger-soft"}
+            variant={foulMode ? "danger" : "outline"}
             onPress={() => {
               onChangeFoulMode(!foulMode);
             }}
