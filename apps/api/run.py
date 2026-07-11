@@ -1,7 +1,7 @@
 # run.py
 import uvicorn
 
-from scoreboard.core.config import settings
+from scoreboard.config import settings
 
 if __name__ == "__main__":
     print(f"Starting Uvicorn server on port {settings.PORT}...")

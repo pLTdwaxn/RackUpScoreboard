@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from scoreboard.core.config import settings
+from scoreboard.config import settings
 from scoreboard.routes.connect import router as connect_router
 from scoreboard.routes.health import router as health_router
 from scoreboard.routes.websocket import router as websocket_router
