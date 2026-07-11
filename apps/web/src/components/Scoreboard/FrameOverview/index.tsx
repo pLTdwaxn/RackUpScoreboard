@@ -18,6 +18,8 @@ export default function FrameOverview() {
     opponentScore,
     myCurrentBreak,
     opponentCurrentBreak,
+    isMyTurn,
+    isOpponentTurn,
   } = useMatchroomFrame();
 
   if (!hasFrame) {
@@ -28,10 +30,12 @@ export default function FrameOverview() {
     <OverviewWrapper>
       <div className="flex flex-row items-center justify-between gap-2">
         <FrameScoreboard
+          currentTurn={isOpponentTurn}
           playerScore={opponentScore}
           playerCurrentBreak={opponentCurrentBreak}
         />
         <FrameScoreboard
+          currentTurn={isMyTurn}
           playerScore={myScore}
           playerCurrentBreak={myCurrentBreak}
         />
