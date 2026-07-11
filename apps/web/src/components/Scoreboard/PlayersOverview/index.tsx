@@ -1,6 +1,7 @@
 "use client";
 
-import { useMatchroomDerivedState } from "@/hooks/useSocket";
+import { useMatchroomFrame } from "@/hooks/useMatchroomFrame";
+import { useMatchroomPlayers } from "@/hooks/useMatchroomPlayers";
 
 import OverviewWrapper from "./OverviewWrapper";
 import PlayerPairDisplay from "./PlayerPairDisplay";
@@ -10,8 +11,8 @@ export { default as PlayerPairDisplay } from "./PlayerPairDisplay";
 export { default as PlayerCard } from "./PlayerCard";
 
 export default function PlayersOverview() {
-  const { hasFrame, me, opponent, winningPlayerKey } =
-    useMatchroomDerivedState();
+  const { hasFrame, winningPlayerKey } = useMatchroomFrame();
+  const { me, opponent } = useMatchroomPlayers();
 
   if (!hasFrame) {
     return null;

@@ -16,8 +16,6 @@ import {
   RoomClientAction,
   RoomSocketMessage,
 } from "@/types";
-import { DEFAULT_FRAME } from "@/lib/viewModel";
-import { resolvePlayerPairWithScores } from "@/types/playerIdentity";
 
 interface MatchroomSessionContextType {
   matchroomId: string;
@@ -320,47 +318,6 @@ export const useMatchroomActions = () => {
       "useMatchroomActions must be used within MatchroomProvider",
     );
   return context;
-};
-
-export const useMatchroomDerivedState = () => {
-  const { gameState, players } = useMatchroomGame();
-  const { sessionKey } = useMatchroomSession();
-
-  return useMemo(() => {
-    const hasFrame = Boolean(gameState?.current_frame);
-    const frame = gameState?.current_frame ?? DEFAULT_FRAME;
-    const currentPlayerKey = sessionKey;
-
-    const { me, opponent, myScore, opponentScore } =
-      resolvePlayerPairWithScores(players, currentPlayerKey, frame.scores);
-
-    const winningPlayerKey =
-      frame.status === "finished" ? frame.winner_key : null;
-    const isMyTurn = frame.current_turn === currentPlayerKey;
-    const isOpponentTurn = Boolean(
-      opponent && frame.current_turn === opponent.session_key,
-    );
-    const currentBreak = frame.current_break ?? 0;
-
-    return {
-      hasFrame,
-      frame,
-      players,
-      currentPlayerKey,
-      me,
-      opponent,
-      myScore,
-      opponentScore,
-      winningPlayerKey,
-      isMyTurn,
-      isOpponentTurn,
-      currentBreak,
-      myCurrentBreak: isMyTurn ? currentBreak : 0,
-      opponentCurrentBreak: isOpponentTurn ? currentBreak : 0,
-      scoreKeeper: gameState?.score_keeper ?? "opp",
-      nextFrameConfirmations: gameState?.next_frame_confirmations ?? [],
-    };
-  }, [gameState, players, sessionKey]);
 };
 
 // Compatibility hook; prefer focused hooks for better render isolation.

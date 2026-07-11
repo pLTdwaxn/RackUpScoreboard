@@ -11,10 +11,9 @@ import ConcedeFrameDialog from "./ConcedeFrameDialog";
 import FinishedFramePanel from "./FinishedFramePanel";
 import SimpleScoringPanel from "./SimpleScoringPanel";
 import { useGameActions } from "@/hooks/useGameActions";
-import {
-  useMatchroomActions,
-  useMatchroomDerivedState,
-} from "@/hooks/useSocket";
+import { useMatchroomActions } from "@/hooks/useSocket";
+import { useMatchroomFrame } from "@/hooks/useMatchroomFrame";
+import { useMatchroomPlayers } from "@/hooks/useMatchroomPlayers";
 import { useControlPanel } from "@/hooks/useControlPanel";
 import { BALL_BY_NAME, BallName } from "@/lib/controlPanelShared";
 
@@ -53,13 +52,9 @@ function summarizeBalls(pottedBalls: BallName[]): string {
 }
 
 export default function Controls() {
-  const {
-    hasFrame,
-    frame,
-    scoreKeeper,
-    nextFrameConfirmations,
-    currentPlayerKey,
-  } = useMatchroomDerivedState();
+  const { currentPlayerKey } = useMatchroomPlayers();
+  const { hasFrame, frame, scoreKeeper, nextFrameConfirmations } =
+    useMatchroomFrame();
   const { sendAction } = useMatchroomActions();
   const { sendShot, sendEndTurn, sendUndo, sendConcede, sendNextFrame } =
     useGameActions(sendAction, currentPlayerKey);

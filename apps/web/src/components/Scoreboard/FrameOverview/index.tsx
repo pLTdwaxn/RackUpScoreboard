@@ -1,6 +1,6 @@
 "use client";
 
-import { useMatchroomDerivedState } from "@/hooks/useSocket";
+import { useMatchroomFrame } from "@/hooks/useMatchroomFrame";
 
 import FrameScoreboard from "./FrameScoreboard";
 import FrameStats from "./FrameStats";
@@ -18,7 +18,7 @@ export default function FrameOverview() {
     opponentScore,
     myCurrentBreak,
     opponentCurrentBreak,
-  } = useMatchroomDerivedState();
+  } = useMatchroomFrame();
 
   if (!hasFrame) {
     return null;
