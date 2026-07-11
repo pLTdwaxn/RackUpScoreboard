@@ -68,6 +68,8 @@ class FrameProgression:
             self.process_foul(frame, (), foul_points)
             return
 
+        frame.set_previously_fouled(False)
+
         if frame.object_ball == RED_BALL:
             reds_potted = potted_balls.count(RED_BALL)
             score = reds_potted * BALL_POINTS[RED_BALL]
@@ -102,6 +104,7 @@ class FrameProgression:
         self._update_highest_break_if_needed(frame)
         frame.switch_turn()
         frame.reset_current_break()
+        frame.set_previously_fouled(False)
         self._advance_after_turn_change(frame)
 
     # Fouls are either player-declared or calculated with the potted balls.
@@ -139,7 +142,17 @@ class FrameProgression:
 
         frame.switch_turn()
         frame.reset_current_break()
+        frame.set_previously_fouled(True)
         self._advance_after_turn_change(frame)
+
+    def process_skip_turn(self, frame: FrameModel) -> None:
+        frame.switch_turn()
+        frame.reset_current_break()
+        frame.set_previously_fouled(False)
+        self._advance_after_turn_change(frame)
+
+    def process_declare_free_ball(self, frame: FrameModel, nominated_colour: str) -> None:
+        frame.set_object_ball(nominated_colour)
 
     def remaining_colour_after(self, frame: FrameModel, colour: str) -> Optional[str]:
         try:

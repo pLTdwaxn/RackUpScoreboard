@@ -59,6 +59,8 @@ class FrameModel:
 
         self.history = []
 
+        self.previously_fouled = False
+
         # Reactive scores mapping; any score mutation recalculates context.
         self.scores = ObservableScores(dict(scores), self.recalculate_score_context)
 
@@ -134,6 +136,9 @@ class FrameModel:
         if len(leaders) != 1:
             return None
         return leaders[0]
+
+    def set_previously_fouled(self, fouled: bool) -> None:
+        self.previously_fouled = fouled
 
     def finish_with_resolved_winner(self) -> None:
         self.status = FrameStatus.FINISHED
@@ -211,6 +216,7 @@ class FrameModel:
             "object_ball": self.object_ball,
             "current_turn": self.current_turn,
             "current_break": self.current_break,
+            "previously_fouled": self.previously_fouled,
             "points_remaining": self.points_remaining,
             "points_gap": self.points_gap(),
             "snookers_required": self.snookers_required,

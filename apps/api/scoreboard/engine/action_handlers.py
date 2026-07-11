@@ -134,3 +134,47 @@ class NextFrameActionHandler:
         context.next_frame_service.start_next_frame(context.frame, context.match, context.matchroom)
         context.pending_next_frame_confirmations.clear()
         return True, None
+
+
+class SkipActionHandler:
+    def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        if context.frame.status != FrameStatus.ACTIVE:
+            return False, "Current frame is not active."
+
+        if not context.frame.previously_fouled:
+            return False, "Cannot skip turn when the player has not fouled."
+
+        transitioned, transition_error = context.transition_service.transition(
+            context.frame,
+            "skip",
+        )
+        if not transitioned:
+            return False, transition_error
+
+        context.frame_progression.process_skip_turn(context.frame)
+
+        return True, None
+
+
+class DeclareFreeBallActionHandler:
+    def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        if context.frame.status != FrameStatus.ACTIVE:
+            return False, "Current frame is not active."
+
+        if not context.frame.previously_fouled:
+            return False, "Cannot declare a free ball when the player has not fouled."
+
+        transitioned, transition_error = context.transition_service.transition(
+            context.frame,
+            "declare_free_ball",
+        )
+        if not transitioned:
+            return False, transition_error
+
+        nominated_colour = context.data.get("nominated_colour")
+        if not nominated_colour:
+            return False, "Nominated colour is missing."
+
+        context.frame_progression.process_declare_free_ball(context.frame, nominated_colour)
+
+        return True, None

@@ -7,6 +7,7 @@ from scoreboard.engine.action_handlers import (
     ConcedeActionHandler,
     NextFrameActionHandler,
     ShotActionHandler,
+    SkipActionHandler,
     UndoActionHandler,
 )
 from scoreboard.engine.models.frame_progression import FrameProgression
@@ -28,6 +29,7 @@ class FrameStatusStateMachine(StateMachine):
 
     shot = ready.to(active) | active.to(active)
     undo = ready.to(ready) | active.to(ready)
+    skip = active.to(active)
 
 
 class MatchroomActionDispatcher:
@@ -41,6 +43,7 @@ class MatchroomActionDispatcher:
         self._next_frame_service = NextFrameService()
         self._action_handlers = {
             "shot": ShotActionHandler(),
+            "skip": SkipActionHandler(),
             "undo": UndoActionHandler(),
             "concede": ConcedeActionHandler(),
             "next_frame": NextFrameActionHandler(),
