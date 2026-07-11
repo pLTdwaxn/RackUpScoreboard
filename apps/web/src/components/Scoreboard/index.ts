@@ -1,11 +1,7 @@
 export { default as Scoreboard } from "./Scoreboard";
-export { default as ThemeToggle } from "./ThemeToggle";
-export { default as NewMatch } from "./NewMatch";
 export { default as Controls } from "./Controls";
-export { default as PlayerCard } from "./PlayerCard";
-export { default as MatchOverview } from "./MatchOverview";
-export { default as FrameOverview } from "./FrameOverview";
+export { default as PlayerCard } from "./PlayersOverview/PlayerCard";
+export { default as PlayersOverview } from "./PlayersOverview";
+export { default as FrameOverview } from "./FrameOverview/index";
 export { default as MatchroomOverview } from "./MatchroomOverview";
-export { default as TopRow } from "./TopRow";
-export { default as Menu } from "./Menu";
 export { default as MatchLog } from "./MatchLog";

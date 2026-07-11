@@ -37,7 +37,6 @@ export const DEFAULT_FRAME: Frame = {
   winner_key: null,
 };
 
-// Deprecate
 export const DEFAULT_TABLE: TableState = {
   reds_remaining: 15,
   colours_on_table: {
@@ -61,14 +60,6 @@ export const DEFAULT_MATCHROOM: Matchroom = {
   scoreKeepingMode: "self" as const,
   status: "pending" as const,
 };
-
-// export type MatchroomViewModel = {
-//   id: string;
-//   roomCode: string;
-//   clubId: string;
-//   scoreKeepingMode: "self" | "opp" | "ref" | "any";
-//   status: "pending" | "active" | "finished";
-// };
 
 export type ScoreboardViewModel = {
   matchroom: Matchroom;

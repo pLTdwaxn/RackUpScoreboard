@@ -1,11 +1,11 @@
 import { Surface } from "@heroui/react/surface";
 import { Children, type ReactNode } from "react";
 
-type TopRowProps = {
+type TopBarProps = {
   children: ReactNode;
 };
 
-export default function TopRow({ children }: TopRowProps) {
+export default function TopBar({ children }: TopBarProps) {
   const [leftChild, centerChild, rightChild] = Children.toArray(children);
 
   return (

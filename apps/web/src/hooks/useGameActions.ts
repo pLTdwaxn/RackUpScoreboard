@@ -1,51 +1,46 @@
 import { toast } from "@heroui/react";
+import { RoomClientAction } from "@/types";
+import {
+  createConcedeAction,
+  createNextFrameAction,
+  createShotAction,
+  createUndoAction,
+} from "@/lib/roomActions";
 
 export function useGameActions(
-  sendEvent: (payload: Record<string, unknown>) => void,
+  sendAction: (action: RoomClientAction) => void,
   turnPlayerName: string,
 ) {
   const sendShot = (pottedBalls: string[], foul = 0) => {
-    sendEvent({
-      action: "shot",
-      data: {
-        potted_balls: pottedBalls,
-        foul,
-      },
-    });
+    sendAction(createShotAction(pottedBalls, foul));
     toast.success(`${turnPlayerName} potted ${pottedBalls.join(", ")}`, {
       timeout: 2000,
     });
   };
 
   const sendEndTurn = () => {
-    sendEvent({
-      action: "shot",
-      data: {
-        potted_balls: [],
-        foul: 0,
-      },
-    });
+    sendAction(createShotAction([], 0));
     toast.info(`${turnPlayerName} ended their turn`, {
       timeout: 2000,
     });
   };
 
   const sendUndo = () => {
-    sendEvent({ action: "undo", data: {} });
+    sendAction(createUndoAction());
     toast.warning(`You reverted the last action`, {
       timeout: 2000,
     });
   };
 
   const sendConcede = () => {
-    sendEvent({ action: "concede", data: {} });
+    sendAction(createConcedeAction());
     toast.warning(`${turnPlayerName} conceded the frame`, {
       timeout: 2000,
     });
   };
 
   const sendNextFrame = () => {
-    sendEvent({ action: "next_frame", data: {} });
+    sendAction(createNextFrameAction());
     toast.info("Confirmed: ready for the next frame", {
       timeout: 2000,
     });

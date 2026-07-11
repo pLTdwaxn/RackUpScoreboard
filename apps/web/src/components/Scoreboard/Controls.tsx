@@ -4,26 +4,19 @@ import { useMemo, useState } from "react";
 
 import { Surface } from "@heroui/react";
 
-import { GameStateMessage, Frame } from "@/types";
+import { Frame } from "@/types";
 
 import AdvancedScoringPanel from "./AdvancedScoringPanel";
 import ConcedeFrameDialog from "./ConcedeFrameDialog";
 import FinishedFramePanel from "./FinishedFramePanel";
 import SimpleScoringPanel from "./SimpleScoringPanel";
-import { BALL_BY_NAME, BallName } from "./controlPanelShared";
-import { useControlPanel } from "./useControlPanel";
-
-type ControlsProps = {
-  frame: Frame;
-  nextFrameConfirmations: string[];
-  scoreKeeper: GameStateMessage["score_keeper"];
-  currentPlayerKey: string;
-  sendShot: (pottedBalls: BallName[], foul?: number) => void;
-  sendEndTurn: () => void;
-  sendUndo: () => void;
-  sendConcede: () => void;
-  sendNextFrame: () => void;
-};
+import { useGameActions } from "@/hooks/useGameActions";
+import {
+  useMatchroomActions,
+  useMatchroomDerivedState,
+} from "@/hooks/useSocket";
+import { useControlPanel } from "@/hooks/useControlPanel";
+import { BALL_BY_NAME, BallName } from "@/lib/controlPanelShared";
 
 function isLegalShot(
   pottedBalls: BallName[],
@@ -59,18 +52,18 @@ function summarizeBalls(pottedBalls: BallName[]): string {
     .join(", ");
 }
 
-export default function Controls({
-  frame,
-  nextFrameConfirmations,
-  // table,
-  scoreKeeper,
-  currentPlayerKey,
-  sendShot,
-  sendEndTurn,
-  sendUndo,
-  sendConcede,
-  sendNextFrame,
-}: ControlsProps) {
+export default function Controls() {
+  const {
+    hasFrame,
+    frame,
+    scoreKeeper,
+    nextFrameConfirmations,
+    currentPlayerKey,
+  } = useMatchroomDerivedState();
+  const { sendAction } = useMatchroomActions();
+  const { sendShot, sendEndTurn, sendUndo, sendConcede, sendNextFrame } =
+    useGameActions(sendAction, currentPlayerKey);
+
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [isConcedeDialogOpen, setIsConcedeDialogOpen] = useState(false);
   const [multiPotBalls, setMultiPotBalls] = useState<BallName[]>([]);
@@ -86,7 +79,6 @@ export default function Controls({
     objectBall,
   } = useControlPanel(
     frame,
-    // table,
     scoreKeeper,
     currentPlayerKey,
     nextFrameConfirmations,
@@ -230,6 +222,10 @@ export default function Controls({
 
     return foulMode ? "Tap the ball fouled on" : "Tap the balls potted";
   })();
+
+  if (!hasFrame) {
+    return null;
+  }
 
   return (
     <Surface

@@ -2,7 +2,6 @@ export type GameStateMessage = {
   type: "game_state";
   matchroom: Matchroom;
   players: Player[];
-  // table: TableState;
   scores: Record<string, number>;
   match_scores: Record<string, number>;
   match: Match;
@@ -86,3 +85,32 @@ export type MatchroomConnection = {
   displayName: string;
   identityType: "verified" | "anonymous";
 };
+
+export type RoomClientShotAction = {
+  action: "shot";
+  data: {
+    potted_balls: string[];
+    foul: number;
+  };
+};
+
+export type RoomClientUndoAction = {
+  action: "undo";
+  data: Record<string, never>;
+};
+
+export type RoomClientConcedeAction = {
+  action: "concede";
+  data: Record<string, never>;
+};
+
+export type RoomClientNextFrameAction = {
+  action: "next_frame";
+  data: Record<string, never>;
+};
+
+export type RoomClientAction =
+  | RoomClientShotAction
+  | RoomClientUndoAction
+  | RoomClientConcedeAction
+  | RoomClientNextFrameAction;

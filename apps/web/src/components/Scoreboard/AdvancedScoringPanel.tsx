@@ -6,7 +6,7 @@ import AdvancedControl, {
   AdvancedBallRail,
   AdvancedBottomActions,
 } from "./AdvancedControl";
-import { BallName } from "./controlPanelShared";
+import { BallName } from "@/lib/controlPanelShared";
 
 type AdvancedScoringPanelProps = {
   summary: string;

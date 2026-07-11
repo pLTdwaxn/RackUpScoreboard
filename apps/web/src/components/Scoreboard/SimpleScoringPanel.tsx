@@ -4,7 +4,7 @@ import SimpleControl, {
   SimpleBallRail,
   SimpleBottomActions,
 } from "./SimpleControl";
-import { BallName } from "./controlPanelShared";
+import { BallName } from "@/lib/controlPanelShared";
 
 type SimpleScoringPanelProps = {
   redsRemaining: number;

@@ -35,7 +35,7 @@ export default function MatchroomOverview({
 
     async function buildQrCode() {
       try {
-        const roomUrl = `${window.location.origin}/app?matchroom=${encodeURIComponent(matchroomId)}`;
+        const roomUrl = `${window.location.origin}/matchroom/${encodeURIComponent(matchroomId)}`;
         const dataUrl = await QRCode.toDataURL(roomUrl, {
           errorCorrectionLevel: "M",
           margin: 1,
