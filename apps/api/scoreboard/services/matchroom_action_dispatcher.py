@@ -6,8 +6,8 @@ from scoreboard.action_handlers import (
     ActionContext,
     ConcedeActionHandler,
     NextFrameActionHandler,
+    PassShotActionHandler,
     ShotActionHandler,
-    SkipActionHandler,
     UndoActionHandler,
 )
 from scoreboard.domain.models.frame import FrameStatus
@@ -29,7 +29,8 @@ class FrameStatusStateMachine(StateMachine):
 
     shot = ready.to(active) | active.to(active)
     undo = ready.to(ready) | active.to(ready)
-    skip = active.to(active)
+    pass_shot = active.to(active)
+    declare_free_ball = active.to(active)
 
 
 class MatchroomActionDispatcher:
@@ -43,7 +44,7 @@ class MatchroomActionDispatcher:
         self._next_frame_service = NextFrameService()
         self._action_handlers = {
             "shot": ShotActionHandler(),
-            "skip": SkipActionHandler(),
+            "pass_shot": PassShotActionHandler(),
             "undo": UndoActionHandler(),
             "concede": ConcedeActionHandler(),
             "next_frame": NextFrameActionHandler(),

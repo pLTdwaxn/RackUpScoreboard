@@ -21,6 +21,7 @@ export const DEFAULT_FRAME: Frame = {
   points_gap: 0,
   scores: {},
   current_turn: "",
+  previously_fouled: false,
   current_break: 0,
   reds_remaining: 15,
   colours_on_table: {

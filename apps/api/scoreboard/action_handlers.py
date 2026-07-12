@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from scoreboard.domain.models.frame import Frame, FrameStatus
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.matchroom import Matchroom
-from scoreboard.domain.orchestrators.frame_orchestrator import ActionPayload, FrameOrchestrator
+from scoreboard.domain.orchestrators.frame_orchestrator import (
+    ActionPayload,
+    FrameOrchestrator,
+)
 from scoreboard.domain.rules.messages import ShotMessage
 from scoreboard.services.action_services import (
     FramePhaseTransitionService,
@@ -74,7 +77,11 @@ class ShotActionHandler:
             ),
         )
 
-        if not was_finished and context.frame.status == FrameStatus.FINISHED and context.frame.winner_key:
+        if (
+            not was_finished
+            and context.frame.status == FrameStatus.FINISHED
+            and context.frame.winner_key
+        ):
             context.pending_next_frame_confirmations.clear()
             context.match_result_service.record_finished_frame_result(
                 context.match,
@@ -100,7 +107,10 @@ class ConcedeActionHandler:
         if len(context.matchroom.players) < 2:
             return False, "Cannot concede when there is no opponent."
 
-        if context.frame.status != FrameStatus.ACTIVE and context.frame.status != FrameStatus.READY:
+        if (
+            context.frame.status != FrameStatus.ACTIVE
+            and context.frame.status != FrameStatus.READY
+        ):
             return False, "Current frame is not in progress."
 
         winner_key = context.opponent_resolver.resolve(
@@ -130,25 +140,29 @@ class NextFrameActionHandler:
             return False, "Match is already finished."
 
         context.pending_next_frame_confirmations.add(context.actor_key)
-        if len(context.pending_next_frame_confirmations) < len(context.matchroom.players):
+        if len(context.pending_next_frame_confirmations) < len(
+            context.matchroom.players
+        ):
             return True, None
 
-        context.next_frame_service.start_next_frame(context.frame, context.match, context.matchroom)
+        context.next_frame_service.start_next_frame(
+            context.frame, context.match, context.matchroom
+        )
         context.pending_next_frame_confirmations.clear()
         return True, None
 
 
-class SkipActionHandler:
+class PassShotActionHandler:
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         if context.frame.status != FrameStatus.ACTIVE:
             return False, "Current frame is not active."
 
         if not context.frame.previously_fouled:
-            return False, "Cannot skip turn when the player has not fouled."
+            return False, "Cannot pass shot when the player has not fouled."
 
         transitioned, transition_error = context.transition_service.transition(
             context.frame,
-            "skip",
+            "pass_shot",
         )
         if not transitioned:
             return False, transition_error

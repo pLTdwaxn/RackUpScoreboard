@@ -275,6 +275,12 @@ export default function Controls() {
               }}
               onDeclareFoul={toggleFoulMode}
               onEndTurn={sendEndTurn}
+<<<<<<< HEAD
+=======
+              onUndo={sendUndo}
+              onPassShot={sendPassShot}
+              onDeclareFreeBall={sendDeclareFreeBall}
+>>>>>>> 6f960f3 (WIP)
             />
           )}
 

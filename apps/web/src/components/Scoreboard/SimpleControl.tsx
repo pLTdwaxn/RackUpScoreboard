@@ -5,7 +5,9 @@ import {
   IconAdjustmentsAlt,
   IconArrowsRightLeft,
   IconBan,
+  IconChartCircles,
   IconFlagFilled,
+  IconPlayerSkipForward,
 } from "@tabler/icons-react";
 
 import { Frame } from "@/types";
@@ -154,6 +156,9 @@ export type SimpleBottomActionsProps = {
   onEnterAdvancedMode: () => void;
   onDeclareFoul: () => void;
   onEndTurn: () => void;
+  onUndo: () => void;
+  onPassShot?: () => void;
+  onDeclareFreeBall?: () => void;
 };
 
 export function SimpleBottomActions({
@@ -162,37 +167,58 @@ export function SimpleBottomActions({
   onEnterAdvancedMode,
   onDeclareFoul,
   onEndTurn,
+  onUndo,
+  onPassShot,
+  onDeclareFreeBall,
 }: SimpleBottomActionsProps) {
   return (
-    <div className="flex w-full flex-row items-center justify-between gap-4">
-      <Button isIconOnly variant="danger" size="sm" onPress={onConcede}>
-        <IconFlagFilled stroke={2} />
-      </Button>
+    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-4">
+      <div className="justify-self-start">
+        <ButtonGroup size="sm">
+          <Button isIconOnly variant="danger" size="sm" onPress={onConcede}>
+            <IconFlagFilled stroke={2} />
+          </Button>
+        </ButtonGroup>
+      </div>
 
-      <ButtonGroup variant="secondary" size="sm" className="mb-0">
-        <Button isIconOnly isDisabled={!canKeepScore} onPress={onEndTurn}>
-          <IconArrowsRightLeft stroke={2} />
-        </Button>
-        <Button
-          isIconOnly
-          variant="danger-soft"
-          isDisabled={!canKeepScore}
-          onPress={onDeclareFoul}
-        >
-          <ButtonGroup.Separator />
-          <IconBan stroke={2} />
-        </Button>
-      </ButtonGroup>
+      <div className="justify-self-center">
+        <ButtonGroup variant="secondary" size="sm">
+          <Button isIconOnly isDisabled={!canKeepScore} onPress={onEndTurn}>
+            <IconArrowsRightLeft stroke={2} />
+          </Button>
+          <Button isIconOnly size="sm" onPress={onPassShot}>
+            <ButtonGroup.Separator />
+            <IconPlayerSkipForward stroke={2} />
+          </Button>
+          <Button isIconOnly size="sm" onPress={onDeclareFreeBall}>
+            <ButtonGroup.Separator />
+            <IconChartCircles stroke={2} />
+          </Button>
+          <Button
+            isIconOnly
+            variant="danger-soft"
+            isDisabled={!canKeepScore}
+            onPress={onDeclareFoul}
+          >
+            <ButtonGroup.Separator />
+            <IconBan stroke={2} />
+          </Button>
+        </ButtonGroup>
+      </div>
 
-      <Button
-        isDisabled={!canKeepScore}
-        variant="secondary"
-        isIconOnly
-        onPress={onEnterAdvancedMode}
-        size="sm"
-      >
-        <IconAdjustmentsAlt stroke={2} />
-      </Button>
+      <div className="justify-self-end">
+        <ButtonGroup variant="secondary" size="sm">
+          <Button
+            isDisabled={!canKeepScore}
+            variant="secondary"
+            isIconOnly
+            onPress={onEnterAdvancedMode}
+            size="sm"
+          >
+            <IconAdjustmentsAlt stroke={2} />
+          </Button>
+        </ButtonGroup>
+      </div>
     </div>
   );
 }

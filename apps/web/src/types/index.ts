@@ -74,6 +74,7 @@ export type Frame = {
   current_turn: string;
   current_break: number;
   points_remaining: number;
+  previously_fouled?: boolean;
   reds_remaining: number;
   colours_on_table: Record<string, boolean>;
   object_ball: string;
@@ -117,6 +118,16 @@ export type RoomClientUndoAction = {
   data: Record<string, never>;
 };
 
+export type RoomClientPassShotAction = {
+  action: "pass_shot";
+  data: Record<string, never>;
+};
+
+export type RoomClientDeclareFreeBallAction = {
+  action: "declare_free_ball";
+  data: Record<string, never>;
+};
+
 export type RoomClientConcedeAction = {
   action_id?: string;
   action: "concede";
@@ -132,5 +143,7 @@ export type RoomClientNextFrameAction = {
 export type RoomClientAction =
   | RoomClientShotAction
   | RoomClientUndoAction
+  | RoomClientPassShotAction
+  | RoomClientDeclareFreeBallAction
   | RoomClientConcedeAction
   | RoomClientNextFrameAction;

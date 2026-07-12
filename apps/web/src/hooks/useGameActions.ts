@@ -1,7 +1,9 @@
 import { RoomClientAction } from "@/types";
 import {
   createConcedeAction,
+  createDeclareFreeBallAction,
   createNextFrameAction,
+  createPassShotAction,
   createShotAction,
   createUndoAction,
 } from "@/lib/roomActions";
@@ -25,9 +27,31 @@ export function useGameActions(
     sendAction(createConcedeAction());
   };
 
+  const sendPassShot = () => {
+    sendAction(createPassShotAction());
+    toast.info(`${turnPlayerName} passed their shot`, {
+      timeout: 2000,
+    });
+  };
+
+  const sendDeclareFreeBall = () => {
+    sendAction(createDeclareFreeBallAction());
+    toast.info(`${turnPlayerName} declared a free ball`, {
+      timeout: 2000,
+    });
+  };
+
   const sendNextFrame = () => {
     sendAction(createNextFrameAction());
   };
 
-  return { sendShot, sendEndTurn, sendUndo, sendConcede, sendNextFrame };
+  return {
+    sendShot,
+    sendEndTurn,
+    sendUndo,
+    sendConcede,
+    sendPassShot,
+    sendDeclareFreeBall,
+    sendNextFrame,
+  };
 }

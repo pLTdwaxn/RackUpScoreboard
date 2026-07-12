@@ -4,7 +4,14 @@ from scoreboard.domain.rules.messages import ShotMessage
 
 from . import BALL_POINTS
 
-VALID_ACTIONS = {"shot", "undo", "concede", "next_frame"}
+VALID_ACTIONS = {
+    "shot",
+    "undo",
+    "pass_shot",
+    "declare_free_ball",
+    "concede",
+    "next_frame",
+}
 VALID_SHOT_FIELDS = {"potted_balls", "foul"}
 
 
@@ -31,6 +38,11 @@ def validate_event(event: dict) -> None:
     if action in {"concede", "next_frame"}:
         if data:
             raise ValueError(f"{action} action does not accept payload data.")
+        return
+
+    if action == "pass_shot":
+        if data:
+            raise ValueError("Pass shot action does not accept payload data.")
         return
 
     validate_shot_data(data)

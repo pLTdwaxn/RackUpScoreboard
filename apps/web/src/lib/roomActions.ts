@@ -13,6 +13,20 @@ export function createShotAction(
   };
 }
 
+export function createPassShotAction(): RoomClientAction {
+  return {
+    action: "pass_shot",
+    data: {},
+  };
+}
+
+export function createDeclareFreeBallAction(): RoomClientAction {
+  return {
+    action: "declare_free_ball",
+    data: {},
+  };
+}
+
 export function createUndoAction(): RoomClientAction {
   return {
     action: "undo",

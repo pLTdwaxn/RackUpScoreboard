@@ -26,6 +26,7 @@ export function useMatchroomFrame() {
       isMyTurn,
       isOpponentTurn,
       currentBreak,
+      previouslyFouled: frame.previously_fouled ?? false,
       myCurrentBreak: isMyTurn ? currentBreak : 0,
       opponentCurrentBreak: isOpponentTurn ? currentBreak : 0,
       scoreKeeper: gameState?.score_keeper ?? "opp",
