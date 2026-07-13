@@ -126,7 +126,7 @@ jobs:
       API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
       WEB_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}-web
       REGISTRY: ${{ vars.VULTR_REGISTRY }}
-      CORS_ALLOW_ORIGINS: ${{ vars.CORS_ALLOW_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,http://207.148.83.4' }}
+      CORS_ALLOW_ORIGINS: ${{ vars.CORS_ALLOW_ORIGINS }}
       API_CONTAINER_NAME: rackupscoreboard-api
       WEB_CONTAINER_NAME: rackupscoreboard-web
       API_PORT: "8004"
@@ -172,12 +172,12 @@ jobs:
               -e CORS_ALLOW_ORIGINS="$CORS_ALLOW_ORIGINS" \
               "$API_IMAGE_NAME:$IMAGE_TAG"
 
-            docker run -d \
-              --name "$WEB_CONTAINER_NAME" \
-              --restart unless-stopped \
-              -p "$WEB_HOST_PORT:$WEB_CONTAINER_PORT" \
-              -e PORT="$WEB_CONTAINER_PORT" \
-              "$WEB_IMAGE_NAME:$IMAGE_TAG"
+            # docker run -d \
+            #   --name "$WEB_CONTAINER_NAME" \
+            #   --restart unless-stopped \
+            #   -p "$WEB_HOST_PORT:$WEB_CONTAINER_PORT" \
+            #   -e PORT="$WEB_CONTAINER_PORT" \
+            #   "$WEB_IMAGE_NAME:$IMAGE_TAG"
 
             prune_image() {
               local image_name="$1"
