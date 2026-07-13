@@ -3,20 +3,9 @@
 import { useState } from "react";
 
 import { MatchroomConnection } from "@/types";
+import { getClientApiBase } from "@/lib/env";
 
 const ROOM_SESSION_KEY_STORAGE_KEY = "scoreboard.room_session_key";
-
-function getApiBase(): string {
-  if (process.env.NEXT_PUBLIC_API_BASE) {
-    return process.env.NEXT_PUBLIC_API_BASE;
-  }
-
-  if (typeof window !== "undefined") {
-    return `${window.location.protocol}//${window.location.hostname}:8004`;
-  }
-
-  return "http://127.0.0.1:8004";
-}
 
 function persistSession(connection: MatchroomConnection): void {
   if (typeof window === "undefined") {
@@ -65,7 +54,13 @@ export function useConnection() {
     setError(null);
 
     try {
-      const apiBase = getApiBase();
+      const apiBase = getClientApiBase();
+      if (!apiBase) {
+        throw new Error(
+          "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
+        );
+      }
+
       const response = await fetch(`${apiBase}/connect`, {
         method: "POST",
         headers: {

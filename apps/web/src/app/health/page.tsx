@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { Card, CardContent, CardHeader, Chip, Code } from "@heroui/react";
+import { getLocalApiPortForDisplay, getServerApiBase } from "@/lib/env";
 
 type HealthResponse = {
   status?: string;
@@ -11,11 +12,17 @@ async function getHealth() {
   const headerStore = await headers();
   const host = headerStore.get("host");
   const forwardedProto = headerStore.get("x-forwarded-proto");
-  const apiBase =
-    process.env.NEXT_PUBLIC_API_BASE ??
-    (host
-      ? `${forwardedProto ?? "http"}://${host.split(":")[0]}:8004`
-      : "http://127.0.0.1:8004");
+  const apiBase = getServerApiBase({ host, forwardedProto });
+
+  if (!apiBase) {
+    return {
+      ok: false,
+      apiBase: "(missing NEXT_PUBLIC_API_BASE)",
+      message:
+        "Backend URL is not configured for this environment. Set NEXT_PUBLIC_API_BASE in deployment settings.",
+    };
+  }
+
   const url = `${apiBase}/health`;
 
   try {
@@ -39,7 +46,7 @@ async function getHealth() {
     return {
       ok: false,
       apiBase,
-      message: "Could not reach backend. Is FastAPI running on port 8004?",
+      message: `Could not reach backend. Is FastAPI running on port ${getLocalApiPortForDisplay()}?`,
     };
   }
 }

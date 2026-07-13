@@ -1,34 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RackUp Frontend
 
-## Getting Started
+This app is a Next.js frontend for the RackUp scoreboard API.
 
-First, run the development server:
+## Environment Profiles
+
+Use separate environment values for local development and cloud deployments.
+
+1. Local development profile:
+Set NEXT_PUBLIC_API_BASE in a local shell or in a local .env.local file.
+
+2. Vercel Preview profile:
+Set NEXT_PUBLIC_API_BASE in Vercel for the Preview environment.
+
+3. Vercel Production profile:
+Set NEXT_PUBLIC_API_BASE in Vercel for the Production environment.
+
+Important:
+NEXT_PUBLIC_* variables are embedded at build time. After changing them in Vercel, redeploy so the client bundle picks up the new value.
+
+Required runtime variables:
+
+- NEXT_PUBLIC_API_BASE: Public backend base URL used by browser requests and websocket connections.
+
+Optional runtime variables:
+
+- NEXT_PUBLIC_LOCAL_API_PORT: Local fallback backend port for localhost/private-network development. Defaults to 8004.
+- ALLOWED_DEV_ORIGINS: Comma-separated dev origins for Next.js allowedDevOrigins.
+
+## Local Setup
 
 ```bash
+export NEXT_PUBLIC_API_BASE=http://127.0.0.1:8004
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Docker Build Args
 
-## Learn More
+The Dockerfile accepts NEXT_PUBLIC_API_BASE and NEXT_PUBLIC_LOCAL_API_PORT as build args because the client needs them at build time.
 
-To learn more about Next.js, take a look at the following resources:
+Example:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_API_BASE=https://api.example.com \
+  --build-arg NEXT_PUBLIC_LOCAL_API_PORT=8004 \
+  -t rackup-web .
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The app intentionally fails fast on non-local hosts if NEXT_PUBLIC_API_BASE is missing.
+- Local fallback to host:NEXT_PUBLIC_LOCAL_API_PORT is only used for local/private development hosts.

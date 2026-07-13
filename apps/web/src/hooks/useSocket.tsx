@@ -16,6 +16,7 @@ import {
   RoomClientAction,
   RoomSocketMessage,
 } from "@/types";
+import { getClientApiBase } from "@/lib/env";
 
 interface MatchroomSessionContextType {
   matchroomId: string;
@@ -73,18 +74,6 @@ function toWebsocketUrl(
   const protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
   const params = new URLSearchParams(query);
   return `${protocol}//${parsed.host}/ws/room/?${params.toString()}`;
-}
-
-function getApiBase(): string {
-  if (process.env.NEXT_PUBLIC_API_BASE) {
-    return process.env.NEXT_PUBLIC_API_BASE;
-  }
-
-  if (typeof window !== "undefined") {
-    return `${window.location.protocol}//${window.location.hostname}:8004`;
-  }
-
-  return "http://127.0.0.1:8004";
 }
 
 export const MatchroomProvider = ({
@@ -162,7 +151,14 @@ export const MatchroomProvider = ({
       );
     }
 
-    const apiBase = getApiBase();
+    const apiBase = getClientApiBase();
+    if (!apiBase) {
+      setSocketError(
+        "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
+      );
+      return;
+    }
+
     const websocketUrl = toWebsocketUrl(apiBase, {
       matchroom_id: matchroomId,
       session_key: sessionKey,
