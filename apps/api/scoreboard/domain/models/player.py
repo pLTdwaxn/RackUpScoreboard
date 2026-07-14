@@ -5,7 +5,7 @@ from typing import Mapping
 
 
 @dataclass
-class PlayerModel:
+class Player:
     id: str  # External ID pointing to a player record in RackUp
     session_key: str  # For anonymous players, this can be the same as id
     name: str

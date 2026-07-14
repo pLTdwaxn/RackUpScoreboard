@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List
 
-from scoreboard.domain.models.match import MatchModel
-from scoreboard.domain.models.player import PlayerModel
+from scoreboard.domain.models.match import Match
+from scoreboard.domain.models.player import Player
 from scoreboard.services.match_state_projector import MatchStateProjector
 
 VALID_SCORE_KEEPERS = {"self", "opp", "ref", "any"}
@@ -20,15 +20,15 @@ class MatchroomStatus(str, Enum):
 @dataclass
 class RoomState:
     match_id: str
-    players: List["PlayerModel"]
+    players: List["Player"]
 
 
 @dataclass
-class MatchroomModel:
+class Matchroom:
     id: str
     room_code: str
-    players: list[PlayerModel]
-    match: MatchModel | None = None
+    players: list[Player]
+    match: Match | None = None
     current_frame_id: str | None = None
     score_keeper: str = "opp"
     status: MatchroomStatus = MatchroomStatus.PENDING
@@ -38,8 +38,8 @@ class MatchroomModel:
         self,
         id: str,
         room_code: str = "",
-        players: list[PlayerModel] = [],
-        match: MatchModel | None = None,
+        players: list[Player] = [],
+        match: Match | None = None,
         current_frame_id: str | None = None,
         score_keeper: str = "opp",
         status: MatchroomStatus = MatchroomStatus.PENDING,
@@ -55,7 +55,7 @@ class MatchroomModel:
         self.pending_next_frame_confirmations = pending_next_frame_confirmations or set()
         self._state_projector = MatchStateProjector()
 
-    def add_player(self, player: PlayerModel) -> None:
+    def add_player(self, player: Player) -> None:
         if len(self.players) < 2:
             self.players.append(player)
 

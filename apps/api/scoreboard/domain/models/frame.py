@@ -28,7 +28,7 @@ class FramePhase(str, Enum):
 
 
 @dataclass(init=False)
-class FrameModel:
+class Frame:
     id: str
     match_id: str
     scores: MutableMapping[str, int]

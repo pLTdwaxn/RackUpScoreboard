@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.factories import MatchFactory
 from scoreboard.factories.player_factory import PlayerFactory
 
@@ -8,7 +8,7 @@ from scoreboard.factories.player_factory import PlayerFactory
 class MatchroomFactory:
     @staticmethod
     def create_matchroom(matchroom_data, match_data, player_data):
-        matchroom = MatchroomModel(
+        matchroom = Matchroom(
             id=uuid4().hex[:8],
             room_code=matchroom_data.get("room_code", ""),
             score_keeper=matchroom_data.get("score_keeper", "opp"),

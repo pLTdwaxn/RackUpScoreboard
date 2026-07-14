@@ -3,21 +3,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
-    from scoreboard.domain.models.matchroom import MatchroomModel
+    from scoreboard.domain.models.matchroom import Matchroom
 
 from scoreboard.factories import MatchroomFactory, PlayerFactory
 
 
 class MatchroomManager:
     def __init__(self):
-        self.active_matchrooms: Dict[str, MatchroomModel] = {}
+        self.active_matchrooms: Dict[str, Matchroom] = {}
 
     def get_or_create_matchroom(
         self,
         matchroom_data: dict,
         player_data: dict,
         match_data: dict,
-    ) -> MatchroomModel:
+    ) -> Matchroom:
         existing = self.get_matchroom(matchroom_data["id"])
         if existing is None:
             new_matchroom = MatchroomFactory.create_matchroom(matchroom_data, match_data, player_data)
@@ -29,10 +29,10 @@ class MatchroomManager:
             existing.add_player(new_player)
         return existing
 
-    def get_matchroom(self, matchroom_id: str) -> MatchroomModel | None:
+    def get_matchroom(self, matchroom_id: str) -> Matchroom | None:
         return self.active_matchrooms.get(matchroom_id)
 
-    def register_matchroom(self, matchroom: MatchroomModel) -> None:
+    def register_matchroom(self, matchroom: Matchroom) -> None:
         self.active_matchrooms[matchroom.id] = matchroom
 
     def close_matchroom(self, matchroom_id: str) -> None:

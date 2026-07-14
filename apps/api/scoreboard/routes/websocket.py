@@ -3,7 +3,7 @@ import json
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.runtime.broadcast import broadcast_to_connections
 from scoreboard.runtime.connection_registry import connection_registry
 from scoreboard.services.matchroom_action_dispatcher import (
@@ -14,7 +14,7 @@ from scoreboard.services.matchroom_manager import matchroom_manager
 router = APIRouter()
 
 
-async def send_game_state(match_id: str, matchroom: MatchroomModel):
+async def send_game_state(match_id: str, matchroom: Matchroom):
     await broadcast_to_connections(
         connection_registry.get(match_id),
         {"type": "game_state", **matchroom.state_payload()},
@@ -36,7 +36,7 @@ async def send_error(websocket: WebSocket, message: str):
 async def handle_client_event(
     websocket: WebSocket,
     match_id: str,
-    matchroom: MatchroomModel,
+    matchroom: Matchroom,
     session_key: str,
     event: dict,
 ):

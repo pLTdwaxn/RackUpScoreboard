@@ -1,9 +1,9 @@
-from scoreboard.domain.models.frame import FrameModel, FramePhase, FrameStatus
+from scoreboard.domain.models.frame import Frame, FramePhase, FrameStatus
 from scoreboard.domain.rules.frame_progression import FrameProgression
 
 
-def make_frame() -> FrameModel:
-    return FrameModel(
+def make_frame() -> Frame:
+    return Frame(
         id="frame-test",
         match_id="match-test",
         scores={"p1": 0, "p2": 0},

@@ -2,23 +2,23 @@ from __future__ import annotations
 
 from typing import Optional
 
-from scoreboard.domain.models.frame import FrameModel, FramePhase
+from scoreboard.domain.models.frame import Frame, FramePhase
 
 from . import BALL_POINTS, COLOUR_BALLS, RED_BALL
 
 
 class FrameProgression:
-    def _update_highest_break_if_needed(self, frame: FrameModel) -> None:
+    def _update_highest_break_if_needed(self, frame: Frame) -> None:
         if frame.highest_break < frame.current_break:
             frame.update_highest_break(frame.current_break)
 
-    def _finish_or_respot_black(self, frame: FrameModel, colour: str) -> None:
+    def _finish_or_respot_black(self, frame: Frame, colour: str) -> None:
         if colour == "black" and frame.points_gap() == 0:
             frame.respot_black()
         else:
             frame.finish_with_resolved_winner()
 
-    def _advance_after_turn_change(self, frame: FrameModel) -> None:
+    def _advance_after_turn_change(self, frame: Frame) -> None:
         if frame.reds_remaining > 0:
             frame.set_object_ball(RED_BALL)
             return
@@ -41,7 +41,7 @@ class FrameProgression:
 
     def process_shot(
         self,
-        frame: FrameModel,
+        frame: Frame,
         potted_balls: tuple[str, ...],
         foul_points: int | None = None,
     ) -> None:
@@ -100,7 +100,7 @@ class FrameProgression:
         else:
             self._finish_or_respot_black(frame, colour)
 
-    def process_non_pot(self, frame: FrameModel, potted_balls: tuple[str, ...]) -> None:
+    def process_non_pot(self, frame: Frame, potted_balls: tuple[str, ...]) -> None:
         self._update_highest_break_if_needed(frame)
         frame.switch_turn()
         frame.reset_current_break()
@@ -114,7 +114,7 @@ class FrameProgression:
     #   e.g. illegal contacting, hitting non-object ball first, etc.
     # The frontend will send in the foul points,
     #   but we rely on the backend to calculate the foul points from the potted balls if possible.
-    def process_foul(self, frame: FrameModel, fouled_with: tuple[str, ...], foul_points: int | None) -> None:
+    def process_foul(self, frame: Frame, fouled_with: tuple[str, ...], foul_points: int | None) -> None:
         if fouled_with:
             penalty_points = max(BALL_POINTS[ball] for ball in fouled_with)
             penalty_points = max(4, min(7, penalty_points))
@@ -145,16 +145,16 @@ class FrameProgression:
         frame.set_previously_fouled(True)
         self._advance_after_turn_change(frame)
 
-    def process_skip_turn(self, frame: FrameModel) -> None:
+    def process_skip_turn(self, frame: Frame) -> None:
         frame.switch_turn()
         frame.reset_current_break()
         frame.set_previously_fouled(False)
         self._advance_after_turn_change(frame)
 
-    def process_declare_free_ball(self, frame: FrameModel, nominated_colour: str) -> None:
+    def process_declare_free_ball(self, frame: Frame, nominated_colour: str) -> None:
         frame.set_object_ball(nominated_colour)
 
-    def remaining_colour_after(self, frame: FrameModel, colour: str) -> Optional[str]:
+    def remaining_colour_after(self, frame: Frame, colour: str) -> Optional[str]:
         try:
             index = COLOUR_BALLS.index(colour)
         except ValueError:

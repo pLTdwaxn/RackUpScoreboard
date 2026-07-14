@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scoreboard.domain.models.frame import FrameModel, FrameStatus
-from scoreboard.domain.models.match import MatchModel
-from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.domain.models.frame import Frame, FrameStatus
+from scoreboard.domain.models.match import Match
+from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.domain.rules.frame_progression import FrameProgression
 from scoreboard.domain.rules.messages import ShotMessage
 from scoreboard.services.action_services import (
@@ -21,9 +21,9 @@ from scoreboard.services.history_manager import HistoryManager
 class ActionContext:
     actor_key: str
     data: dict
-    frame: FrameModel
-    match: MatchModel
-    matchroom: MatchroomModel
+    frame: Frame
+    match: Match
+    matchroom: Matchroom
     pending_next_frame_confirmations: set[str]
     frame_progression: FrameProgression
     score_keeper_policy: ScoreKeeperPolicy

@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING
 from . import BALL_POINTS, COLOUR_BALLS
 
 if TYPE_CHECKING:
-    from scoreboard.domain.models.frame import FrameModel
+    from scoreboard.domain.models.frame import Frame
 
 
 class SnookerCalculator:
-    def points_remaining(self, frame: FrameModel) -> int:
+    def points_remaining(self, frame: Frame) -> int:
         if frame.reds_remaining > 0:
             remaining = (8 * frame.reds_remaining) + sum(BALL_POINTS[c] for c in COLOUR_BALLS)
 
@@ -23,7 +23,7 @@ class SnookerCalculator:
 
         return sum(BALL_POINTS[colour] for colour, on_table in frame.colours_on_table.items() if on_table)
 
-    def snookers_required(self, frame: FrameModel) -> int:
+    def snookers_required(self, frame: Frame) -> int:
         if len(frame.scores) < 2:
             return 0
 

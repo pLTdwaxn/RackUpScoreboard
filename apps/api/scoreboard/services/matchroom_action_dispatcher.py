@@ -11,7 +11,7 @@ from scoreboard.action_handlers import (
     UndoActionHandler,
 )
 from scoreboard.domain.models.frame import FrameStatus
-from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.domain.rules.frame_progression import FrameProgression
 from scoreboard.domain.rules.validator import validate_event
 from scoreboard.services.action_services import (
@@ -49,7 +49,7 @@ class MatchroomActionDispatcher:
             "next_frame": NextFrameActionHandler(),
         }
 
-    def _reconcile_roster_for_active_frame(self, matchroom: MatchroomModel) -> tuple[bool, str | None]:
+    def _reconcile_roster_for_active_frame(self, matchroom: Matchroom) -> tuple[bool, str | None]:
         match = matchroom.match
         if match is None:
             return False, "Matchroom has no active match."
@@ -71,7 +71,7 @@ class MatchroomActionDispatcher:
 
         return True, None
 
-    def dispatch(self, matchroom: MatchroomModel, actor_key: str, event: dict) -> tuple[bool, str | None]:
+    def dispatch(self, matchroom: Matchroom, actor_key: str, event: dict) -> tuple[bool, str | None]:
         try:
             validate_event(event)
         except ValueError as exc:

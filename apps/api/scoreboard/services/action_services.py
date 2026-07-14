@@ -3,17 +3,17 @@ from __future__ import annotations
 from statemachine import StateMachine
 from statemachine.exceptions import TransitionNotAllowed
 
-from scoreboard.domain.models.frame import FrameModel, FrameStatus
-from scoreboard.domain.models.match import MatchModel
-from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.domain.models.frame import Frame, FrameStatus
+from scoreboard.domain.models.match import Match
+from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.factories.frame_factory import FrameFactory
 
 
 class ScoreKeeperPolicy:
     def can_player_keep_score(
         self,
-        matchroom: MatchroomModel,
-        frame: FrameModel,
+        matchroom: Matchroom,
+        frame: Frame,
         actor_key: str,
     ) -> bool:
         is_at_table = frame.current_turn == actor_key
@@ -36,7 +36,7 @@ class FramePhaseTransitionService:
     def __init__(self, phase_machine: StateMachine) -> None:
         self._phase_machine = phase_machine
 
-    def transition(self, frame: FrameModel, action: str) -> tuple[bool, str | None]:
+    def transition(self, frame: Frame, action: str) -> tuple[bool, str | None]:
         self._phase_machine.current_state_value = frame.status.value
         trigger = getattr(self._phase_machine, action, None)
         if trigger is None:
@@ -55,12 +55,12 @@ class FramePhaseTransitionService:
 
 
 class OpponentResolver:
-    def resolve(self, matchroom: MatchroomModel, actor_key: str) -> str:
+    def resolve(self, matchroom: Matchroom, actor_key: str) -> str:
         return next(player.session_key for player in matchroom.players if player.session_key != actor_key)
 
 
 class MatchResultService:
-    def record_finished_frame_result(self, match: MatchModel, winner_key: str) -> None:
+    def record_finished_frame_result(self, match: Match, winner_key: str) -> None:
         match.match_scores[winner_key] = match.match_scores.get(winner_key, 0) + 1
         if match.frames_to_win and match.match_scores[winner_key] >= match.frames_to_win:
             match.is_finished = True
@@ -69,9 +69,9 @@ class MatchResultService:
 class NextFrameService:
     def start_next_frame(
         self,
-        frame: FrameModel,
-        match: MatchModel,
-        matchroom: MatchroomModel,
+        frame: Frame,
+        match: Match,
+        matchroom: Matchroom,
     ) -> None:
         current_opening_turn = frame.opening_turn or frame.current_turn
         player_keys = [player.session_key for player in matchroom.players]

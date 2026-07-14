@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
-from scoreboard.domain.models.frame import FrameModel
+from scoreboard.domain.models.frame import Frame
 
 
 class MatchStatus(str, Enum):
@@ -20,11 +20,11 @@ class MatchState:
 
 
 @dataclass
-class MatchModel:
+class Match:
     id: str  # External ID pointing to a match record in RackUp
     matchroom_id: str
     player_ids: list[str]  # List of player session keys
-    frames: dict[str, FrameModel]  # List of frame IDs
+    frames: dict[str, Frame]  # List of frame IDs
     match_importance: str
     frames_to_win: int
     is_finished: bool  # Replace with status field to indicate if the match is finished or not
@@ -36,7 +36,7 @@ class MatchModel:
         id: str,  # External ID pointing to a match record in RackUp
         matchroom_id: str,
         player_ids: list[str] | None = None,
-        frames: dict[str, FrameModel] | None = None,
+        frames: dict[str, Frame] | None = None,
         match_importance: str = "Practice Match",
         frames_to_win: int = 0,
         status: MatchStatus = MatchStatus.PENDING,
