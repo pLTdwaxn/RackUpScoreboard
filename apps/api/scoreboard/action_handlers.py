@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from scoreboard.domain.models.frame import Frame, FrameStatus
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.matchroom import Matchroom
-from scoreboard.domain.rules.frame_progression import FrameProgression
+from scoreboard.domain.rules.frame_runner import FrameRunner
 from scoreboard.domain.rules.messages import ShotMessage
 from scoreboard.services.action_services import (
     FramePhaseTransitionService,
@@ -25,7 +25,7 @@ class ActionContext:
     match: Match
     matchroom: Matchroom
     pending_next_frame_confirmations: set[str]
-    frame_progression: FrameProgression
+    frame_progression: FrameRunner
     score_keeper_policy: ScoreKeeperPolicy
     transition_service: FramePhaseTransitionService
     opponent_resolver: OpponentResolver

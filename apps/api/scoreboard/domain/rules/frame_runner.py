@@ -7,7 +7,7 @@ from scoreboard.domain.models.frame import Frame, FramePhase
 from . import BALL_POINTS, COLOUR_BALLS, RED_BALL
 
 
-class FrameProgression:
+class FrameRunner:
     def _update_highest_break_if_needed(self, frame: Frame) -> None:
         if frame.highest_break < frame.current_break:
             frame.update_highest_break(frame.current_break)
