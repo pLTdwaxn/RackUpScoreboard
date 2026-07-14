@@ -1,7 +1,7 @@
-from scoreboard.engine.services.matchroom_action_dispatcher import (
+from scoreboard.services.matchroom_action_dispatcher import (
     MatchroomActionDispatcher,
 )
-from scoreboard.engine.services.matchroom_manager import MatchroomManager
+from scoreboard.services.matchroom_manager import MatchroomManager
 
 
 def _create_room_with_two_players(

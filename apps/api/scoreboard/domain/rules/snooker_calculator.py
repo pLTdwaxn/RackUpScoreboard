@@ -3,10 +3,10 @@ from __future__ import annotations
 from math import ceil
 from typing import TYPE_CHECKING
 
-from ..rules import BALL_POINTS, COLOUR_BALLS
+from . import BALL_POINTS, COLOUR_BALLS
 
 if TYPE_CHECKING:
-    from scoreboard.engine.models.frame import FrameModel
+    from scoreboard.domain.models.frame import FrameModel
 
 
 class SnookerCalculator:

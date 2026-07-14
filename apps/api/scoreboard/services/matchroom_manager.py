@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:
-    from scoreboard.engine.models.matchroom import MatchroomModel
+    from scoreboard.domain.models.matchroom import MatchroomModel
 
-from scoreboard.engine.factories import MatchroomFactory, PlayerFactory
+from scoreboard.factories import MatchroomFactory, PlayerFactory
 
 
 class MatchroomManager:

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from scoreboard.engine.rules.messages import ShotMessage
+from scoreboard.domain.rules.messages import ShotMessage
 
-from ..rules import BALL_POINTS
+from . import BALL_POINTS
 
 VALID_ACTIONS = {"shot", "undo", "concede", "next_frame"}
 VALID_SHOT_FIELDS = {"potted_balls", "foul"}

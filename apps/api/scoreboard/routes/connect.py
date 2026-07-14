@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from scoreboard.engine.services.matchroom_manager import matchroom_manager
+from scoreboard.services.matchroom_manager import matchroom_manager
 
 router = APIRouter()
 

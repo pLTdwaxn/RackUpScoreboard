@@ -1,7 +1,7 @@
-from scoreboard.engine.services.matchroom_action_dispatcher import (
+from scoreboard.services.matchroom_action_dispatcher import (
     MatchroomActionDispatcher,
 )
-from scoreboard.engine.services.matchroom_manager import MatchroomManager
+from scoreboard.services.matchroom_manager import MatchroomManager
 
 
 def test_dispatcher_reconciles_roster_then_no_pot_switches_turn() -> None:

@@ -1,6 +1,6 @@
 import pytest
 
-from scoreboard.engine.rules.validator import validate_event
+from scoreboard.domain.rules.validator import validate_event
 
 
 @pytest.mark.parametrize(

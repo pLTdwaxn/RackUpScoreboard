@@ -1,7 +1,7 @@
 from uuid import uuid4
 
-from scoreboard.engine.factories.frame_factory import FrameFactory
-from scoreboard.engine.models.match import MatchModel
+from scoreboard.domain.models.match import MatchModel
+from scoreboard.factories.frame_factory import FrameFactory
 
 
 class MatchFactory:

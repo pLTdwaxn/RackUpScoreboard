@@ -1,4 +1,4 @@
-from scoreboard.engine.services.matchroom_manager import MatchroomManager
+from scoreboard.services.matchroom_manager import MatchroomManager
 
 
 def test_second_player_join_updates_room_membership_only() -> None:

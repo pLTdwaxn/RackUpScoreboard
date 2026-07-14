@@ -3,11 +3,10 @@ from __future__ import annotations
 from statemachine import StateMachine
 from statemachine.exceptions import TransitionNotAllowed
 
-from scoreboard.engine.factories.frame_factory import FrameFactory
-from scoreboard.engine.models.frame import FrameModel
-from scoreboard.engine.models.match import MatchModel
-from scoreboard.engine.models.matchroom import MatchroomModel
-from scoreboard.engine.models.states import FrameStatus
+from scoreboard.domain.models.frame import FrameModel, FrameStatus
+from scoreboard.domain.models.match import MatchModel
+from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.factories.frame_factory import FrameFactory
 
 
 class ScoreKeeperPolicy:

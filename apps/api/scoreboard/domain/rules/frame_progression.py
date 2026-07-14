@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from scoreboard.engine.models.frame import FrameModel, FramePhase
+from scoreboard.domain.models.frame import FrameModel, FramePhase
 
-from ..rules import BALL_POINTS, COLOUR_BALLS, RED_BALL
+from . import BALL_POINTS, COLOUR_BALLS, RED_BALL
 
 
 class FrameProgression:

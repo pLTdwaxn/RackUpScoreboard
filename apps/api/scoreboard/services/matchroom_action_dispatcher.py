@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from statemachine import State, StateMachine
 
-from scoreboard.engine.action_handlers import (
+from scoreboard.action_handlers import (
     ActionContext,
     ConcedeActionHandler,
     NextFrameActionHandler,
@@ -10,11 +10,11 @@ from scoreboard.engine.action_handlers import (
     SkipActionHandler,
     UndoActionHandler,
 )
-from scoreboard.engine.models.frame_progression import FrameProgression
-from scoreboard.engine.models.matchroom import MatchroomModel
-from scoreboard.engine.models.states import FrameStatus
-from scoreboard.engine.rules.validator import validate_event
-from scoreboard.engine.services.action_services import (
+from scoreboard.domain.models.frame import FrameStatus
+from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.domain.rules.frame_progression import FrameProgression
+from scoreboard.domain.rules.validator import validate_event
+from scoreboard.services.action_services import (
     FramePhaseTransitionService,
     MatchResultService,
     NextFrameService,

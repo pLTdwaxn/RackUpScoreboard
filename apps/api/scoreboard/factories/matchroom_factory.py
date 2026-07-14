@@ -1,8 +1,8 @@
 from uuid import uuid4
 
-from scoreboard.engine.factories import MatchFactory
-from scoreboard.engine.factories.player_factory import PlayerFactory
-from scoreboard.engine.models.matchroom import MatchroomModel
+from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.factories import MatchFactory
+from scoreboard.factories.player_factory import PlayerFactory
 
 
 class MatchroomFactory:

@@ -5,14 +5,20 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, MutableMapping
 
-from scoreboard.engine.models.snooker_calculator import SnookerCalculator
-from scoreboard.engine.models.states import FrameStatus
+from scoreboard.domain.rules.snooker_calculator import SnookerCalculator
 
+# from scoreboard.engine.models.states import FrameStatus
 from ..rules import (
     BALL_POINTS,
     COLOUR_BALLS,
     RED_BALL,
 )
+
+
+class FrameStatus(str, Enum):
+    READY = "ready"
+    ACTIVE = "active"
+    FINISHED = "finished"
 
 
 class FramePhase(str, Enum):

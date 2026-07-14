@@ -2,14 +2,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional
 
-from scoreboard.engine.models.frame import FrameModel
+from scoreboard.domain.models.frame import FrameModel
 
 
 class MatchStatus(str, Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     FINISHED = "finished"
+
+
+class MatchState:
+    frames_to_win: Optional[int] = 0
+    match_type: str = "standard"
+    is_finished: bool = False
 
 
 @dataclass

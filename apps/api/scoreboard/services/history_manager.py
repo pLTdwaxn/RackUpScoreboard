@@ -4,8 +4,8 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from scoreboard.engine.models.frame import FrameModel
-    from scoreboard.engine.models.match import MatchModel
+    from scoreboard.domain.models.frame import FrameModel
+    from scoreboard.domain.models.match import MatchModel
 
 
 class HistoryState(Protocol):

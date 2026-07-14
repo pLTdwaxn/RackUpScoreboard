@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import List
 
-from scoreboard.engine.models.match import MatchModel
-from scoreboard.engine.models.match_state_projector import MatchStateProjector
-from scoreboard.engine.models.player import PlayerModel
+from scoreboard.domain.models.match import MatchModel
+from scoreboard.domain.models.player import PlayerModel
+from scoreboard.services.match_state_projector import MatchStateProjector
 
 VALID_SCORE_KEEPERS = {"self", "opp", "ref", "any"}
 
@@ -14,6 +15,12 @@ class MatchroomStatus(str, Enum):
     PENDING = "pending"
     ACTIVE = "active"
     CLOSED = "closed"
+
+
+@dataclass
+class RoomState:
+    match_id: str
+    players: List["PlayerModel"]
 
 
 @dataclass

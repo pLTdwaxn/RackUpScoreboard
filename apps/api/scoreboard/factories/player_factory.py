@@ -1,4 +1,4 @@
-from scoreboard.engine.models.player import PlayerModel
+from scoreboard.domain.models.player import PlayerModel
 
 
 class PlayerFactory:

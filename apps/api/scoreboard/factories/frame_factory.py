@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from scoreboard.engine.models.frame import FrameModel
+from scoreboard.domain.models.frame import FrameModel
 
 
 class FrameFactory:

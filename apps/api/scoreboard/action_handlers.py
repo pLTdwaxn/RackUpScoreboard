@@ -2,20 +2,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scoreboard.engine.models.frame import FrameModel
-from scoreboard.engine.models.frame_progression import FrameProgression
-from scoreboard.engine.models.history_manager import HistoryManager
-from scoreboard.engine.models.match import MatchModel
-from scoreboard.engine.models.matchroom import MatchroomModel
-from scoreboard.engine.models.states import FrameStatus
-from scoreboard.engine.rules.messages import ShotMessage
-from scoreboard.engine.services.action_services import (
+from scoreboard.domain.models.frame import FrameModel, FrameStatus
+from scoreboard.domain.models.match import MatchModel
+from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.domain.rules.frame_progression import FrameProgression
+from scoreboard.domain.rules.messages import ShotMessage
+from scoreboard.services.action_services import (
     FramePhaseTransitionService,
     MatchResultService,
     NextFrameService,
     OpponentResolver,
     ScoreKeeperPolicy,
 )
+from scoreboard.services.history_manager import HistoryManager
 
 
 @dataclass

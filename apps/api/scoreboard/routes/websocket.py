@@ -3,13 +3,13 @@ import json
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from scoreboard.engine.models.matchroom import MatchroomModel
-from scoreboard.engine.runtime.broadcast import broadcast_to_connections
-from scoreboard.engine.runtime.connection_registry import connection_registry
-from scoreboard.engine.services.matchroom_action_dispatcher import (
+from scoreboard.domain.models.matchroom import MatchroomModel
+from scoreboard.runtime.broadcast import broadcast_to_connections
+from scoreboard.runtime.connection_registry import connection_registry
+from scoreboard.services.matchroom_action_dispatcher import (
     matchroom_action_dispatcher,
 )
-from scoreboard.engine.services.matchroom_manager import matchroom_manager
+from scoreboard.services.matchroom_manager import matchroom_manager
 
 router = APIRouter()
 

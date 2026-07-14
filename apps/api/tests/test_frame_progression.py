@@ -1,6 +1,5 @@
-from scoreboard.engine.models.frame import FrameModel, FramePhase
-from scoreboard.engine.models.frame_progression import FrameProgression
-from scoreboard.engine.models.states import FrameStatus
+from scoreboard.domain.models.frame import FrameModel, FramePhase, FrameStatus
+from scoreboard.domain.rules.frame_progression import FrameProgression
 
 
 def make_frame() -> FrameModel:
