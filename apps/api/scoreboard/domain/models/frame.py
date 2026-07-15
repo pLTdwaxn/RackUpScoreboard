@@ -3,8 +3,13 @@ from __future__ import annotations
 from collections import UserDict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Callable, MutableMapping
+from typing import TYPE_CHECKING, Callable, MutableMapping
 
+if TYPE_CHECKING:
+    from scoreboard.domain.orchestrators.effects.frame_effect import FrameEffect
+
+# Don't call the SnookerCalculator directly from the Frame model!
+# Currently porting to the FrameOrchestrator.
 from scoreboard.domain.rules.snooker_calculator import SnookerCalculator
 
 # from scoreboard.engine.models.states import FrameStatus
@@ -208,6 +213,10 @@ class Frame:
                 return colour
         # No colours remaining, return black and decide if respotting is needed
         return "black"
+
+    def apply(self, effects: list[FrameEffect]) -> None:
+        for effect in effects:
+            effect.apply(self)
 
     def history_depth(self) -> int:
         return len(self.history)

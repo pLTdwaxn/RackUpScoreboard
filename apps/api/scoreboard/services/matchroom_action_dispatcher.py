@@ -12,7 +12,7 @@ from scoreboard.action_handlers import (
 )
 from scoreboard.domain.models.frame import FrameStatus
 from scoreboard.domain.models.matchroom import Matchroom
-from scoreboard.domain.rules.frame_runner import FrameRunner
+from scoreboard.domain.orchestrators.frame_orchestrator import FrameOrchestrator
 from scoreboard.domain.rules.validator import validate_event
 from scoreboard.services.action_services import (
     FramePhaseTransitionService,
@@ -36,7 +36,7 @@ class MatchroomActionDispatcher:
     """Dispatches room actions to handlers without coupling transport to domain logic."""
 
     def __init__(self) -> None:
-        self._frame_progression = FrameRunner()
+        self._frame_orchestrator = FrameOrchestrator()
         self._score_keeper_policy = ScoreKeeperPolicy()
         self._opponent_resolver = OpponentResolver()
         self._match_result_service = MatchResultService()
@@ -111,7 +111,7 @@ class MatchroomActionDispatcher:
             match=match,
             matchroom=matchroom,
             pending_next_frame_confirmations=pending_confirmations,
-            frame_progression=self._frame_progression,
+            frame_orchestrator=self._frame_orchestrator,
             score_keeper_policy=self._score_keeper_policy,
             transition_service=transition_service,
             opponent_resolver=self._opponent_resolver,

@@ -1,19 +1,20 @@
+from scoreboard.domain.services.matchroom_service import MatchroomService
+from scoreboard.repositories.matchroom_repository import MatchroomRepository
 from scoreboard.services.matchroom_action_dispatcher import (
     MatchroomActionDispatcher,
 )
-from scoreboard.services.matchroom_manager import MatchroomManager
 
 
 def test_dispatcher_reconciles_roster_then_no_pot_switches_turn() -> None:
-    manager = MatchroomManager()
+    matchroom_service = MatchroomService(repository=MatchroomRepository())
     dispatcher = MatchroomActionDispatcher()
 
-    room = manager.get_or_create_matchroom(
+    room = matchroom_service.connect_player_to_matchroom(
         {"id": "room_dispatch"},
         {"id": "", "session_key": "p1", "display_name": "P1"},
         {"id": "", "match_importance": "practice match", "frames_to_win": 3},
     )
-    manager.get_or_create_matchroom(
+    matchroom_service.connect_player_to_matchroom(
         {"id": room.id},
         {"id": "", "session_key": "p2", "display_name": "P2"},
         {"id": "", "match_importance": "practice match", "frames_to_win": 3},

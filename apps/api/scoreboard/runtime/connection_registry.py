@@ -5,25 +5,25 @@ from typing import Dict
 from fastapi import WebSocket
 
 
-class MatchConnectionRegistry:
+class MatchroomConnectionRegistry:
     def __init__(self):
         self._connections: Dict[str, Dict[str, WebSocket]] = {}
 
-    async def register(self, match_id: str, session_key: str, websocket: WebSocket):
-        match_connections = self._connections.setdefault(match_id, {})
-        match_connections[session_key] = websocket
+    async def register(self, matchroom_id: str, session_key: str, websocket: WebSocket):
+        matchroom_connections = self._connections.setdefault(matchroom_id, {})
+        matchroom_connections[session_key] = websocket
         await websocket.accept()
 
-    def remove(self, match_id: str, session_key: str):
-        match_connections = self._connections.get(match_id)
-        if not match_connections:
+    def remove(self, matchroom_id: str, session_key: str):
+        matchroom_connections = self._connections.get(matchroom_id)
+        if not matchroom_connections:
             return
-        match_connections.pop(session_key, None)
-        if not match_connections:
-            self._connections.pop(match_id, None)
+        matchroom_connections.pop(session_key, None)
+        if not matchroom_connections:
+            self._connections.pop(matchroom_id, None)
 
-    def get(self, match_id: str) -> Dict[str, WebSocket]:
-        return self._connections.get(match_id, {})
+    def get(self, matchroom_id: str) -> Dict[str, WebSocket]:
+        return self._connections.get(matchroom_id, {})
 
 
-connection_registry = MatchConnectionRegistry()
+matchroom_connection_registry = MatchroomConnectionRegistry()

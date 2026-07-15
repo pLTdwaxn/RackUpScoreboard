@@ -1,20 +1,25 @@
+from scoreboard.domain.services.matchroom_service import MatchroomService
+from scoreboard.repositories.matchroom_repository import MatchroomRepository
 from scoreboard.services.matchroom_action_dispatcher import (
     MatchroomActionDispatcher,
 )
-from scoreboard.services.matchroom_manager import MatchroomManager
+
+
+def make_matchroom_service() -> MatchroomService:
+    return MatchroomService(repository=MatchroomRepository())
 
 
 def _create_room_with_two_players(
-    manager: MatchroomManager,
+    matchroom_service: MatchroomService,
     room_id: str,
     score_keeper: str = "opp",
 ):
-    room = manager.get_or_create_matchroom(
+    room = matchroom_service.connect_player_to_matchroom(
         {"id": room_id, "score_keeper": score_keeper},
         {"id": "", "session_key": "p1", "display_name": "Player 1"},
         {"id": "", "match_importance": "practice match", "frames_to_win": 3},
     )
-    manager.get_or_create_matchroom(
+    matchroom_service.connect_player_to_matchroom(
         {"id": room.id, "score_keeper": score_keeper},
         {"id": "", "session_key": "p2", "display_name": "Player 2"},
         {"id": "", "match_importance": "practice match", "frames_to_win": 3},
@@ -23,8 +28,8 @@ def _create_room_with_two_players(
 
 
 def test_state_payload_exposes_matchroom_match_and_current_frame() -> None:
-    manager = MatchroomManager()
-    room = _create_room_with_two_players(manager, "room_payload")
+    matchroom_service = make_matchroom_service()
+    room = _create_room_with_two_players(matchroom_service, "room_payload")
 
     payload = room.state_payload()
 
@@ -37,9 +42,9 @@ def test_state_payload_exposes_matchroom_match_and_current_frame() -> None:
 
 
 def test_dispatch_shot_updates_scores_break_and_history() -> None:
-    manager = MatchroomManager()
+    matchroom_service = make_matchroom_service()
     dispatcher = MatchroomActionDispatcher()
-    room = _create_room_with_two_players(manager, "room_scoring")
+    room = _create_room_with_two_players(matchroom_service, "room_scoring")
 
     assert room.match is not None
     assert room.current_frame_id is not None
@@ -61,9 +66,9 @@ def test_dispatch_shot_updates_scores_break_and_history() -> None:
 
 
 def test_dispatch_foul_awards_opponent_and_switches_turn() -> None:
-    manager = MatchroomManager()
+    matchroom_service = make_matchroom_service()
     dispatcher = MatchroomActionDispatcher()
-    room = _create_room_with_two_players(manager, "room_foul")
+    room = _create_room_with_two_players(matchroom_service, "room_foul")
 
     assert room.match is not None
     assert room.current_frame_id is not None
@@ -84,9 +89,9 @@ def test_dispatch_foul_awards_opponent_and_switches_turn() -> None:
 
 
 def test_undo_restores_previous_frame_state() -> None:
-    manager = MatchroomManager()
+    matchroom_service = make_matchroom_service()
     dispatcher = MatchroomActionDispatcher()
-    room = _create_room_with_two_players(manager, "room_undo")
+    room = _create_room_with_two_players(matchroom_service, "room_undo")
 
     assert room.match is not None
     assert room.current_frame_id is not None
@@ -117,9 +122,9 @@ def test_undo_restores_previous_frame_state() -> None:
 
 
 def test_dispatch_rejects_player_at_table_under_opp_score_keeper() -> None:
-    manager = MatchroomManager()
+    matchroom_service = make_matchroom_service()
     dispatcher = MatchroomActionDispatcher()
-    room = _create_room_with_two_players(manager, "room_keeper", score_keeper="opp")
+    room = _create_room_with_two_players(matchroom_service, "room_keeper", score_keeper="opp")
 
     handled, error = dispatcher.dispatch(
         room,
@@ -132,9 +137,9 @@ def test_dispatch_rejects_player_at_table_under_opp_score_keeper() -> None:
 
 
 def test_dispatch_concede_marks_winner_and_match_score() -> None:
-    manager = MatchroomManager()
+    matchroom_service = make_matchroom_service()
     dispatcher = MatchroomActionDispatcher()
-    room = _create_room_with_two_players(manager, "room_concede")
+    room = _create_room_with_two_players(matchroom_service, "room_concede")
 
     assert room.match is not None
     assert room.current_frame_id is not None
@@ -150,9 +155,9 @@ def test_dispatch_concede_marks_winner_and_match_score() -> None:
 
 
 def test_dispatch_next_frame_creates_new_frame_and_rotates_opening_turn() -> None:
-    manager = MatchroomManager()
+    matchroom_service = make_matchroom_service()
     dispatcher = MatchroomActionDispatcher()
-    room = _create_room_with_two_players(manager, "room_next_frame")
+    room = _create_room_with_two_players(matchroom_service, "room_next_frame")
 
     assert room.match is not None
     assert room.current_frame_id is not None

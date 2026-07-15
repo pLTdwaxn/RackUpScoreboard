@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from scoreboard.services.matchroom_manager import matchroom_manager
+from scoreboard.domain.services.matchroom_service import matchroom_service
 
 router = APIRouter()
 
@@ -29,13 +29,11 @@ def connect_player(payload: ConnectRequest) -> ConnectResponse:
 
     session_key = uuid4().hex[:8]
 
-    matchroom = matchroom_manager.get_or_create_matchroom(
+    matchroom = matchroom_service.connect_player_to_matchroom(
         {"id": (payload.matchroom_id or "").strip()},
         {"id": "", "session_key": session_key, "display_name": display_name},
         {"id": "", "match_importance": "practice match", "frames_to_win": 3},
     )
-
-    print("matchroom", matchroom)
 
     return ConnectResponse(
         # instance_id=uuid4().hex[:8],

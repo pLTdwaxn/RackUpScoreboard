@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from scoreboard.domain.models.frame import Frame, FrameStatus
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.matchroom import Matchroom
-from scoreboard.domain.rules.frame_runner import FrameRunner
+from scoreboard.domain.orchestrators.frame_orchestrator import ActionPayload, FrameOrchestrator
 from scoreboard.domain.rules.messages import ShotMessage
 from scoreboard.services.action_services import (
     FramePhaseTransitionService,
@@ -25,7 +25,7 @@ class ActionContext:
     match: Match
     matchroom: Matchroom
     pending_next_frame_confirmations: set[str]
-    frame_progression: FrameRunner
+    frame_orchestrator: FrameOrchestrator
     score_keeper_policy: ScoreKeeperPolicy
     transition_service: FramePhaseTransitionService
     opponent_resolver: OpponentResolver
@@ -58,10 +58,13 @@ class ShotActionHandler:
 
         self._history_manager.push(context, scoring_player_key, context.data)
 
-        context.frame_progression.process_shot(
+        context.frame_orchestrator.orchestrate(
             context.frame,
-            shot.potted_balls,
-            foul_points=shot.foul,
+            ActionPayload(
+                action="shot",
+                potted_balls=shot.potted_balls,
+                foul=shot.foul,
+            ),
         )
 
         if not was_finished and context.frame.status == FrameStatus.FINISHED and context.frame.winner_key:
@@ -150,7 +153,10 @@ class SkipActionHandler:
         if not transitioned:
             return False, transition_error
 
-        context.frame_progression.process_skip_turn(context.frame)
+        context.frame_orchestrator.orchestrate(
+            context.frame,
+            ActionPayload(action="skip", potted_balls=()),
+        )
 
         return True, None
 
@@ -174,6 +180,13 @@ class DeclareFreeBallActionHandler:
         if not nominated_colour:
             return False, "Nominated colour is missing."
 
-        context.frame_progression.process_declare_free_ball(context.frame, nominated_colour)
+        context.frame_orchestrator.orchestrate(
+            context.frame,
+            ActionPayload(
+                action="declare_free_ball",
+                potted_balls=(),
+                nominated_colour=nominated_colour,
+            ),
+        )
 
         return True, None
