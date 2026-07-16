@@ -4,12 +4,11 @@ import { Player as PlayerType } from "@/types";
 
 import PlayerAvatar from "./PlayerAvatar";
 import PlayerName from "./PlayerName";
-import PlayerScoreBadge from "./PlayerScoreBadge";
 import {
   getAvatarColors,
   getPlayerInitials,
   getReverseDirection,
-} from "./utils";
+} from "./playerIdentity";
 
 type PlayerCardProps = {
   player: PlayerType;
@@ -29,23 +28,19 @@ export default function PlayerCard({
   return (
     <Card
       variant="transparent"
-      className="w-full items-stretch rounded-full px-2py-2"
+      className="w-full min-w-0 items-stretch rounded-full p-0"
     >
       <Card.Content
-        className={`flex w-auto items-center gap-2 ${
+        className={`flex w-full min-w-0 items-center gap-2 p-0 ${
           reverseDirection ? "flex-row-reverse" : "flex-row"
         }`}
       >
-        <Badge.Anchor>
+        <Badge.Anchor className="shrink-0">
           <PlayerAvatar
             isFrameWinner={isFrameWinner}
             avatarColor={avatarColor}
             avatarColor2={avatarColor2}
             initials={initials}
-          />
-          <PlayerScoreBadge
-            player={player}
-            reverseDirection={reverseDirection}
           />
         </Badge.Anchor>
         <PlayerName player={player} reverseDirection={reverseDirection} />

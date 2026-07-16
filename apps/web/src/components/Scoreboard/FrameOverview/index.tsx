@@ -2,24 +2,23 @@
 
 import { useMatchroomFrame } from "@/hooks/useMatchroomFrame";
 
-import FrameScoreboard from "./FrameScoreboard";
 import FrameStats from "./FrameStats";
 import OverviewWrapper from "./OverviewWrapper";
+import ScoreCard from "./ScoreCard";
+import { useMatchroomPlayers } from "@/hooks/useMatchroomPlayers";
 
-export { default as FrameScoreboard } from "./FrameScoreboard";
 export { default as FrameStats } from "./FrameStats";
 export { default as OverviewWrapper } from "./OverviewWrapper";
+export { default as ScoreCard } from "./ScoreCard";
 
 export default function FrameOverview() {
+  const { me, opponent } = useMatchroomPlayers();
   const {
     hasFrame,
     frame,
-    myScore,
-    opponentScore,
-    myCurrentBreak,
-    opponentCurrentBreak,
     isMyTurn,
     isOpponentTurn,
+    winningPlayerKey,
   } = useMatchroomFrame();
 
   if (!hasFrame) {
@@ -30,15 +29,18 @@ export default function FrameOverview() {
     <OverviewWrapper>
       <FrameStats frame={frame} />
       <div className="flex flex-row items-center justify-between gap-2">
-        <FrameScoreboard
+        <ScoreCard
+          player={opponent}
+          frame={frame}
           currentTurn={isOpponentTurn}
-          playerScore={opponentScore}
-          playerCurrentBreak={opponentCurrentBreak}
+          isFrameWinner={opponent?.session_key === winningPlayerKey}
         />
-        <FrameScoreboard
+        <ScoreCard
+          player={me}
+          frame={frame}
           currentTurn={isMyTurn}
-          playerScore={myScore}
-          playerCurrentBreak={myCurrentBreak}
+          direction="rtl"
+          isFrameWinner={me?.session_key === winningPlayerKey}
         />
       </div>
     </OverviewWrapper>

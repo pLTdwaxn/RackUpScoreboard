@@ -1,10 +1,11 @@
-import { Avatar, Card } from "@heroui/react";
+import { Card } from "@heroui/react";
 
 import { FrameLogEntry } from "@/types";
+import PlayerAvatar from "@/components/Scoreboard/shared/PlayerAvatar";
 import {
   getAvatarColors,
   getPlayerInitials,
-} from "@/components/Scoreboard/PlayersOverview/utils";
+} from "@/components/Scoreboard/shared/playerIdentity";
 import BallComposition from "./BallComposition";
 import UndoSlot from "./UndoSlot";
 
@@ -65,18 +66,12 @@ export default function LogEntry({
                   isCurrentUser ? "flex-row-reverse" : "flex-row"
                 }`}
               >
-                <Avatar size="sm">
-                  <Avatar.Image />
-                  <Avatar.Fallback
-                    className="font-sans text-xs font-medium"
-                    style={{
-                      background: `linear-gradient(135deg, ${avatarColor}, ${avatarColor2})`,
-                      color: "#fff",
-                    }}
-                  >
-                    {initials}
-                  </Avatar.Fallback>
-                </Avatar>
+                <PlayerAvatar
+                  size="sm"
+                  avatarColor={avatarColor}
+                  avatarColor2={avatarColor2}
+                  initials={initials}
+                />
 
                 <BallComposition
                   entryId={entry.id}

@@ -12,7 +12,7 @@ export default function PlayerName({
   return (
     <div className="flex w-full min-w-0 flex-col items-stretch gap-1">
       <h2
-        className={`font-mono font-normal tracking-wider uppercase ${
+        className={`truncate font-mono font-normal tracking-wider uppercase ${
           reverseDirection ? "text-right" : "text-left"
         }`}
       >

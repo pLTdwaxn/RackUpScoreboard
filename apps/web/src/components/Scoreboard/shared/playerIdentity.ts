@@ -18,14 +18,18 @@ const AVATAR_COLORS = [
   "#90a4ae",
 ];
 
-export function getAvatarColors(name: string): { avatarColor: string; avatarColor2: string } {
+export function getAvatarColors(name: string): {
+  avatarColor: string;
+  avatarColor2: string;
+} {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
 
   const avatarColor = AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]!;
-  const avatarColor2 = AVATAR_COLORS[Math.abs(hash + name.length) % AVATAR_COLORS.length]!;
+  const avatarColor2 =
+    AVATAR_COLORS[Math.abs(hash + name.length) % AVATAR_COLORS.length]!;
 
   return { avatarColor, avatarColor2 };
 }
