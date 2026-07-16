@@ -45,7 +45,7 @@ class PhaseProcessor:
 
     def _advances_after_turn_change(self, context) -> bool:
         shot = context.payload
-        return context.foul_result.is_foul or shot.action == "skip" or not shot.potted_balls
+        return context.foul_result.is_foul or shot.action == "pass_shot" or not shot.potted_balls
 
 
 @dataclass

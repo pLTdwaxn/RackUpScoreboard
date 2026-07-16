@@ -20,10 +20,14 @@ export function createPassShotAction(): RoomClientAction {
   };
 }
 
-export function createDeclareFreeBallAction(): RoomClientAction {
+export function createDeclareFreeBallAction(
+  nominatedColour: string,
+): RoomClientAction {
   return {
     action: "declare_free_ball",
-    data: {},
+    data: {
+      nominated_colour: nominatedColour,
+    },
   };
 }
 

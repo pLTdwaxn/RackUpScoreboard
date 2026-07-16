@@ -16,7 +16,7 @@ class TurnProcessor:
 
         if foul.finishes_frame or foul.respots_black:
             next_player = frame.current_turn
-        elif shot.action == "skip":
+        elif shot.action == "pass_shot":
             next_player = self._opponent_key(frame) or frame.current_turn
         elif shot.action == "declare_free_ball":
             next_player = frame.current_turn

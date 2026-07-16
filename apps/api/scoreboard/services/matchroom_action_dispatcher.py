@@ -5,6 +5,7 @@ from statemachine import State, StateMachine
 from scoreboard.action_handlers import (
     ActionContext,
     ConcedeActionHandler,
+    DeclareFreeBallActionHandler,
     NextFrameActionHandler,
     PassShotActionHandler,
     ShotActionHandler,
@@ -45,6 +46,7 @@ class MatchroomActionDispatcher:
         self._action_handlers = {
             "shot": ShotActionHandler(),
             "pass_shot": PassShotActionHandler(),
+            "declare_free_ball": DeclareFreeBallActionHandler(),
             "undo": UndoActionHandler(),
             "concede": ConcedeActionHandler(),
             "next_frame": NextFrameActionHandler(),

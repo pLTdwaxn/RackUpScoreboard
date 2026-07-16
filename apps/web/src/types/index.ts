@@ -47,9 +47,15 @@ export type TableState = {
   reds_remaining: number;
   colours_on_table: Record<string, boolean>;
   object_ball: string;
+  free_ball: FreeBallState | null;
   current_turn: string;
   current_break: number;
   points_remaining: number;
+};
+
+export type FreeBallState = {
+  nominated_colour: string;
+  object_ball: string;
 };
 
 export type Matchroom = {
@@ -78,6 +84,7 @@ export type Frame = {
   reds_remaining: number;
   colours_on_table: Record<string, boolean>;
   object_ball: string;
+  free_ball: FreeBallState | null;
   points_gap: number;
   snookers_required: number;
   highest_break: number | null;
@@ -119,13 +126,17 @@ export type RoomClientUndoAction = {
 };
 
 export type RoomClientPassShotAction = {
+  action_id?: string;
   action: "pass_shot";
   data: Record<string, never>;
 };
 
 export type RoomClientDeclareFreeBallAction = {
+  action_id?: string;
   action: "declare_free_ball";
-  data: Record<string, never>;
+  data: {
+    nominated_colour: string;
+  };
 };
 
 export type RoomClientConcedeAction = {

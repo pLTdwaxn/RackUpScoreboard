@@ -9,7 +9,7 @@ class FoulProcessor:
         frame = context.frame
         shot = context.payload
 
-        if shot.action == "skip":
+        if shot.action == "pass_shot":
             context.foul_result = FoulResult(is_foul=False)
             return [SetPreviouslyFouledEffect(False)]
 
@@ -18,7 +18,7 @@ class FoulProcessor:
             context.foul_result = result
             return []
 
-        fouled_with = self._fouled_with(frame, shot.potted_balls)
+        fouled_with = self._fouled_with(frame, self._object_ball_equivalent_potted_balls(frame, shot.potted_balls))
         declared_foul = shot.foul > 0
 
         if fouled_with:
@@ -56,6 +56,14 @@ class FoulProcessor:
             return potted_balls
 
         return ()
+
+    def _object_ball_equivalent_potted_balls(self, frame: Frame, potted_balls: tuple[str, ...]) -> tuple[str, ...]:
+        nominated_colour = frame.free_ball_nominated_colour
+        object_ball = frame.free_ball_object_ball
+        if not nominated_colour or not object_ball:
+            return potted_balls
+
+        return tuple(object_ball if ball == nominated_colour else ball for ball in potted_balls)
 
     def _scores_after_penalty(self, frame: Frame, points_awarded: int) -> dict[str, int]:
         scores = dict(frame.scores)

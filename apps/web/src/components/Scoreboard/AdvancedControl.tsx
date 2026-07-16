@@ -29,7 +29,12 @@ function isBallLegal(
   objectBall: string,
   redsRemaining: number,
   coloursOnTable: TableState["colours_on_table"],
+  freeBall: TableState["free_ball"],
 ): boolean {
+  if (freeBall) {
+    return ball === freeBall.nominated_colour && coloursOnTable[ball];
+  }
+
   if (ball === "red") {
     return objectBall === "red" && redsRemaining > 0;
   }
@@ -45,10 +50,23 @@ function isBallLegal(
   return objectBall === ball;
 }
 
+function ballPoints(ball: BallName, freeBall: TableState["free_ball"]): number {
+  if (
+    freeBall &&
+    ball === freeBall.nominated_colour &&
+    freeBall.object_ball !== "colour"
+  ) {
+    return BALL_BY_NAME[freeBall.object_ball as BallName].points;
+  }
+
+  return BALL_BY_NAME[ball].points;
+}
+
 type AdvancedBallRailProps = {
   redsRemaining: number;
   coloursOnTable: TableState["colours_on_table"];
   objectBall: string;
+  freeBall: TableState["free_ball"];
   canKeepScore: boolean;
   redSelections: number;
   selectedBalls: BallName[];
@@ -63,6 +81,7 @@ export function AdvancedBallRail({
   redsRemaining,
   coloursOnTable,
   objectBall,
+  freeBall,
   canKeepScore,
   redSelections,
   selectedBalls,
@@ -115,6 +134,7 @@ export function AdvancedBallRail({
           objectBall,
           redsRemaining,
           coloursOnTable,
+          freeBall,
         );
         const picked =
           ball === "red"
@@ -153,7 +173,7 @@ export function AdvancedBallRail({
         };
 
         const foulPoints = BALL_BY_NAME[ball].penaltyPoints;
-        const potPoints = BALL_BY_NAME[ball].points;
+        const potPoints = ballPoints(ball, freeBall);
 
         const badgeLabel = () => {
           if (foulMode) {

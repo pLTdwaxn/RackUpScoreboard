@@ -67,6 +67,8 @@ class Frame:
         self.reds_remaining = 15
         self.colours_on_table = {ball: True for ball in COLOUR_BALLS}
         self.object_ball = RED_BALL
+        self.free_ball_nominated_colour = None
+        self.free_ball_object_ball = None
 
         self.history = []
 
@@ -103,6 +105,8 @@ class Frame:
     reds_remaining: int = 15
     colours_on_table: dict[str, bool] = field(default_factory=lambda: {ball: True for ball in COLOUR_BALLS})
     object_ball: str = RED_BALL
+    free_ball_nominated_colour: str | None = None
+    free_ball_object_ball: str | None = None
 
     history: list[dict] = field(default_factory=list)
     _snooker_calculator: SnookerCalculator = field(
@@ -171,6 +175,17 @@ class Frame:
         self.object_ball = ball
         self.recalculate_score_context()
 
+    def declare_free_ball(self, nominated_colour: str) -> None:
+        self.free_ball_nominated_colour = nominated_colour
+        self.free_ball_object_ball = nominated_colour if self.object_ball == "colour" else self.object_ball
+        self.previously_fouled = False
+        self.recalculate_score_context()
+
+    def clear_free_ball(self) -> None:
+        self.free_ball_nominated_colour = None
+        self.free_ball_object_ball = None
+        self.recalculate_score_context()
+
     def remove_reds(self, reds: int) -> None:
         self.reds_remaining = max(0, self.reds_remaining - reds)
         # TODO: Flag the frame history for diagnostic purposes if self.reds_remaining < 0.
@@ -229,6 +244,14 @@ class Frame:
             "reds_remaining": self.reds_remaining,
             "colours_on_table": dict(self.colours_on_table),
             "object_ball": self.object_ball,
+            "free_ball": (
+                {
+                    "nominated_colour": self.free_ball_nominated_colour,
+                    "object_ball": self.free_ball_object_ball,
+                }
+                if self.free_ball_nominated_colour and self.free_ball_object_ball
+                else None
+            ),
             "current_turn": self.current_turn,
             "current_break": self.current_break,
             "previously_fouled": self.previously_fouled,

@@ -26,7 +26,7 @@ class BreakProcessor:
             context.break_result = result
             return [UpdateHighestBreakEffect(), PreserveBreakEffect(result)]
 
-        if foul.is_foul or shot.action == "skip" or not shot.potted_balls:
+        if foul.is_foul or shot.action == "pass_shot" or not shot.potted_balls:
             result = BreakResult(
                 break_points=0,
                 update_highest=True,

@@ -114,7 +114,7 @@ def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client):
             "break_points": 1,
             "foul_points": 0,
             "result": "in_progress",
-            "message": "Player One: 1 break",
+            "message": "Player One: break 1",
         }
     ]
     assert shot_update["frame_log"][0]["history_ids"] == [shot_update["frame_log"][0]["id"]]

@@ -11,8 +11,12 @@ if TYPE_CHECKING:
 
 class SnookerCalculator:
     def points_remaining(self, frame: Frame) -> int:
-        if frame.reds_remaining > 0:
-            remaining = (8 * frame.reds_remaining) + sum(BALL_POINTS[c] for c in COLOUR_BALLS)
+        effective_reds_remaining = frame.reds_remaining
+        if frame.free_ball_object_ball == "red":
+            effective_reds_remaining += 1
+
+        if effective_reds_remaining > 0:
+            remaining = (8 * effective_reds_remaining) + sum(BALL_POINTS[c] for c in COLOUR_BALLS)
 
             # After a red is potted, the incoming colour attempt is still available
             # in this visit until a miss/foul or successful colour pot resolves it.

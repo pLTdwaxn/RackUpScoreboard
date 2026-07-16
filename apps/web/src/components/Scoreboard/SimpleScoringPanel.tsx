@@ -10,7 +10,10 @@ type SimpleScoringPanelProps = {
   redsRemaining: number;
   coloursOnTable: TableState["colours_on_table"];
   objectBall: string;
+  freeBall: TableState["free_ball"];
   canKeepScore: boolean;
+  canUseFoulOptions: boolean;
+  freeBallMode: boolean;
   selectedBalls: BallName[];
   onBallTap: (ball: BallName) => void;
   onConcede: () => void;
@@ -26,7 +29,10 @@ export default function SimpleScoringPanel({
   redsRemaining,
   coloursOnTable,
   objectBall,
+  freeBall,
   canKeepScore,
+  canUseFoulOptions,
+  freeBallMode,
   selectedBalls,
   onBallTap,
   onConcede,
@@ -41,7 +47,11 @@ export default function SimpleScoringPanel({
     <SimpleControl
       messageRow={
         <div className="flex items-center justify-center gap-2 text-sm leading-5 text-muted">
-          <span className="text-center">Scorekeeping for your opponent</span>
+          <span className="text-center">
+            {freeBallMode
+              ? "Nominate the free ball"
+              : "Scorekeeping for your opponent"}
+          </span>
         </div>
       }
       ballRow={
@@ -49,7 +59,9 @@ export default function SimpleScoringPanel({
           redsRemaining={redsRemaining}
           coloursOnTable={coloursOnTable}
           objectBall={objectBall}
+          freeBall={freeBall}
           canKeepScore={canKeepScore}
+          freeBallMode={freeBallMode}
           selectedBalls={selectedBalls}
           onBallTap={onBallTap}
         />
@@ -57,6 +69,7 @@ export default function SimpleScoringPanel({
       actionsRow={
         <SimpleBottomActions
           canKeepScore={canKeepScore}
+          canUseFoulOptions={canUseFoulOptions}
           onConcede={onConcede}
           onEnterAdvancedMode={onEnterAdvancedMode}
           onDeclareFoul={onDeclareFoul}

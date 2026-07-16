@@ -61,14 +61,7 @@ class ShotActionHandler:
         scoring_player_key = context.frame.current_turn or context.actor_key
         was_finished = context.frame.status == FrameStatus.FINISHED
 
-        self._frame_undo_service.push(
-            context,
-            scoring_player_key,
-            context.data,
-            state_before,
-        )
-
-        context.frame_orchestrator.orchestrate(
+        outcome = context.frame_orchestrator.orchestrate(
             context.frame,
             ActionPayload(
                 action="shot",
@@ -77,11 +70,15 @@ class ShotActionHandler:
             ),
         )
 
-        if (
-            not was_finished
-            and context.frame.status == FrameStatus.FINISHED
-            and context.frame.winner_key
-        ):
+        self._frame_undo_service.push(
+            context,
+            scoring_player_key,
+            context.data,
+            outcome.to_dict(),
+            state_before,
+        )
+
+        if not was_finished and context.frame.status == FrameStatus.FINISHED and context.frame.winner_key:
             context.pending_next_frame_confirmations.clear()
             context.match_result_service.record_finished_frame_result(
                 context.match,
@@ -107,10 +104,7 @@ class ConcedeActionHandler:
         if len(context.matchroom.players) < 2:
             return False, "Cannot concede when there is no opponent."
 
-        if (
-            context.frame.status != FrameStatus.ACTIVE
-            and context.frame.status != FrameStatus.READY
-        ):
+        if context.frame.status != FrameStatus.ACTIVE and context.frame.status != FrameStatus.READY:
             return False, "Current frame is not in progress."
 
         winner_key = context.opponent_resolver.resolve(
@@ -140,25 +134,27 @@ class NextFrameActionHandler:
             return False, "Match is already finished."
 
         context.pending_next_frame_confirmations.add(context.actor_key)
-        if len(context.pending_next_frame_confirmations) < len(
-            context.matchroom.players
-        ):
+        if len(context.pending_next_frame_confirmations) < len(context.matchroom.players):
             return True, None
 
-        context.next_frame_service.start_next_frame(
-            context.frame, context.match, context.matchroom
-        )
+        context.next_frame_service.start_next_frame(context.frame, context.match, context.matchroom)
         context.pending_next_frame_confirmations.clear()
         return True, None
 
 
 class PassShotActionHandler:
+    def __init__(self, frame_undo_service: FrameUndoService | None = None) -> None:
+        self._frame_undo_service = frame_undo_service or FrameUndoService()
+
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         if context.frame.status != FrameStatus.ACTIVE:
             return False, "Current frame is not active."
 
         if not context.frame.previously_fouled:
             return False, "Cannot pass shot when the player has not fouled."
+
+        state_before = self._frame_undo_service.snapshot(context)
+        passing_player_key = context.frame.current_turn or context.actor_key
 
         transitioned, transition_error = context.transition_service.transition(
             context.frame,
@@ -167,21 +163,35 @@ class PassShotActionHandler:
         if not transitioned:
             return False, transition_error
 
-        context.frame_orchestrator.orchestrate(
+        outcome = context.frame_orchestrator.orchestrate(
             context.frame,
-            ActionPayload(action="skip", potted_balls=()),
+            ActionPayload(action="pass_shot", potted_balls=()),
+        )
+
+        self._frame_undo_service.push(
+            context,
+            passing_player_key,
+            {"action": "pass_shot", "data": {}},
+            outcome.to_dict(),
+            state_before,
         )
 
         return True, None
 
 
 class DeclareFreeBallActionHandler:
+    def __init__(self, frame_undo_service: FrameUndoService | None = None) -> None:
+        self._frame_undo_service = frame_undo_service or FrameUndoService()
+
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         if context.frame.status != FrameStatus.ACTIVE:
             return False, "Current frame is not active."
 
         if not context.frame.previously_fouled:
             return False, "Cannot declare a free ball when the player has not fouled."
+
+        state_before = self._frame_undo_service.snapshot(context)
+        declaring_player_key = context.frame.current_turn or context.actor_key
 
         transitioned, transition_error = context.transition_service.transition(
             context.frame,
@@ -194,13 +204,21 @@ class DeclareFreeBallActionHandler:
         if not nominated_colour:
             return False, "Nominated colour is missing."
 
-        context.frame_orchestrator.orchestrate(
+        outcome = context.frame_orchestrator.orchestrate(
             context.frame,
             ActionPayload(
                 action="declare_free_ball",
                 potted_balls=(),
                 nominated_colour=nominated_colour,
             ),
+        )
+
+        self._frame_undo_service.push(
+            context,
+            declaring_player_key,
+            {"action": "declare_free_ball", "data": dict(context.data)},
+            outcome.to_dict(),
+            state_before,
         )
 
         return True, None

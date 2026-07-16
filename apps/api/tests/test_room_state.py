@@ -71,6 +71,16 @@ def test_dispatch_shot_updates_scores_break_and_history() -> None:
     assert frame.history[0]["id"]
     assert isinstance(frame.history[0]["id"], str)
     assert frame.history[0]["id"] != "action-1"
+    assert frame.history[0]["outcome"] == {
+        "action": "shot",
+        "result": "scoring",
+        "player_key": "p1",
+        "potted_balls": ["red"],
+        "break_points": 1,
+        "foul_points": 0,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
 
 
 def test_dispatch_foul_awards_opponent_and_switches_turn() -> None:
@@ -94,6 +104,242 @@ def test_dispatch_foul_awards_opponent_and_switches_turn() -> None:
     assert frame.current_turn == "p2"
     assert frame.current_break == 0
     assert frame.object_ball == "red"
+    assert frame.history[0]["outcome"] == {
+        "action": "shot",
+        "result": "foul",
+        "player_key": "p2",
+        "potted_balls": [],
+        "break_points": 0,
+        "foul_points": 6,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
+
+
+def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_legal_blue_log")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+    frame.status = frame.status.__class__("active")
+    frame.object_ball = "blue"
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": ["blue"], "foul": 0}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.history[0]["outcome"] == {
+        "action": "shot",
+        "result": "scoring",
+        "player_key": "p1",
+        "potted_balls": ["blue"],
+        "break_points": 5,
+        "foul_points": 0,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
+    assert room.state_payload()["frame_log"] == [
+        {
+            "id": room.state_payload()["frame_log"][0]["id"],
+            "type": "visit",
+            "player_key": "p1",
+            "player_name": "Player 1",
+            "history_ids": room.state_payload()["frame_log"][0]["history_ids"],
+            "potted_balls": ["blue"],
+            "shot_count": 1,
+            "break_points": 5,
+            "foul_points": 0,
+            "result": "in_progress",
+            "message": "Player 1: break 5",
+        }
+    ]
+
+
+def test_dispatch_pass_shot_adds_frame_log_entry_and_can_be_undone() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_pass_shot")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": [], "foul": 4}},
+    )
+    assert handled is True
+    assert error is None
+    assert frame.current_turn == "p2"
+    assert frame.previously_fouled is True
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "pass_shot", "data": {}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.current_turn == "p1"
+    assert frame.previously_fouled is False
+    assert len(frame.history) == 2
+    assert frame.history[1]["actor"] == "p2"
+    assert frame.history[1]["event"] == {"action": "pass_shot", "data": {}}
+    assert frame.history[1]["outcome"] == {
+        "action": "pass_shot",
+        "result": "passed",
+        "player_key": None,
+        "potted_balls": [],
+        "break_points": 0,
+        "foul_points": 0,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
+    assert room.state_payload()["frame_log"][1]["message"] == "Player 2: passed shot back"
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "undo", "data": {}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.current_turn == "p2"
+    assert frame.previously_fouled is True
+    assert len(frame.history) == 1
+
+
+def test_dispatch_declare_free_ball_adds_history_outcome_and_can_be_undone() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_free_ball")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": [], "foul": 4}},
+    )
+    assert handled is True
+    assert error is None
+    assert frame.current_turn == "p2"
+    assert frame.object_ball == "red"
+    assert frame.previously_fouled is True
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "declare_free_ball", "data": {"nominated_colour": "blue"}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.current_turn == "p2"
+    assert frame.object_ball == "red"
+    assert frame.free_ball_nominated_colour == "blue"
+    assert frame.free_ball_object_ball == "red"
+    assert frame.previously_fouled is False
+    assert len(frame.history) == 2
+    assert frame.history[1]["actor"] == "p2"
+    assert frame.history[1]["event"] == {
+        "action": "declare_free_ball",
+        "data": {"nominated_colour": "blue"},
+    }
+    assert frame.history[1]["outcome"] == {
+        "action": "declare_free_ball",
+        "result": "declared",
+        "player_key": None,
+        "potted_balls": [],
+        "break_points": 0,
+        "foul_points": 0,
+        "winner_key": None,
+        "nominated_colour": "blue",
+    }
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "undo", "data": {}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.current_turn == "p2"
+    assert frame.object_ball == "red"
+    assert frame.free_ball_nominated_colour is None
+    assert frame.free_ball_object_ball is None
+    assert frame.previously_fouled is True
+    assert len(frame.history) == 1
+
+
+def test_free_ball_colour_counts_as_extra_red_and_then_colour_is_on() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_free_ball_red")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": [], "foul": 4}},
+    )
+    assert handled is True
+    assert error is None
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "declare_free_ball", "data": {"nominated_colour": "green"}},
+    )
+    assert handled is True
+    assert error is None
+    assert frame.object_ball == "red"
+    assert frame.free_ball_nominated_colour == "green"
+    assert frame.free_ball_object_ball == "red"
+    assert frame.points_remaining == 155
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "shot", "data": {"potted_balls": ["green"], "foul": 0}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.scores["p2"] == 5
+    assert frame.current_break == 1
+    assert frame.points_remaining == 154
+    assert frame.reds_remaining == 15
+    assert frame.colours_on_table["green"] is True
+    assert frame.object_ball == "colour"
+    assert frame.free_ball_nominated_colour is None
+    assert frame.free_ball_object_ball is None
+    assert frame.history[2]["outcome"] == {
+        "action": "shot",
+        "result": "scoring",
+        "player_key": "p2",
+        "potted_balls": ["green"],
+        "break_points": 1,
+        "foul_points": 0,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
 
 
 def test_undo_restores_previous_frame_state() -> None:

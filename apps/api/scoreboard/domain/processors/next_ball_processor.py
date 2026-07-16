@@ -21,7 +21,7 @@ class NextBallProcessor:
         if shot.action == "declare_free_ball":
             result = NextBallResult(ball=shot.nominated_colour or frame.object_ball)
             context.next_ball_result = result
-            return [UpdateNextBallEffect(result)]
+            return [DeclareFreeBallEffect(result)]
 
         ball = self._next_ball(context)
         respot_black = ball is None and self._should_respot_black(context)
@@ -43,7 +43,7 @@ class NextBallProcessor:
         score = context.score_result
         future_reds = max(0, frame.reds_remaining - score.reds_removed)
 
-        if shot.action == "skip" or context.foul_result.is_foul or not shot.potted_balls:
+        if shot.action == "pass_shot" or context.foul_result.is_foul or not shot.potted_balls:
             return self._advance_after_turn_change(frame, future_reds)
 
         if frame.object_ball == RED_BALL:
@@ -113,6 +113,15 @@ class UpdateNextBallEffect:
 class RespotBlackEffect:
     def apply(self, frame: Frame) -> None:
         frame.respot_black()
+
+
+@dataclass
+class DeclareFreeBallEffect:
+    result: "NextBallResult"
+
+    def apply(self, frame: Frame) -> None:
+        if self.result.ball is not None:
+            frame.declare_free_ball(self.result.ball)
 
 
 @dataclass

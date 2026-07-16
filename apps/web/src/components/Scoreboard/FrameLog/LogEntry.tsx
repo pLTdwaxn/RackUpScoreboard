@@ -16,26 +16,6 @@ type LogEntryProps = {
   onUndo: () => void;
 };
 
-function actionLabel(entry: FrameLogEntry): string {
-  if (entry.result === "frame_won") {
-    return "won the frame";
-  }
-
-  if (entry.foul_points > 0 && entry.break_points > 0) {
-    return `${entry.break_points} Break, Foul ${entry.foul_points}`;
-  }
-
-  if (entry.foul_points > 0) {
-    return `Foul ${entry.foul_points}`;
-  }
-
-  if (entry.break_points > 0) {
-    return `Break ${entry.break_points}`;
-  }
-
-  return "Shot Taken";
-}
-
 export default function LogEntry({
   entry,
   isCurrentUser,
@@ -83,12 +63,9 @@ export default function LogEntry({
         </div>
         <UndoSlot canUndo={canUndo} onUndo={onUndo} />
       </div>
-      <div className="flex flex-row min-w-0 flex-1 justify-center py-0.5">
-        <span className="min-w-0 truncate text-sm font-medium text-foreground">
-          {entry.player_name}
-        </span>
-        <span className="pl-2 shrink-0 text-sm text-muted">
-          {actionLabel(entry)}
+      <div className="flex min-w-0 flex-1 justify-center py-0.5">
+        <span className="min-w-0 truncate text-sm text-muted">
+          {entry.message}
         </span>
       </div>
     </li>

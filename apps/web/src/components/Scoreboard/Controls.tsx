@@ -21,23 +21,41 @@ function isLegalShot(
   pottedBalls: BallName[],
   objectBall: Frame["object_ball"],
   redsRemaining: number,
+  freeBall: Frame["free_ball"],
 ): boolean {
   if (pottedBalls.length === 0) {
     return false;
   }
 
+  const nominatedColour = freeBall?.nominated_colour as BallName | undefined;
+  if (freeBall && !pottedBalls.includes(nominatedColour as BallName)) {
+    return false;
+  }
+
+  const equivalentBalls = pottedBalls.map((ball) =>
+    freeBall && ball === nominatedColour ? freeBall.object_ball : ball,
+  );
+
   if (objectBall === "red") {
+    const redLimit = redsRemaining + (freeBall ? 1 : 0);
     return (
-      pottedBalls.every((ball) => ball === "red") &&
-      pottedBalls.length <= redsRemaining
+      equivalentBalls.every((ball) => ball === "red") &&
+      equivalentBalls.length <= redLimit
     );
   }
 
   if (objectBall === "colour") {
-    return pottedBalls.length === 1 && pottedBalls[0] !== "red";
+    return equivalentBalls.length === 1 && equivalentBalls[0] !== "red";
   }
 
-  return pottedBalls.length === 1 && pottedBalls[0] === objectBall;
+  return equivalentBalls.length === 1 && equivalentBalls[0] === objectBall;
+}
+
+function inferFoulPoints(pottedBalls: BallName[]): number {
+  return Math.max(
+    4,
+    ...pottedBalls.map((ball) => BALL_BY_NAME[ball].penaltyPoints),
+  );
 }
 
 function summarizeBalls(pottedBalls: BallName[]): string {
@@ -56,14 +74,22 @@ export default function Controls() {
   const { hasFrame, frame, scoreKeeper, nextFrameConfirmations } =
     useMatchroomFrame();
   const { sendAction } = useMatchroomActions();
-  const { sendShot, sendEndTurn, sendConcede, sendNextFrame } =
-    useGameActions(sendAction);
+  const {
+    sendShot,
+    sendEndTurn,
+    sendUndo,
+    sendConcede,
+    sendPassShot,
+    sendDeclareFreeBall,
+    sendNextFrame,
+  } = useGameActions(sendAction);
 
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [isConcedeDialogOpen, setIsConcedeDialogOpen] = useState(false);
   const [multiPotBalls, setMultiPotBalls] = useState<BallName[]>([]);
   const [foulBall, setFoulBall] = useState<BallName | null>(null);
   const [foulMode, setFoulMode] = useState(false);
+  const [freeBallMode, setFreeBallMode] = useState(false);
 
   const {
     isFrameFinished,
@@ -72,6 +98,7 @@ export default function Controls() {
     redsRemaining,
     coloursOnTable,
     objectBall,
+    freeBall,
   } = useControlPanel(
     frame,
     scoreKeeper,
@@ -90,14 +117,27 @@ export default function Controls() {
   );
   const comboIsFoul =
     multiPotBalls.length > 0 &&
-    !isLegalShot(multiPotBalls, objectBall, redsRemaining);
+    !isLegalShot(multiPotBalls, objectBall, redsRemaining, freeBall);
   const foulPoints = foulBall ? BALL_BY_NAME[foulBall].penaltyPoints : 0;
+  const inferredFreeBallFoulPoints =
+    freeBall && comboIsFoul ? inferFoulPoints(multiPotBalls) : 0;
+  const submittedFoulPoints = foulPoints || inferredFreeBallFoulPoints;
   const hasSelectedBalls = multiPotBalls.length > 0 || foulBall !== null;
+  const canUseFoulOptions =
+    canKeepScore &&
+    frame.status === "active" &&
+    Boolean(frame.previously_fouled) &&
+    !freeBall;
   const comboStatusChip =
     foulBall !== null
       ? { label: `FOUL ${foulPoints}`, color: "danger" as const }
       : comboIsFoul
-        ? { label: "FOUL", color: "danger" as const }
+        ? {
+            label: inferredFreeBallFoulPoints
+              ? `FOUL ${inferredFreeBallFoulPoints}`
+              : "FOUL",
+            color: "danger" as const,
+          }
         : multiPotBalls.length > 0
           ? { label: "LEGAL", color: "success" as const }
           : null;
@@ -111,6 +151,7 @@ export default function Controls() {
     setMultiPotBalls([]);
     setFoulBall(null);
     setFoulMode(false);
+    setFreeBallMode(false);
     setIsAdvancedMode(false);
   };
 
@@ -153,6 +194,15 @@ export default function Controls() {
       return;
     }
 
+    if (freeBallMode) {
+      if (ball !== "red" && coloursOnTable[ball]) {
+        sendDeclareFreeBall(ball);
+        setFreeBallMode(false);
+      }
+
+      return;
+    }
+
     if (isAdvancedMode) {
       if (ball === "red") {
         toggleMultiBall(ball);
@@ -168,7 +218,7 @@ export default function Controls() {
       return;
     }
 
-    const legalSingle = isLegalShot([ball], objectBall, redsRemaining);
+    const legalSingle = isLegalShot([ball], objectBall, redsRemaining, freeBall);
     if (legalSingle) {
       sendShot([ball], 0);
       return;
@@ -181,6 +231,7 @@ export default function Controls() {
   };
 
   const toggleFoulMode = () => {
+    setFreeBallMode(false);
     setFoulMode((prev) => {
       if (prev) {
         setFoulBall(null);
@@ -198,8 +249,20 @@ export default function Controls() {
       return;
     }
 
-    sendShot(multiPotBalls, foulPoints);
+    sendShot(multiPotBalls, submittedFoulPoints);
     cancelAdvancedMode();
+  };
+
+  const startFreeBallMode = () => {
+    if (!canUseFoulOptions) {
+      return;
+    }
+
+    setMultiPotBalls([]);
+    setFoulBall(null);
+    setFoulMode(false);
+    setIsAdvancedMode(false);
+    setFreeBallMode((prev) => !prev);
   };
 
   const advancedSummary = (() => {
@@ -243,6 +306,7 @@ export default function Controls() {
               redsRemaining={redsRemaining}
               coloursOnTable={coloursOnTable}
               objectBall={objectBall}
+              freeBall={freeBall}
               canKeepScore={canKeepScore}
               redSelections={redSelections}
               foulMode={foulMode}
@@ -262,7 +326,10 @@ export default function Controls() {
               redsRemaining={redsRemaining}
               coloursOnTable={coloursOnTable}
               objectBall={objectBall}
+              freeBall={freeBall}
               canKeepScore={canKeepScore}
+              canUseFoulOptions={canUseFoulOptions}
+              freeBallMode={freeBallMode}
               selectedBalls={multiPotBalls}
               onBallTap={handleBallTap}
               onConcede={() => setIsConcedeDialogOpen(true)}
@@ -275,12 +342,9 @@ export default function Controls() {
               }}
               onDeclareFoul={toggleFoulMode}
               onEndTurn={sendEndTurn}
-<<<<<<< HEAD
-=======
               onUndo={sendUndo}
               onPassShot={sendPassShot}
-              onDeclareFreeBall={sendDeclareFreeBall}
->>>>>>> 6f960f3 (WIP)
+              onDeclareFreeBall={startFreeBallMode}
             />
           )}
 

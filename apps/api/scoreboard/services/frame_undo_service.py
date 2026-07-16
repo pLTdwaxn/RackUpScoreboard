@@ -32,6 +32,9 @@ class FrameUndoService:
             "reds_remaining": state.frame.reds_remaining,
             "colours_on_table": dict(state.frame.colours_on_table),
             "object_ball": state.frame.object_ball,
+            "free_ball_nominated_colour": state.frame.free_ball_nominated_colour,
+            "free_ball_object_ball": state.frame.free_ball_object_ball,
+            "previously_fouled": state.frame.previously_fouled,
         }
 
     def restore(self, state: FrameUndoState, snapshot: dict) -> None:
@@ -49,6 +52,9 @@ class FrameUndoService:
         state.frame.reds_remaining = snapshot["reds_remaining"]
         state.frame.colours_on_table = dict(snapshot["colours_on_table"])
         state.frame.object_ball = snapshot["object_ball"]
+        state.frame.free_ball_nominated_colour = snapshot.get("free_ball_nominated_colour")
+        state.frame.free_ball_object_ball = snapshot.get("free_ball_object_ball")
+        state.frame.previously_fouled = snapshot["previously_fouled"]
         state.frame.recalculate_score_context()
 
     def push(
@@ -56,6 +62,7 @@ class FrameUndoService:
         state: FrameUndoState,
         actor_session_key: str,
         event: dict,
+        outcome: dict | None = None,
         state_before: dict | None = None,
     ) -> None:
         state.frame.history.append(
@@ -63,6 +70,7 @@ class FrameUndoService:
                 "id": uuid4().hex,
                 "actor": actor_session_key,
                 "event": deepcopy(event),
+                "outcome": deepcopy(outcome) if outcome is not None else None,
                 "state_before": state_before or self.snapshot(state),
             }
         )

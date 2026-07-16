@@ -347,6 +347,36 @@ def test_specific_colour_mismatch_is_foul_with_potted_colour_value(
     assert frame.object_ball == "red"
 
 
+def test_free_ball_colour_counts_as_ball_on_during_colours_phase(
+    orchestrator: FrameOrchestrator,
+    frame: Frame,
+) -> None:
+    frame.phase = FramePhase.COLOURS
+    frame.object_ball = "yellow"
+    frame.colours_on_table = {
+        "yellow": True,
+        "green": True,
+        "brown": True,
+        "blue": True,
+        "pink": True,
+        "black": True,
+    }
+
+    orchestrator.orchestrate(
+        frame,
+        ActionPayload(action="declare_free_ball", potted_balls=(), nominated_colour="green"),
+    )
+    orchestrator.orchestrate(frame, ActionPayload(potted_balls=("green",)))
+
+    assert dict(frame.scores) == {PLAYER_ONE: 14, PLAYER_TWO: 5}
+    assert frame.current_break == 2
+    assert frame.colours_on_table["yellow"] is True
+    assert frame.colours_on_table["green"] is True
+    assert frame.object_ball == "green"
+    assert frame.free_ball_nominated_colour is None
+    assert frame.free_ball_object_ball is None
+
+
 def test_pink_potted_then_final_black_missed_with_large_gap_finishes_frame(
     orchestrator: FrameOrchestrator,
     frame: Frame,

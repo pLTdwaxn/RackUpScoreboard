@@ -79,8 +79,8 @@ label {
 
 /* text-6xl font-bold font-mono */
 .score-primary {
-  color: var(--scoreboard-screen-number);
   text-align: center;
+  color: var(--scoreboard-screen-number);
   font-size: 4.5rem;
   font-weight: bold;
   font-family: var(--font-mono);
@@ -90,7 +90,8 @@ label {
 /* text-2xl font-bold font-mono */
 .score-secondary {
   color: var(--scoreboard-screen-number);
-  font-size: 2rem;
+  text-align: center;
+  font-size: 1.5rem;
   font-weight: bold;
   font-family: var(--font-mono);
   line-height: 0.8;

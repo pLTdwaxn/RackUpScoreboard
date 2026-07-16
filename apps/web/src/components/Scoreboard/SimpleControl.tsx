@@ -36,7 +36,12 @@ function isBallLegal(
   objectBall: Frame["object_ball"],
   redsRemaining: number,
   coloursOnTable: Frame["colours_on_table"],
+  freeBall: Frame["free_ball"],
 ): boolean {
+  if (freeBall) {
+    return ball === freeBall.nominated_colour && coloursOnTable[ball];
+  }
+
   if (ball === "red") {
     return objectBall === "red" && redsRemaining > 0;
   }
@@ -56,7 +61,9 @@ type SimpleBallRailProps = {
   redsRemaining: number;
   coloursOnTable: Frame["colours_on_table"];
   objectBall: Frame["object_ball"];
+  freeBall: Frame["free_ball"];
   canKeepScore: boolean;
+  freeBallMode?: boolean;
   selectedBalls: BallName[];
   onBallTap: (ball: BallName) => void;
 };
@@ -65,7 +72,9 @@ export function SimpleBallRail({
   redsRemaining,
   coloursOnTable,
   objectBall,
+  freeBall,
   canKeepScore,
+  freeBallMode = false,
   selectedBalls,
   onBallTap,
 }: SimpleBallRailProps) {
@@ -85,11 +94,14 @@ export function SimpleBallRail({
           objectBall,
           redsRemaining,
           coloursOnTable,
+          freeBall,
         );
         const picked = (selectedBallCounts[ball] ?? 0) > 0;
         const unavailable =
           ball === "red" ? redsRemaining <= 0 : !coloursOnTable[ball];
-        const isDisabled = !canKeepScore || unavailable;
+        const isDisabled =
+          !canKeepScore ||
+          (freeBallMode ? ball === "red" || unavailable : unavailable);
 
         const badgeColor = picked
           ? legal
@@ -152,6 +164,7 @@ export default function SimpleControl({
 
 export type SimpleBottomActionsProps = {
   canKeepScore: boolean;
+  canUseFoulOptions: boolean;
   onConcede: () => void;
   onEnterAdvancedMode: () => void;
   onDeclareFoul: () => void;
@@ -163,6 +176,7 @@ export type SimpleBottomActionsProps = {
 
 export function SimpleBottomActions({
   canKeepScore,
+  canUseFoulOptions,
   onConcede,
   onEnterAdvancedMode,
   onDeclareFoul,
@@ -186,11 +200,21 @@ export function SimpleBottomActions({
           <Button isIconOnly isDisabled={!canKeepScore} onPress={onEndTurn}>
             <IconArrowsRightLeft stroke={2} />
           </Button>
-          <Button isIconOnly size="sm" onPress={onPassShot}>
+          <Button
+            isIconOnly
+            size="sm"
+            isDisabled={!canUseFoulOptions}
+            onPress={onPassShot}
+          >
             <ButtonGroup.Separator />
             <IconPlayerSkipForward stroke={2} />
           </Button>
-          <Button isIconOnly size="sm" onPress={onDeclareFreeBall}>
+          <Button
+            isIconOnly
+            size="sm"
+            isDisabled={!canUseFoulOptions}
+            onPress={onDeclareFreeBall}
+          >
             <ButtonGroup.Separator />
             <IconChartCircles stroke={2} />
           </Button>

@@ -17,25 +17,27 @@ class FrameLogProjector:
 
         for history_entry in frame.history:
             actor_key = history_entry["actor"]
-            event = history_entry.get("event", {})
-            data = event.get("data", event)
-            potted_balls = tuple(data.get("potted_balls", ()))
-            foul_points = int(data.get("foul", 0))
+            outcome = self._outcome_for_history_entry(history_entry)
+            action = outcome["action"]
 
             visit = visits[-1] if visits and visits[-1]["player_key"] == actor_key else None
-            if visit is None or visit["result"] == "foul":
+            if visit is None or visit["result"] == "foul" or action in {"pass_shot", "declare_free_ball"}:
                 visit = self._new_visit(history_entry, actor_key, players_by_key)
                 visits.append(visit)
 
             visit["history_ids"].append(history_entry["id"])
             visit["shot_count"] += 1
 
-            if foul_points:
-                visit["foul_points"] += foul_points
+            if action == "pass_shot":
+                visit["message_override"] = f"{visit['player_name']}: passed shot back"
+            elif action == "declare_free_ball":
+                visit["message_override"] = f"{visit['player_name']}: nominated {outcome['nominated_colour']} free ball"
+            elif outcome["foul_points"]:
+                visit["foul_points"] += outcome["foul_points"]
                 visit["result"] = "foul"
             else:
-                visit["potted_balls"].extend(potted_balls)
-                visit["break_points"] += sum(BALL_POINTS.get(ball, 0) for ball in potted_balls)
+                visit["potted_balls"].extend(outcome["potted_balls"])
+                visit["break_points"] += outcome["break_points"]
 
         if visits:
             last_visit = visits[-1]
@@ -45,7 +47,7 @@ class FrameLogProjector:
                 last_visit["result"] = "in_progress"
 
         for visit in visits:
-            visit["message"] = self._message_for_visit(visit)
+            visit["message"] = visit.pop("message_override", None) or self._message_for_visit(visit)
 
         return visits
 
@@ -67,15 +69,41 @@ class FrameLogProjector:
             "message": "",
         }
 
+    def _outcome_for_history_entry(self, history_entry: dict) -> dict:
+        outcome = history_entry.get("outcome")
+        if isinstance(outcome, dict):
+            return {
+                "action": outcome.get("action", "shot"),
+                "potted_balls": list(outcome.get("potted_balls", [])),
+                "break_points": int(outcome.get("break_points", 0)),
+                "foul_points": int(outcome.get("foul_points", 0)),
+                "nominated_colour": outcome.get("nominated_colour"),
+            }
+
+        event = history_entry.get("event", {})
+        action = event.get("action", "shot")
+        data = event.get("data", event)
+        foul_points = int(data.get("foul", 0))
+        potted_balls = list(data.get("potted_balls", ()))
+        return {
+            "action": action,
+            "potted_balls": [] if foul_points else potted_balls,
+            "break_points": 0 if foul_points else sum(BALL_POINTS.get(ball, 0) for ball in potted_balls),
+            "foul_points": foul_points,
+            "nominated_colour": data.get("nominated_colour"),
+        }
+
     def _message_for_visit(self, visit: dict) -> str:
         player_name = visit["player_name"]
         break_points = visit["break_points"]
         foul_points = visit["foul_points"]
 
+        if visit["result"] == "frame_won":
+            return f"{player_name}: won the frame"
         if foul_points and break_points:
-            return f"{player_name}: {break_points} break, foul {foul_points}"
+            return f"{player_name}: break {break_points}, foul {foul_points}"
         if foul_points:
             return f"{player_name}: foul {foul_points}"
         if break_points:
-            return f"{player_name}: {break_points} break"
+            return f"{player_name}: break {break_points}"
         return f"{player_name}: no score"

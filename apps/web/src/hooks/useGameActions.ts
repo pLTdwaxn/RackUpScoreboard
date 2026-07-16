@@ -29,16 +29,10 @@ export function useGameActions(
 
   const sendPassShot = () => {
     sendAction(createPassShotAction());
-    toast.info(`${turnPlayerName} passed their shot`, {
-      timeout: 2000,
-    });
   };
 
-  const sendDeclareFreeBall = () => {
-    sendAction(createDeclareFreeBallAction());
-    toast.info(`${turnPlayerName} declared a free ball`, {
-      timeout: 2000,
-    });
+  const sendDeclareFreeBall = (nominatedColour: string) => {
+    sendAction(createDeclareFreeBallAction(nominatedColour));
   };
 
   const sendNextFrame = () => {

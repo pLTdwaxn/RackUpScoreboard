@@ -14,6 +14,7 @@ type AdvancedScoringPanelProps = {
   redsRemaining: number;
   coloursOnTable: TableState["colours_on_table"];
   objectBall: string;
+  freeBall: TableState["free_ball"];
   canKeepScore: boolean;
   redSelections: number;
   foulMode: boolean;
@@ -33,6 +34,7 @@ export default function AdvancedScoringPanel({
   redsRemaining,
   coloursOnTable,
   objectBall,
+  freeBall,
   canKeepScore,
   redSelections,
   foulMode,
@@ -67,6 +69,7 @@ export default function AdvancedScoringPanel({
           redsRemaining={redsRemaining}
           coloursOnTable={coloursOnTable}
           objectBall={objectBall}
+          freeBall={freeBall}
           canKeepScore={canKeepScore}
           redSelections={redSelections}
           selectedBalls={selectedBalls}

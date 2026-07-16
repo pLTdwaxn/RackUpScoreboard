@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from scoreboard.domain.rules.messages import ShotMessage
 
-from . import BALL_POINTS
+from . import BALL_POINTS, COLOUR_BALLS
 
 VALID_ACTIONS = {
     "shot",
@@ -13,6 +13,7 @@ VALID_ACTIONS = {
     "next_frame",
 }
 VALID_SHOT_FIELDS = {"potted_balls", "foul"}
+VALID_FREE_BALL_FIELDS = {"nominated_colour"}
 
 
 def validate_event(event: dict) -> None:
@@ -45,7 +46,25 @@ def validate_event(event: dict) -> None:
             raise ValueError("Pass shot action does not accept payload data.")
         return
 
+    if action == "declare_free_ball":
+        validate_declare_free_ball_data(data)
+        return
+
     validate_shot_data(data)
+
+
+def validate_declare_free_ball_data(data: dict) -> None:
+    extra_fields = set(data.keys()) - VALID_FREE_BALL_FIELDS
+    if extra_fields:
+        raise ValueError(f"Unsupported free ball payload fields: {', '.join(sorted(extra_fields))}")
+
+    if not VALID_FREE_BALL_FIELDS.issubset(data.keys()):
+        missing = sorted(VALID_FREE_BALL_FIELDS - set(data.keys()))
+        raise ValueError(f"Missing free ball payload fields: {', '.join(missing)}")
+
+    nominated_colour = data.get("nominated_colour")
+    if nominated_colour not in COLOUR_BALLS:
+        raise ValueError(f"Unsupported nominated colour: {nominated_colour}")
 
 
 def validate_shot_data(data: dict) -> None:
