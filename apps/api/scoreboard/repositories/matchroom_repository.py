@@ -15,5 +15,8 @@ class MatchroomRepository:
         if matchroom_id in self._matchrooms:
             del self._matchrooms[matchroom_id]
 
+    def clear(self) -> None:
+        self._matchrooms.clear()
+
 
 matchroom_repository = MatchroomRepository()

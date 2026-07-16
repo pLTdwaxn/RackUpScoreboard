@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from scoreboard.domain.projectors.frame_log_projector import FrameLogProjector
+from scoreboard.domain.projectors.payloads import (
+    frame_payload,
+    match_payload,
+    matchroom_payload,
+    player_payload,
+)
 
 
 class MatchStateProjector:
@@ -16,16 +22,12 @@ class MatchStateProjector:
 
         scores = current_frame.scores if current_frame else {}
         match_scores = match.match_scores if match else {}
-        matchroom_payload = matchroom.payload()
-        players_payload = [player.payload(scores, match_scores) for player in players if player]
-        match_payload = match.payload() if match else None
-        frame_payload = current_frame.payload() if current_frame else None
 
         return {
-            "matchroom": matchroom_payload,
-            "players": players_payload,
-            "match": match_payload,
-            "current_frame": frame_payload,
+            "matchroom": matchroom_payload(matchroom),
+            "players": [player_payload(player, scores, match_scores) for player in players if player],
+            "match": match_payload(match) if match else None,
+            "current_frame": frame_payload(current_frame) if current_frame else None,
             "frame_log": self._frame_log_projector.project(current_frame, players),
             "match_scores": match_scores,
             "next_frame_confirmations": sorted(matchroom.pending_next_frame_confirmations),

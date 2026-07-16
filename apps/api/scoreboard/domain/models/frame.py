@@ -236,33 +236,6 @@ class Frame:
     def history_depth(self) -> int:
         return len(self.history)
 
-    def payload(self) -> dict:
-        return {
-            "status": self.status.value,
-            "scores": dict(self.scores),
-            "phase": self.phase.value,
-            "reds_remaining": self.reds_remaining,
-            "colours_on_table": dict(self.colours_on_table),
-            "object_ball": self.object_ball,
-            "free_ball": (
-                {
-                    "nominated_colour": self.free_ball_nominated_colour,
-                    "object_ball": self.free_ball_object_ball,
-                }
-                if self.free_ball_nominated_colour and self.free_ball_object_ball
-                else None
-            ),
-            "current_turn": self.current_turn,
-            "current_break": self.current_break,
-            "previously_fouled": self.previously_fouled,
-            "points_remaining": self.points_remaining,
-            "points_gap": self.points_gap(),
-            "snookers_required": self.snookers_required,
-            "highest_break": self.highest_break if self.highest_break > 0 else None,
-            "opening_turn": self._opening_turn,
-            "winner_key": self.winner_key,
-        }
-
 
 class ObservableScores(UserDict):
     def __init__(self, initial: dict[str, int], on_change: Callable[[], None]) -> None:

@@ -57,13 +57,3 @@ class Match:
 
     # def _highest_break(self) -> int:
     # return max((frame.highest_break for frame in self.frames), default=0)
-
-    def payload(self) -> dict:
-        return {
-            "id": None,  # Placeholder for future implementation
-            "name": None,  # Placeholder for future implementation
-            "match_importance": "Practice Match",
-            "frames_to_win": self.frames_to_win,
-            "status": self.status.value,
-            "match_scores": self.match_scores,
-        }

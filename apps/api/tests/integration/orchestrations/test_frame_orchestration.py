@@ -5,6 +5,7 @@ from scoreboard.domain.orchestrators.frame_orchestrator import (
     ActionPayload,
     FrameOrchestrator,
 )
+from scoreboard.domain.projectors.payloads import frame_payload
 
 PLAYER_ONE = "player-one"
 PLAYER_TWO = "player-two"
@@ -132,7 +133,7 @@ def test_calculation_failure_does_not_commit_any_accumulated_effects(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    initial_payload = frame.payload()
+    initial_payload = frame_payload(frame)
 
     class FailingProcessor:
         def process(self, context):
@@ -143,7 +144,7 @@ def test_calculation_failure_does_not_commit_any_accumulated_effects(
     with pytest.raises(RuntimeError, match="calculation failed"):
         orchestrator.orchestrate(frame, ActionPayload(potted_balls=("red",)))
 
-    assert frame.payload() == initial_payload
+    assert frame_payload(frame) == initial_payload
 
 
 def test_final_black_pot_with_tied_score_respots_black(

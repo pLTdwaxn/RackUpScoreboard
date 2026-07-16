@@ -1,3 +1,4 @@
+from scoreboard.domain.projectors.match_state_projector import MatchStateProjector
 from scoreboard.domain.services.matchroom_service import MatchroomService
 from scoreboard.repositories.matchroom_repository import MatchroomRepository
 from scoreboard.services.matchroom_action_dispatcher import (
@@ -7,6 +8,10 @@ from scoreboard.services.matchroom_action_dispatcher import (
 
 def make_matchroom_service() -> MatchroomService:
     return MatchroomService(repository=MatchroomRepository())
+
+
+def state_payload(room) -> dict:
+    return MatchStateProjector().state_payload(room)
 
 
 def _create_room_with_two_players(
@@ -31,7 +36,7 @@ def test_state_payload_exposes_matchroom_match_and_current_frame() -> None:
     matchroom_service = make_matchroom_service()
     room = _create_room_with_two_players(matchroom_service, "room_payload")
 
-    payload = room.state_payload()
+    payload = state_payload(room)
 
     assert payload["matchroom"]["id"] == room.id
     assert payload["match"]["frames_to_win"] == 3
@@ -145,13 +150,14 @@ def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
         "winner_key": None,
         "nominated_colour": None,
     }
-    assert room.state_payload()["frame_log"] == [
+    payload = state_payload(room)
+    assert payload["frame_log"] == [
         {
-            "id": room.state_payload()["frame_log"][0]["id"],
+            "id": payload["frame_log"][0]["id"],
             "type": "visit",
             "player_key": "p1",
             "player_name": "Player 1",
-            "history_ids": room.state_payload()["frame_log"][0]["history_ids"],
+            "history_ids": payload["frame_log"][0]["history_ids"],
             "potted_balls": ["blue"],
             "shot_count": 1,
             "break_points": 5,
@@ -204,7 +210,7 @@ def test_dispatch_pass_shot_adds_frame_log_entry_and_can_be_undone() -> None:
         "winner_key": None,
         "nominated_colour": None,
     }
-    assert room.state_payload()["frame_log"][1]["message"] == "Player 2: passed shot back"
+    assert state_payload(room)["frame_log"][1]["message"] == "Player 2: passed shot back"
 
     handled, error = dispatcher.dispatch(
         room,

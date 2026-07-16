@@ -2,20 +2,18 @@ from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.domain.models.player import Player
 from scoreboard.factories.matchroom_factory import MatchroomFactory
 from scoreboard.factories.player_factory import PlayerFactory
-from scoreboard.repositories.matchroom_repository import (
-    MatchroomRepository,
-    matchroom_repository,
-)
+from scoreboard.repositories.factory import create_matchroom_repository
+from scoreboard.repositories.protocols import MatchroomStore
 
 
 class MatchroomService:
     def __init__(
         self,
-        repository: MatchroomRepository | None = None,
+        repository: MatchroomStore | None = None,
         matchroom_factory: MatchroomFactory | None = None,
         player_factory: PlayerFactory | None = None,
     ):
-        self.repository = repository or matchroom_repository
+        self.repository = repository or create_matchroom_repository()
         self.matchroom_factory = matchroom_factory or MatchroomFactory()
         self.player_factory = player_factory or PlayerFactory()
 
@@ -44,6 +42,9 @@ class MatchroomService:
     def get_matchroom_by_id(self, matchroom_id: str) -> Matchroom | None:
         """Return the matchroom associated with the given matchroom ID."""
         return self.repository.get(matchroom_id)
+
+    def save_matchroom(self, matchroom: Matchroom) -> None:
+        self.repository.save(matchroom)
 
     def close_matchroom(self, matchroom_id: str) -> None:
         self.repository.delete(matchroom_id)

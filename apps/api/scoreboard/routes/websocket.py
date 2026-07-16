@@ -4,6 +4,7 @@ import json
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 from scoreboard.domain.models.matchroom import Matchroom
+from scoreboard.domain.projectors.match_state_projector import MatchStateProjector
 from scoreboard.domain.services.matchroom_service import matchroom_service
 from scoreboard.runtime.broadcast import broadcast_to_connections
 from scoreboard.runtime.connection_registry import matchroom_connection_registry
@@ -12,12 +13,13 @@ from scoreboard.services.matchroom_action_dispatcher import (
 )
 
 router = APIRouter()
+match_state_projector = MatchStateProjector()
 
 
 async def send_game_state(matchroom_id: str, matchroom: Matchroom):
     await broadcast_to_connections(
         matchroom_connection_registry.get(matchroom_id),
-        {"type": "game_state", **matchroom.state_payload()},
+        {"type": "game_state", **match_state_projector.state_payload(matchroom)},
     )
 
 
@@ -50,6 +52,7 @@ async def handle_client_event(
         await send_error(websocket, error or "Unable to process message.", action_id)
         return
 
+    matchroom_service.save_matchroom(matchroom)
     await send_game_state(matchroom_id, matchroom)
 
 

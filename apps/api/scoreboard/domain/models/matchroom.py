@@ -6,7 +6,6 @@ from typing import List
 
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.player import Player
-from scoreboard.domain.projectors.match_state_projector import MatchStateProjector
 
 VALID_SCORE_KEEPERS = {"self", "opp", "ref", "any"}
 
@@ -53,22 +52,7 @@ class Matchroom:
         self.score_keeper = score_keeper if score_keeper in VALID_SCORE_KEEPERS else "opp"
         self.status = status
         self.pending_next_frame_confirmations = pending_next_frame_confirmations or set()
-        self._state_projector = MatchStateProjector()
 
     def add_player(self, player: Player) -> None:
         if len(self.players) < 2:
             self.players.append(player)
-
-    def payload(self) -> dict:
-        return {
-            "id": self.id,
-            "room_code": self.room_code,
-            "club_id": None,  # Placeholder for future implementation
-            "table_id": None,  # Placeholder for future implementation
-            "status": self.status.value,
-            "score_keeper": self.score_keeper,
-        }
-
-    def state_payload(self) -> dict:
-        payload = self._state_projector.state_payload(self)
-        return payload
