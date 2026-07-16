@@ -21,18 +21,18 @@ function actionLabel(entry: FrameLogEntry): string {
   }
 
   if (entry.foul_points > 0 && entry.break_points > 0) {
-    return `${entry.break_points} break, foul ${entry.foul_points}`;
+    return `${entry.break_points} Break, Foul ${entry.foul_points}`;
   }
 
   if (entry.foul_points > 0) {
-    return `foul ${entry.foul_points}`;
+    return `Foul ${entry.foul_points}`;
   }
 
   if (entry.break_points > 0) {
     return `Break ${entry.break_points}`;
   }
 
-  return "no score";
+  return "Shot Taken";
 }
 
 export default function LogEntry({
@@ -43,6 +43,7 @@ export default function LogEntry({
 }: LogEntryProps) {
   const { avatarColor, avatarColor2 } = getAvatarColors(entry.player_name);
   const initials = getPlayerInitials(entry.player_name);
+  const isCurrentBreak = entry.result === "in_progress";
 
   return (
     <li className="flex w-full flex-col">
@@ -52,8 +53,13 @@ export default function LogEntry({
             isCurrentUser ? "justify-end" : "justify-start"
           }`}
         >
-          <Card variant="secondary" className="w-fit max-w-full p-1">
-            <Card.Content className="flex min-h-9 flex-row items-center gap-2 p-0">
+          <Card
+            variant="secondary"
+            className={`w-fit max-w-full p-1 ${
+              isCurrentBreak ? "current-break-glow" : ""
+            }`}
+          >
+            <Card.Content className="flex flex-row items-center gap-2 p-0">
               <div
                 className={`flex min-w-0 items-center gap-2 ${
                   isCurrentUser ? "flex-row-reverse" : "flex-row"

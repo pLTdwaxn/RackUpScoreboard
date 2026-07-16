@@ -11,6 +11,9 @@
   --scoreboard-screen-number: #3a6e0a;
   --scoreboard-screen-label: #4a6830;
   --scoreboard-screen-accent: rgba(16, 130, 80, 0.18);
+  --current-break-bg: rgba(74, 120, 14, 0.14);
+  --current-break-glow-soft: rgba(74, 120, 14, 0.3);
+  --current-break-glow-strong: rgba(74, 120, 14, 0.58);
 }
 
 .dark {
@@ -22,6 +25,9 @@
   --scoreboard-screen-number: #8fbe4d;
   --scoreboard-screen-label: #b7cc9c;
   --scoreboard-screen-accent: rgba(16, 185, 129, 0.28);
+  --current-break-bg: rgba(132, 204, 22, 0.14);
+  --current-break-glow-soft: rgba(132, 204, 22, 0.32);
+  --current-break-glow-strong: rgba(132, 204, 22, 0.62);
 }
 
 @theme inline {
@@ -122,5 +128,27 @@ label {
 .winner-avatar-glow {
   border-radius: 9999px;
   animation: winner-avatar-pulse 3s ease-in-out infinite;
+  will-change: box-shadow, transform;
+}
+
+@keyframes current-break-breathe {
+  0%,
+  100% {
+    box-shadow:
+      /* 0 0 0 0px var(--current-break-glow-soft), */
+      0 0 14px 3px var(--current-break-glow-soft);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      /* 0 0 0 0px var(--current-break-glow-strong), */
+      0 0 28px 8px var(--current-break-glow-strong);
+    transform: scale(1.015);
+  }
+}
+
+.current-break-glow {
+  background: var(--current-break-bg);
+  animation: current-break-breathe 1.8s ease-in-out infinite;
   will-change: box-shadow, transform;
 }

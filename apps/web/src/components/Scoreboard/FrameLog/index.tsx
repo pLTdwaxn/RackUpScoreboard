@@ -22,7 +22,7 @@ export default function FrameLog() {
   return (
     <ScrollShadow
       hideScrollBar
-      className="h-full min-h-0 overflow-y-auto overscroll-contain touch-pan-y text-muted"
+      className="h-full min-h-0 overflow-y-auto overscroll-contain touch-pan-y px-4 py-3 text-muted"
     >
       <ol className="flex flex-col text-sm">
         {frameLog.map((entry) => (

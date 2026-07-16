@@ -50,7 +50,7 @@ export default function BallComposition({
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-1 overflow-hidden px-2">
+    <div className="flex min-w-0 items-center gap-1 overflow-hidden px-1">
       {composition.map(({ ball, count }, index) => (
         <span
           key={`${entryId}-${index}-${ball}`}

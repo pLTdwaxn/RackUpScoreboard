@@ -28,6 +28,7 @@ export default function FrameOverview() {
 
   return (
     <OverviewWrapper>
+      <FrameStats frame={frame} />
       <div className="flex flex-row items-center justify-between gap-2">
         <FrameScoreboard
           currentTurn={isOpponentTurn}
@@ -40,7 +41,6 @@ export default function FrameOverview() {
           playerCurrentBreak={myCurrentBreak}
         />
       </div>
-      <FrameStats frame={frame} />
     </OverviewWrapper>
   );
 }
