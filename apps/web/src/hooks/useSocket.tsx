@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "@heroui/react";
 import {
   createContext,
   useCallback,
@@ -74,6 +75,14 @@ function toWebsocketUrl(
   const protocol = parsed.protocol === "https:" ? "wss:" : "ws:";
   const params = new URLSearchParams(query);
   return `${protocol}//${parsed.host}/ws/room/?${params.toString()}`;
+}
+
+function createMessageId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 export const MatchroomProvider = ({
@@ -153,8 +162,10 @@ export const MatchroomProvider = ({
 
     const apiBase = getClientApiBase();
     if (!apiBase) {
-      setSocketError(
-        "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
+      queueMicrotask(() =>
+        setSocketError(
+          "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
+        ),
       );
       return;
     }
@@ -183,6 +194,11 @@ export const MatchroomProvider = ({
 
         switch (payload.type) {
           case "error": {
+            if (payload.action_id) {
+              toast.warning(payload.message, { timeout: 2000 });
+              return;
+            }
+
             setSocketError(payload.message);
             return;
           }
@@ -234,7 +250,10 @@ export const MatchroomProvider = ({
 
   const sendAction = useCallback(
     (action: RoomClientAction) => {
-      sendEvent(action);
+      sendEvent({
+        ...action,
+        action_id: action.action_id ?? createMessageId(),
+      });
     },
     [sendEvent],
   );

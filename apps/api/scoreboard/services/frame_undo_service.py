@@ -2,19 +2,20 @@ from __future__ import annotations
 
 from copy import deepcopy
 from typing import TYPE_CHECKING, Protocol
+from uuid import uuid4
 
 if TYPE_CHECKING:
     from scoreboard.domain.models.frame import Frame
     from scoreboard.domain.models.match import Match
 
 
-class HistoryState(Protocol):
+class FrameUndoState(Protocol):
     frame: "Frame"
     match: "Match"
 
 
-class HistoryManager:
-    def snapshot(self, state: HistoryState) -> dict:
+class FrameUndoService:
+    def snapshot(self, state: FrameUndoState) -> dict:
         return {
             # Persist plain values to avoid deep-copying reactive score objects.
             "scores": dict(state.frame.scores),
@@ -24,6 +25,7 @@ class HistoryManager:
             "current_turn": state.frame.current_turn,
             "opening_turn": state.frame.opening_turn,
             "winner_key": state.frame.winner_key,
+            "frame_status": state.frame.status.value,
             "frame_phase": state.frame.phase.value,
             "is_finished": state.match.is_finished,
             "frames_to_win": state.match.frames_to_win,
@@ -32,7 +34,7 @@ class HistoryManager:
             "object_ball": state.frame.object_ball,
         }
 
-    def restore(self, state: HistoryState, snapshot: dict) -> None:
+    def restore(self, state: FrameUndoState, snapshot: dict) -> None:
         state.frame.replace_scores(snapshot["scores"])
         state.match.match_scores = dict(snapshot["match_scores"])
         state.frame.highest_break = snapshot["highest_break"]
@@ -40,6 +42,7 @@ class HistoryManager:
         state.frame.current_turn = snapshot["current_turn"]
         state.frame._opening_turn = snapshot["opening_turn"]
         state.frame.winner_key = snapshot["winner_key"]
+        state.frame.status = state.frame.status.__class__(snapshot["frame_status"])
         state.frame.phase = state.frame.phase.__class__(snapshot["frame_phase"])
         state.match.is_finished = snapshot["is_finished"]
         state.match.frames_to_win = snapshot["frames_to_win"]
@@ -48,16 +51,23 @@ class HistoryManager:
         state.frame.object_ball = snapshot["object_ball"]
         state.frame.recalculate_score_context()
 
-    def push(self, state: HistoryState, actor_session_key: str, event: dict) -> None:
+    def push(
+        self,
+        state: FrameUndoState,
+        actor_session_key: str,
+        event: dict,
+        state_before: dict | None = None,
+    ) -> None:
         state.frame.history.append(
             {
+                "id": uuid4().hex,
                 "actor": actor_session_key,
                 "event": deepcopy(event),
-                "state_before": self.snapshot(state),
+                "state_before": state_before or self.snapshot(state),
             }
         )
 
-    def undo(self, state: HistoryState) -> bool:
+    def undo(self, state: FrameUndoState) -> bool:
         if not state.frame.history:
             return False
 

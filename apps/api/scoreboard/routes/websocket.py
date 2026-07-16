@@ -21,16 +21,16 @@ async def send_game_state(matchroom_id: str, matchroom: Matchroom):
     )
 
 
-async def send_error(websocket: WebSocket, message: str):
-    await websocket.send_text(
-        json.dumps(
-            {
-                "type": "error",
-                "message": message,
-                "error": message,
-            },
-        ),
-    )
+async def send_error(websocket: WebSocket, message: str, action_id: str | None = None):
+    payload = {
+        "type": "error",
+        "message": message,
+        "error": message,
+    }
+    if action_id is not None:
+        payload["action_id"] = action_id
+
+    await websocket.send_text(json.dumps(payload))
 
 
 async def handle_client_event(
@@ -40,9 +40,14 @@ async def handle_client_event(
     session_key: str,
     event: dict,
 ):
+    action_id = event.get("action_id") if isinstance(event, dict) else None
+    if action_id is not None and not isinstance(action_id, str):
+        await send_error(websocket, "Action id must be a string.")
+        return
+
     handled, error = matchroom_action_dispatcher.dispatch(matchroom, session_key, event)
     if not handled:
-        await send_error(websocket, error or "Unable to process message.")
+        await send_error(websocket, error or "Unable to process message.", action_id)
         return
 
     await send_game_state(matchroom_id, matchroom)

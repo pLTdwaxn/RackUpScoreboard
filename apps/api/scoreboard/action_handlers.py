@@ -14,7 +14,7 @@ from scoreboard.services.action_services import (
     OpponentResolver,
     ScoreKeeperPolicy,
 )
-from scoreboard.services.history_manager import HistoryManager
+from scoreboard.services.frame_undo_service import FrameUndoService
 
 
 @dataclass
@@ -34,8 +34,8 @@ class ActionContext:
 
 
 class ShotActionHandler:
-    def __init__(self, history_manager: HistoryManager | None = None) -> None:
-        self._history_manager = history_manager or HistoryManager()
+    def __init__(self, frame_undo_service: FrameUndoService | None = None) -> None:
+        self._frame_undo_service = frame_undo_service or FrameUndoService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         if not context.score_keeper_policy.can_player_keep_score(
@@ -44,6 +44,8 @@ class ShotActionHandler:
             context.actor_key,
         ):
             return False, "You are not allowed to keep score in this turn."
+
+        state_before = self._frame_undo_service.snapshot(context)
 
         transitioned, transition_error = context.transition_service.transition(
             context.frame,
@@ -56,7 +58,12 @@ class ShotActionHandler:
         scoring_player_key = context.frame.current_turn or context.actor_key
         was_finished = context.frame.status == FrameStatus.FINISHED
 
-        self._history_manager.push(context, scoring_player_key, context.data)
+        self._frame_undo_service.push(
+            context,
+            scoring_player_key,
+            context.data,
+            state_before,
+        )
 
         context.frame_orchestrator.orchestrate(
             context.frame,
@@ -78,19 +85,12 @@ class ShotActionHandler:
 
 
 class UndoActionHandler:
-    def __init__(self, history_manager: HistoryManager | None = None) -> None:
-        self._history_manager = history_manager or HistoryManager()
+    def __init__(self, frame_undo_service: FrameUndoService | None = None) -> None:
+        self._frame_undo_service = frame_undo_service or FrameUndoService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
-        if not self._history_manager.undo(context):
+        if not self._frame_undo_service.undo(context):
             return False, "No prior message to undo."
-
-        transitioned, transition_error = context.transition_service.transition(
-            context.frame,
-            "undo",
-        )
-        if not transitioned:
-            return False, transition_error
 
         return True, None
 

@@ -6,7 +6,7 @@ from typing import List
 
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.player import Player
-from scoreboard.services.match_state_projector import MatchStateProjector
+from scoreboard.domain.projectors.match_state_projector import MatchStateProjector
 
 VALID_SCORE_KEEPERS = {"self", "opp", "ref", "any"}
 

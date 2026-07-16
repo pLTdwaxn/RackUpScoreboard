@@ -6,14 +6,30 @@ export type GameStateMessage = {
   match_scores: Record<string, number>;
   match: Match;
   current_frame: Frame;
+  frame_log: FrameLogEntry[];
   score_keeper: "self" | "opp" | "ref" | "any";
   history_depth?: number;
   next_frame_confirmations?: string[];
 };
 
+export type FrameLogEntry = {
+  id: string;
+  type: "visit";
+  player_key: string;
+  player_name: string;
+  history_ids: string[];
+  potted_balls: string[];
+  shot_count: number;
+  break_points: number;
+  foul_points: number;
+  result: "in_progress" | "ended" | "foul" | "frame_won";
+  message: string;
+};
+
 export type ErrorMessage = {
   type: "error";
   message: string;
+  action_id?: string;
 };
 
 export type PlayerStatusChangeMessage = {
@@ -87,6 +103,7 @@ export type MatchroomConnection = {
 };
 
 export type RoomClientShotAction = {
+  action_id?: string;
   action: "shot";
   data: {
     potted_balls: string[];
@@ -95,16 +112,19 @@ export type RoomClientShotAction = {
 };
 
 export type RoomClientUndoAction = {
+  action_id?: string;
   action: "undo";
   data: Record<string, never>;
 };
 
 export type RoomClientConcedeAction = {
+  action_id?: string;
   action: "concede";
   data: Record<string, never>;
 };
 
 export type RoomClientNextFrameAction = {
+  action_id?: string;
   action: "next_frame";
   data: Record<string, never>;
 };

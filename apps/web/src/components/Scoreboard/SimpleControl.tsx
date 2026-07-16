@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { Badge, Button, ButtonGroup } from "@heroui/react";
 import {
-  IconArrowBackUp,
   IconAdjustmentsAlt,
   IconArrowsRightLeft,
   IconBan,
@@ -155,7 +154,6 @@ export type SimpleBottomActionsProps = {
   onEnterAdvancedMode: () => void;
   onDeclareFoul: () => void;
   onEndTurn: () => void;
-  onUndo: () => void;
 };
 
 export function SimpleBottomActions({
@@ -164,7 +162,6 @@ export function SimpleBottomActions({
   onEnterAdvancedMode,
   onDeclareFoul,
   onEndTurn,
-  onUndo,
 }: SimpleBottomActionsProps) {
   return (
     <div className="flex w-full flex-row items-center justify-between gap-4">
@@ -175,10 +172,6 @@ export function SimpleBottomActions({
       <ButtonGroup variant="secondary" size="sm" className="mb-0">
         <Button isIconOnly isDisabled={!canKeepScore} onPress={onEndTurn}>
           <IconArrowsRightLeft stroke={2} />
-        </Button>
-        <Button isIconOnly size="sm" onPress={onUndo}>
-          <ButtonGroup.Separator />
-          <IconArrowBackUp stroke={2} />
         </Button>
         <Button
           isIconOnly

@@ -56,8 +56,8 @@ export default function Controls() {
   const { hasFrame, frame, scoreKeeper, nextFrameConfirmations } =
     useMatchroomFrame();
   const { sendAction } = useMatchroomActions();
-  const { sendShot, sendEndTurn, sendUndo, sendConcede, sendNextFrame } =
-    useGameActions(sendAction, currentPlayerKey);
+  const { sendShot, sendEndTurn, sendConcede, sendNextFrame } =
+    useGameActions(sendAction);
 
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [isConcedeDialogOpen, setIsConcedeDialogOpen] = useState(false);
@@ -275,7 +275,6 @@ export default function Controls() {
               }}
               onDeclareFoul={toggleFoulMode}
               onEndTurn={sendEndTurn}
-              onUndo={sendUndo}
             />
           )}
 

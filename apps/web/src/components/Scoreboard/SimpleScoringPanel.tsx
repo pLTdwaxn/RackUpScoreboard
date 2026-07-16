@@ -17,7 +17,6 @@ type SimpleScoringPanelProps = {
   onEnterAdvancedMode: () => void;
   onDeclareFoul: () => void;
   onEndTurn: () => void;
-  onUndo: () => void;
 };
 
 export default function SimpleScoringPanel({
@@ -31,7 +30,6 @@ export default function SimpleScoringPanel({
   onEnterAdvancedMode,
   onDeclareFoul,
   onEndTurn,
-  onUndo,
 }: SimpleScoringPanelProps) {
   return (
     <SimpleControl
@@ -57,7 +55,6 @@ export default function SimpleScoringPanel({
           onEnterAdvancedMode={onEnterAdvancedMode}
           onDeclareFoul={onDeclareFoul}
           onEndTurn={onEndTurn}
-          onUndo={onUndo}
         />
       }
     />

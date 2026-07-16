@@ -76,6 +76,52 @@ def test_shot_event_updates_state_for_both_connections(client):
         assert update["current_frame"]["object_ball"] == "colour"
 
 
+def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client):
+    p1 = _connect(client, "Player One")
+    p2 = _connect(client, "Player Two", matchroom_id=p1["matchroom_id"])
+
+    p2_params = f"matchroom_id={p2['matchroom_id']}&session_key={p2['player_key']}"
+
+    with client.websocket_connect(f"/ws/room/?{p2_params}") as ws:
+        _ = json.loads(ws.receive_text())
+
+        ws.send_text(
+            json.dumps(
+                {
+                    "action": "shot",
+                    "data": {
+                        "potted_balls": ["red"],
+                        "foul": 0,
+                    },
+                }
+            )
+        )
+        shot_update = json.loads(ws.receive_text())
+
+        ws.send_text(json.dumps({"action": "undo", "data": {}}))
+        undo_update = json.loads(ws.receive_text())
+
+    assert shot_update["type"] == "game_state"
+    assert shot_update["frame_log"] == [
+        {
+            "id": shot_update["frame_log"][0]["id"],
+            "type": "visit",
+            "player_key": p1["player_key"],
+            "player_name": "Player One",
+            "history_ids": shot_update["frame_log"][0]["history_ids"],
+            "potted_balls": ["red"],
+            "shot_count": 1,
+            "break_points": 1,
+            "foul_points": 0,
+            "result": "in_progress",
+            "message": "Player One: 1 break",
+        }
+    ]
+    assert shot_update["frame_log"][0]["history_ids"] == [shot_update["frame_log"][0]["id"]]
+    assert undo_update["type"] == "game_state"
+    assert undo_update["frame_log"] == []
+
+
 def test_next_frame_flow_updates_state_over_websocket_for_both_players(client):
     p1 = _connect(client, "Player One")
     p2 = _connect(client, "Player Two", matchroom_id=p1["matchroom_id"])
@@ -138,6 +184,20 @@ def test_invalid_action_is_rejected_over_websocket(client):
         err = json.loads(ws.receive_text())
 
     assert err["type"] == "error"
+    assert "Unsupported action" in err["error"]
+
+
+def test_action_error_echoes_action_id(client):
+    p1 = _connect(client, "Breaker")
+    params = f"matchroom_id={p1['matchroom_id']}&session_key={p1['player_key']}"
+
+    with client.websocket_connect(f"/ws/room/?{params}") as ws:
+        _ = json.loads(ws.receive_text())
+        ws.send_text(json.dumps({"action_id": "bad-1", "action": "invalid_action"}))
+        err = json.loads(ws.receive_text())
+
+    assert err["type"] == "error"
+    assert err["action_id"] == "bad-1"
     assert "Unsupported action" in err["error"]
 
 

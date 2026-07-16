@@ -37,6 +37,7 @@ def test_state_payload_exposes_matchroom_match_and_current_frame() -> None:
     assert payload["match"]["frames_to_win"] == 3
     assert payload["current_frame"]["reds_remaining"] == 15
     assert payload["current_frame"]["object_ball"] == "red"
+    assert payload["frame_log"] == []
     assert payload["players"][0]["session_key"] == "p1"
     assert payload["players"][1]["session_key"] == "p2"
 
@@ -53,7 +54,11 @@ def test_dispatch_shot_updates_scores_break_and_history() -> None:
     handled, error = dispatcher.dispatch(
         room,
         "p2",
-        {"action": "shot", "data": {"potted_balls": ["red"], "foul": 0}},
+        {
+            "action_id": "action-1",
+            "action": "shot",
+            "data": {"potted_balls": ["red"], "foul": 0},
+        },
     )
 
     assert handled is True
@@ -63,6 +68,9 @@ def test_dispatch_shot_updates_scores_break_and_history() -> None:
     assert frame.reds_remaining == 14
     assert frame.current_break == 1
     assert len(frame.history) == 1
+    assert frame.history[0]["id"]
+    assert isinstance(frame.history[0]["id"], str)
+    assert frame.history[0]["id"] != "action-1"
 
 
 def test_dispatch_foul_awards_opponent_and_switches_turn() -> None:
@@ -118,7 +126,49 @@ def test_undo_restores_previous_frame_state() -> None:
     assert frame.reds_remaining == 15
     assert frame.object_ball == "red"
     assert frame.points_remaining == 147
+    assert frame.status.value == "ready"
     assert len(frame.history) == 0
+
+
+def test_undo_restores_active_frame_status_after_later_shot() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_undo_active")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": ["red"], "foul": 0}},
+    )
+    assert handled is True
+    assert error is None
+    assert frame.status.value == "active"
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": ["black"], "foul": 0}},
+    )
+    assert handled is True
+    assert error is None
+    assert frame.scores["p1"] == 8
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "undo", "data": {}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.status.value == "active"
+    assert frame.scores["p1"] == 1
+    assert frame.object_ball == "colour"
+    assert len(frame.history) == 1
 
 
 def test_dispatch_rejects_player_at_table_under_opp_score_keeper() -> None:

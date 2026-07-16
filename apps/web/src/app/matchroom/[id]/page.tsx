@@ -9,7 +9,7 @@ import { useMatchroomSession } from "@/hooks/useSocket";
 export default function MatchPage() {
   const params = useParams<{ id?: string }>();
   const { hydrated, hasRoomSession, readyToRenderRoom } = useMatchroomSession();
-  const matchroomId = typeof params.id === "string" ? params.id : "";
+  const matchroomId = typeof params?.id === "string" ? params.id : "";
 
   if (!hydrated || !hasRoomSession) {
     return (

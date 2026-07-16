@@ -12,8 +12,8 @@ def validate_event(event: dict) -> None:
     if not isinstance(event, dict):
         raise ValueError("Message must be a JSON object.")
 
-    if set(event.keys()) - {"action", "data"}:
-        raise ValueError("Message envelope accepts only 'action' and 'data'.")
+    if set(event.keys()) - {"action", "data", "action_id"}:
+        raise ValueError("Message envelope accepts only 'action', 'data', and 'action_id'.")
 
     action = event.get("action")
     if action not in VALID_ACTIONS:

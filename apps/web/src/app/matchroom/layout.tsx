@@ -39,7 +39,7 @@ function MatchroomTopRowContent() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const params = useParams<{ id?: string }>();
-  const matchroomId = typeof params.id === "string" ? params.id : "";
+  const matchroomId = typeof params?.id === "string" ? params.id : "";
 
   return (
     <MatchroomProvider matchroomId={matchroomId}>
