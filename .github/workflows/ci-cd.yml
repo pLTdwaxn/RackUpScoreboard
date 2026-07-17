@@ -27,13 +27,13 @@ jobs:
       - name: Run tests
         run: pytest -q apps/api/tests
 
-  build_and_push_api:
-    if: github.event_name == 'workflow_dispatch'
+  build_and_push_api_preview:
+    if: github.event_name == 'push' && github.ref_name == 'master'
     needs: test
     runs-on: ubuntu-latest
-    environment: Production
+    environment: Preview
     env:
-      IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
+      API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
       REGISTRY: ${{ vars.VULTR_REGISTRY }}
     outputs:
       image_tag: ${{ steps.vars.outputs.image_tag }}
@@ -43,7 +43,7 @@ jobs:
 
       - name: Derive image tag
         id: vars
-        run: echo "image_tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+        run: echo "image_tag=preview-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -55,7 +55,7 @@ jobs:
           username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
           password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
 
-      - name: Build and push API image
+      - name: Build and push preview API image
         uses: docker/build-push-action@v6
         with:
           context: ./apps/api
@@ -64,28 +64,150 @@ jobs:
           provenance: false
           sbom: false
           tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}
+            ${{ env.API_IMAGE_NAME }}:preview-latest
+            ${{ env.API_IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}
 
-  deploy_vultr_vm:
-    if: github.event_name == 'workflow_dispatch'
+  deploy_preview_vultr_vm:
+    if: github.event_name == 'push' && github.ref_name == 'master'
     needs:
-      - build_and_push_api
+      - build_and_push_api_preview
+    runs-on: ubuntu-latest
+    environment: Preview
+    env:
+      API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
+      REGISTRY: ${{ vars.VULTR_REGISTRY }}
+      APP_ENV: preview
+      STUB_REDIS: "true"
+      REDIS_KEY_PREFIX: rackup:scoreboard:preview
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      RACKUP_URL: ${{ vars.RACKUP_URL }}
+      INTERNAL_SECRET_TOKEN: ${{ secrets.INTERNAL_SECRET_TOKEN }}
+      CORS_ALLOW_ORIGINS: ${{ vars.CORS_ALLOW_ORIGINS }}
+      API_CONTAINER_NAME: rackupscoreboard-api-preview
+      API_PORT: "8005"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy deploy script to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ vars.VM_PORT }}
+          source: .github/scripts/deploy-api-container.sh
+          target: /tmp/rackupscoreboard-deploy
+
+      - name: Deploy preview on VM over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          API_IMAGE_NAME: ${{ env.API_IMAGE_NAME }}
+          IMAGE_TAG: ${{ needs.build_and_push_api_preview.outputs.image_tag }}
+          REGISTRY: ${{ env.REGISTRY }}
+          APP_ENV: ${{ env.APP_ENV }}
+          STUB_REDIS: ${{ env.STUB_REDIS }}
+          REDIS_KEY_PREFIX: ${{ env.REDIS_KEY_PREFIX }}
+          REDIS_URL: ${{ env.REDIS_URL }}
+          RACKUP_URL: ${{ env.RACKUP_URL }}
+          INTERNAL_SECRET_TOKEN: ${{ env.INTERNAL_SECRET_TOKEN }}
+          CORS_ALLOW_ORIGINS: ${{ env.CORS_ALLOW_ORIGINS }}
+          API_CONTAINER_NAME: ${{ env.API_CONTAINER_NAME }}
+          API_PORT: ${{ env.API_PORT }}
+          VULTR_REGISTRY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          VULTR_REGISTRY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ vars.VM_PORT }}
+          envs: API_IMAGE_NAME,IMAGE_TAG,REGISTRY,APP_ENV,STUB_REDIS,REDIS_KEY_PREFIX,REDIS_URL,RACKUP_URL,INTERNAL_SECRET_TOKEN,CORS_ALLOW_ORIGINS,API_CONTAINER_NAME,API_PORT,VULTR_REGISTRY_USERNAME,VULTR_REGISTRY_PASSWORD
+          script: bash /tmp/rackupscoreboard-deploy/.github/scripts/deploy-api-container.sh
+
+  build_and_push_api_production:
+    if: github.event_name == 'workflow_dispatch' && github.ref_name == 'release'
+    needs: test
     runs-on: ubuntu-latest
     environment: Production
     env:
       API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
       REGISTRY: ${{ vars.VULTR_REGISTRY }}
+    outputs:
+      image_tag: ${{ steps.vars.outputs.image_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive image tag
+        id: vars
+        run: echo "image_tag=release-${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Vultr Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+
+      - name: Build and push production API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/api
+          file: ./apps/api/Dockerfile
+          push: true
+          provenance: false
+          sbom: false
+          tags: |
+            ${{ env.API_IMAGE_NAME }}:latest
+            ${{ env.API_IMAGE_NAME }}:${{ steps.vars.outputs.image_tag }}
+
+  deploy_production_vultr_vm:
+    if: github.event_name == 'workflow_dispatch' && github.ref_name == 'release'
+    needs:
+      - build_and_push_api_production
+    runs-on: ubuntu-latest
+    environment: Production
+    env:
+      API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
+      REGISTRY: ${{ vars.VULTR_REGISTRY }}
+      APP_ENV: production
+      STUB_REDIS: "true"
+      REDIS_KEY_PREFIX: rackup:scoreboard
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      RACKUP_URL: ${{ vars.RACKUP_URL }}
+      INTERNAL_SECRET_TOKEN: ${{ secrets.INTERNAL_SECRET_TOKEN }}
       CORS_ALLOW_ORIGINS: ${{ vars.CORS_ALLOW_ORIGINS }}
       API_CONTAINER_NAME: rackupscoreboard-api
       API_PORT: "8004"
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy deploy script to VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.VM_HOST }}
+          username: ${{ vars.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ vars.VM_PORT }}
+          source: .github/scripts/deploy-api-container.sh
+          target: /tmp/rackupscoreboard-deploy
+
       - name: Deploy on VM over SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
           API_IMAGE_NAME: ${{ env.API_IMAGE_NAME }}
-          IMAGE_TAG: ${{ needs.build_and_push_api.outputs.image_tag }}
+          IMAGE_TAG: ${{ needs.build_and_push_api_production.outputs.image_tag }}
           REGISTRY: ${{ env.REGISTRY }}
+          APP_ENV: ${{ env.APP_ENV }}
+          STUB_REDIS: ${{ env.STUB_REDIS }}
+          REDIS_KEY_PREFIX: ${{ env.REDIS_KEY_PREFIX }}
+          REDIS_URL: ${{ env.REDIS_URL }}
+          RACKUP_URL: ${{ env.RACKUP_URL }}
+          INTERNAL_SECRET_TOKEN: ${{ env.INTERNAL_SECRET_TOKEN }}
           API_CONTAINER_NAME: ${{ env.API_CONTAINER_NAME }}
           API_PORT: ${{ env.API_PORT }}
           CORS_ALLOW_ORIGINS: ${{ env.CORS_ALLOW_ORIGINS }}
@@ -95,32 +217,6 @@ jobs:
           host: ${{ vars.VM_HOST }}
           username: ${{ vars.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
-          port: ${{ vars.VM_PORT || 22 }}
-          envs: API_IMAGE_NAME,IMAGE_TAG,REGISTRY,CORS_ALLOW_ORIGINS,API_CONTAINER_NAME,API_PORT,VULTR_REGISTRY_USERNAME,VULTR_REGISTRY_PASSWORD
-          script: |
-            set -euo pipefail
-
-            echo "$VULTR_REGISTRY_PASSWORD" | docker login "$REGISTRY" -u "$VULTR_REGISTRY_USERNAME" --password-stdin
-            docker pull "$API_IMAGE_NAME:$IMAGE_TAG"
-
-            docker rm -f "$API_CONTAINER_NAME" || true
-
-            docker run -d \
-              --name "$API_CONTAINER_NAME" \
-              --restart unless-stopped \
-              -p "$API_PORT:$API_PORT" \
-              -e PORT="$API_PORT" \
-              -e CORS_ALLOW_ORIGINS="$CORS_ALLOW_ORIGINS" \
-              "$API_IMAGE_NAME:$IMAGE_TAG"
-
-            prune_image() {
-              local image_name="$1"
-              docker images "$image_name" --format "{{.Repository}}:{{.Tag}}" \
-                | grep -v ":$IMAGE_TAG$" \
-                | grep -v ":latest$" \
-                | xargs -r docker rmi || true
-            }
-
-            prune_image "$API_IMAGE_NAME"
-
-            docker image prune -f >/dev/null 2>&1 || true
+          port: ${{ vars.VM_PORT }}
+          envs: API_IMAGE_NAME,IMAGE_TAG,REGISTRY,APP_ENV,STUB_REDIS,REDIS_KEY_PREFIX,REDIS_URL,RACKUP_URL,INTERNAL_SECRET_TOKEN,CORS_ALLOW_ORIGINS,API_CONTAINER_NAME,API_PORT,VULTR_REGISTRY_USERNAME,VULTR_REGISTRY_PASSWORD
+          script: bash /tmp/rackupscoreboard-deploy/.github/scripts/deploy-api-container.sh
