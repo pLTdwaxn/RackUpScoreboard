@@ -6,7 +6,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Callable, MutableMapping
 
 if TYPE_CHECKING:
-    from scoreboard.domain.orchestrators.effects.frame_effect import FrameEffect
+    from scoreboard.domain.orchestrators.effects.contracts import FrameEffect
 
 # Don't call the SnookerCalculator directly from the Frame model!
 # Currently porting to the FrameOrchestrator.

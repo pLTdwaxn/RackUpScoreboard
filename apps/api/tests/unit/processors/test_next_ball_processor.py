@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 
 from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
+from scoreboard.domain.processors.action_processor import DeclareFreeBallProcessor
 from scoreboard.domain.processors.foul_processor import FoulResult
 from scoreboard.domain.processors.next_ball_processor import (
     NextBallProcessor,
@@ -22,9 +24,9 @@ def make_frame() -> Frame:
 
 
 def test_next_ball_processor_sets_colour_after_legal_red():
-    context = SimpleNamespace(
+    context = FrameCalculationContext(
         frame=make_frame(),
-        payload=SimpleNamespace(action="shot", potted_balls=("red",), foul=0),
+        payload=ActionPayload(action="shot", potted_balls=("red",), foul=0),
         foul_result=FoulResult(is_foul=False),
         phase_result=PhaseResult(phase=make_frame().phase),
         score_result=ScoreResult(player="p1", points=1, reds_removed=1, potted_ball=RED_BALL),
@@ -38,7 +40,7 @@ def test_next_ball_processor_sets_colour_after_legal_red():
     assert isinstance(effects[0], UpdateNextBallEffect)
 
 
-def test_next_ball_processor_uses_nomination_for_free_ball():
+def test_declare_free_ball_processor_uses_nomination():
     frame = make_frame()
     context = SimpleNamespace(
         frame=frame,
@@ -48,6 +50,6 @@ def test_next_ball_processor_uses_nomination_for_free_ball():
         score_result=ScoreResult(player="p1", points=0),
     )
 
-    NextBallProcessor().process(context)
+    DeclareFreeBallProcessor().process(context)
 
     assert context.next_ball_result.ball == "blue"

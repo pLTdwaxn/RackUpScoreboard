@@ -1,6 +1,5 @@
-from types import SimpleNamespace
-
 from scoreboard.domain.models.frame import Frame, FramePhase
+from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.processors.foul_processor import FoulResult
 from scoreboard.domain.processors.phase_processor import PhaseProcessor, PhaseResult, UpdatePhaseEffect
 from scoreboard.domain.processors.score_processor import ScoreResult
@@ -19,9 +18,9 @@ def make_frame() -> Frame:
 def test_phase_processor_enters_colours_after_last_red_and_turn_change():
     frame = make_frame()
     frame.reds_remaining = 1
-    context = SimpleNamespace(
+    context = FrameCalculationContext(
         frame=frame,
-        payload=SimpleNamespace(action="shot", potted_balls=(), foul=0),
+        payload=ActionPayload(action="shot", potted_balls=(), foul=0),
         foul_result=FoulResult(is_foul=False),
         score_result=ScoreResult(player="p1", points=0, reds_removed=1),
         turn_result=TurnResult(next_player="p2"),

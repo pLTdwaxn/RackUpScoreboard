@@ -1,27 +1,28 @@
-from dataclasses import dataclass
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.orchestrators.effects.frame_effects import UpdateTurnEffect
+from scoreboard.domain.rules.frame_helpers import opponent_key
 
+from .results import TurnResult
 
-@dataclass
-class TurnResult:
-    next_player: str
+if TYPE_CHECKING:
+    from scoreboard.domain.orchestrators.contracts import FrameCalculationContext
+    from scoreboard.domain.orchestrators.effects.contracts import FrameEffect
 
 
 class TurnProcessor:
-    def process(self, context):
+    def process(self, context: "FrameCalculationContext") -> Sequence["FrameEffect"]:
         frame = context.frame
         shot = context.payload
-        foul = context.foul_result
+        foul = context.require_foul_result("TurnProcessor")
 
         if foul.finishes_frame or foul.respots_black:
             next_player = frame.current_turn
         elif shot.action == "pass_shot":
-            next_player = self._opponent_key(frame) or frame.current_turn
-        elif shot.action == "declare_free_ball":
-            next_player = frame.current_turn
+            next_player = opponent_key(frame) or frame.current_turn
         elif foul.is_foul or not shot.potted_balls:
-            next_player = self._opponent_key(frame) or frame.current_turn
+            next_player = opponent_key(frame) or frame.current_turn
         else:
             next_player = frame.current_turn
 
@@ -30,20 +31,6 @@ class TurnProcessor:
         context.turn_result = result
 
         return [UpdateTurnEffect(result)]
-
-    def _opponent_key(self, frame: Frame) -> str | None:
-        for player_key in frame.scores:
-            if player_key != frame.current_turn:
-                return player_key
-        return None
-
-
-@dataclass
-class UpdateTurnEffect:
-    result: TurnResult
-
-    def apply(self, frame: Frame) -> None:
-        frame.current_turn = self.result.next_player
 
 
 turn_processor = TurnProcessor()

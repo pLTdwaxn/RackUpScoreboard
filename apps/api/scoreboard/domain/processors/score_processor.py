@@ -1,21 +1,35 @@
-from dataclasses import dataclass
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from scoreboard.domain.models.frame import Frame, FramePhase
+from scoreboard.domain.models.frame import FramePhase
+from scoreboard.domain.orchestrators.effects.frame_effects import (
+    AwardPenaltyEffect,
+    ClearFreeBallEffect,
+    RemoveColoursEffect,
+    RemoveRedsEffect,
+    RespotColoursEffect,
+    ScorePointsEffect,
+    ScoreRedsEffect,
+)
 from scoreboard.domain.rules import BALL_POINTS, RED_BALL
+from scoreboard.domain.rules.frame_helpers import object_ball_equivalent_potted_balls, opponent_key
+
+from .results import ScoreResult
+
+if TYPE_CHECKING:
+    from scoreboard.domain.orchestrators.contracts import FrameCalculationContext
+    from scoreboard.domain.orchestrators.effects.contracts import FrameEffect
 
 
 class ScoreProcessor:
-    def process(self, context):
+    def process(self, context: "FrameCalculationContext") -> Sequence["FrameEffect"]:
         frame = context.frame
-        foul = context.foul_result
+        foul = context.require_foul_result("ScoreProcessor")
         shot = context.payload
 
-        if shot.action != "shot":
-            result = ScoreResult(player=frame.current_turn, points=0)
-            context.score_result = result
-            return []
+        assert shot.action == "shot"
 
-        effects = []
+        effects: list["FrameEffect"] = []
 
         if foul.is_foul:
             reds_removed = foul.fouled_with.count(RED_BALL)
@@ -25,7 +39,7 @@ class ScoreProcessor:
             if frame.free_ball_nominated_colour:
                 effects.append(ClearFreeBallEffect())
             result = ScoreResult(
-                player=self._opponent_key(frame) or frame.current_turn,
+                player=opponent_key(frame) or frame.current_turn,
                 points=foul.points_awarded,
                 reds_removed=reds_removed,
                 is_scoring_shot=False,
@@ -38,7 +52,7 @@ class ScoreProcessor:
             context.score_result = result
             return [ClearFreeBallEffect()] if frame.free_ball_nominated_colour else []
 
-        equivalent_potted_balls = self._object_ball_equivalent_potted_balls(frame, shot.potted_balls)
+        equivalent_potted_balls = object_ball_equivalent_potted_balls(frame, shot.potted_balls)
         nominated_colour = frame.free_ball_nominated_colour
         free_ball_potted = bool(nominated_colour and nominated_colour in shot.potted_balls)
 
@@ -46,7 +60,7 @@ class ScoreProcessor:
             reds_potted = equivalent_potted_balls.count(RED_BALL)
             actual_reds_potted = shot.potted_balls.count(RED_BALL)
             points = reds_potted * BALL_POINTS[RED_BALL]
-            effects = []
+            effects: list["FrameEffect"] = []
             if actual_reds_potted:
                 effects.append(RemoveRedsEffect(actual_reds_potted))
             if free_ball_potted:
@@ -70,7 +84,7 @@ class ScoreProcessor:
 
         colour = equivalent_potted_balls[0]
         points = BALL_POINTS[colour]
-        effects = [ScorePointsEffect(points)]
+        effects: list["FrameEffect"] = [ScorePointsEffect(points)]
         actual_colour = shot.potted_balls[0]
         if free_ball_potted and nominated_colour:
             effects.append(RespotColoursEffect((nominated_colour,)))
@@ -98,95 +112,6 @@ class ScoreProcessor:
         )
         context.score_result = result
         return effects
-
-    def _opponent_key(self, frame: Frame) -> str | None:
-        for player_key in frame.scores:
-            if player_key != frame.current_turn:
-                return player_key
-        return None
-
-    def _object_ball_equivalent_potted_balls(self, frame: Frame, potted_balls: tuple[str, ...]) -> tuple[str, ...]:
-        nominated_colour = frame.free_ball_nominated_colour
-        object_ball = frame.free_ball_object_ball
-        if not nominated_colour or not object_ball:
-            return potted_balls
-
-        return tuple(object_ball if ball == nominated_colour else ball for ball in potted_balls)
-
-
-@dataclass
-class RemoveRedsEffect:
-    count: int
-
-    def apply(self, frame: Frame) -> None:
-        frame.remove_reds(self.count)
-
-
-@dataclass
-class ScoreRedsEffect:
-    count: int
-
-    def apply(self, frame: Frame) -> None:
-        frame.score_reds(self.count)
-
-
-@dataclass
-class ScorePointsEffect:
-    points: int
-
-    def apply(self, frame: Frame) -> None:
-        frame.scores[frame.current_turn] += self.points
-        frame.recalculate_score_context()
-
-
-@dataclass
-class RemoveColoursEffect:
-    colours: tuple[str, ...]
-
-    def apply(self, frame: Frame) -> None:
-        frame.remove_colours(self.colours)
-
-
-@dataclass
-class ScoreColourEffect:
-    colour: str
-
-    def apply(self, frame: Frame) -> None:
-        frame.score_colour(self.colour)
-
-
-@dataclass
-class RespotColoursEffect:
-    colours: tuple[str, ...]
-
-    def apply(self, frame: Frame) -> None:
-        frame.respot_colours(self.colours)
-
-
-@dataclass
-class AwardPenaltyEffect:
-    points: int
-
-    def apply(self, frame: Frame) -> None:
-        frame.award_penalty(self.points)
-
-
-@dataclass
-class ClearFreeBallEffect:
-    def apply(self, frame: Frame) -> None:
-        frame.clear_free_ball()
-
-
-@dataclass
-class ScoreResult:
-    player: str
-    points: int
-    reds_removed: int = 0
-    break_points: int = 0
-    colours_removed: tuple[str, ...] = ()
-    colours_respotted: tuple[str, ...] = ()
-    potted_ball: str | None = None
-    is_scoring_shot: bool = False
 
 
 score_processor = ScoreProcessor()

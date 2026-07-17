@@ -1,15 +1,23 @@
-from dataclasses import dataclass
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from scoreboard.domain.models.frame import Frame, FrameStatus
+from scoreboard.domain.orchestrators.effects.frame_effects import FinishFrameEffect
+from scoreboard.domain.rules.frame_helpers import leading_player_key, scores_after_points
+
+from .results import WinConditionResult
+
+if TYPE_CHECKING:
+    from scoreboard.domain.orchestrators.contracts import FrameCalculationContext
+    from scoreboard.domain.orchestrators.effects.contracts import FrameEffect
 
 
 class WinConditionProcessor:
-    def process(self, context):
-        finishes_frame = (
-            context.foul_result.finishes_frame
-            or context.phase_result.finishes_frame
-            or context.next_ball_result.finishes_frame
-        )
+    def process(self, context: "FrameCalculationContext") -> Sequence["FrameEffect"]:
+        foul = context.require_foul_result("WinConditionProcessor")
+        phase = context.require_phase_result("WinConditionProcessor")
+        next_ball = context.require_next_ball_result("WinConditionProcessor")
+
+        finishes_frame = foul.finishes_frame or phase.finishes_frame or next_ball.finishes_frame
         if not finishes_frame:
             result = WinConditionResult(finishes_frame=False)
             context.win_condition_result = result
@@ -24,36 +32,14 @@ class WinConditionProcessor:
 
     def _winner_after_effects(self, context) -> str | None:
         scores = dict(context.frame.scores)
-        score = context.score_result
+        score = context.require_score_result("WinConditionProcessor")
 
         if score.is_scoring_shot:
-            scores[score.player] = scores.get(score.player, 0) + score.points
-        elif context.foul_result.is_foul:
-            scores[score.player] = scores.get(score.player, 0) + score.points
+            scores = scores_after_points(scores, score.player, score.points)
+        elif context.require_foul_result("WinConditionProcessor").is_foul:
+            scores = scores_after_points(scores, score.player, score.points)
 
-        if not scores:
-            return None
-
-        highest_score = max(scores.values())
-        leaders = [player_key for player_key, player_score in scores.items() if player_score == highest_score]
-        if len(leaders) != 1:
-            return None
-        return leaders[0]
-
-
-@dataclass
-class FinishFrameEffect:
-    result: "WinConditionResult"
-
-    def apply(self, frame: Frame) -> None:
-        frame.status = FrameStatus.FINISHED
-        frame.winner_key = self.result.winner_key
-
-
-@dataclass
-class WinConditionResult:
-    finishes_frame: bool
-    winner_key: str | None = None
+        return leading_player_key(scores)
 
 
 win_condition_processor = WinConditionProcessor()

@@ -1,6 +1,5 @@
-from types import SimpleNamespace
-
 from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.processors.break_processor import (
     BreakProcessor,
     BumpBreakEffect,
@@ -19,12 +18,12 @@ def make_context(**overrides):
             scores={"p1": 0, "p2": 0},
             current_turn="p1",
         ),
-        "payload": SimpleNamespace(action="shot", potted_balls=("red",), foul=0),
+        "payload": ActionPayload(action="shot", potted_balls=("red",), foul=0),
         "foul_result": FoulResult(is_foul=False),
         "score_result": ScoreResult(player="p1", points=1, break_points=1),
     }
     context.update(overrides)
-    return SimpleNamespace(**context)
+    return FrameCalculationContext(**context)
 
 
 def test_break_processor_bumps_break_for_scoring_shot():
@@ -40,7 +39,7 @@ def test_break_processor_bumps_break_for_scoring_shot():
 
 def test_break_processor_updates_highest_and_resets_on_miss():
     context = make_context(
-        payload=SimpleNamespace(action="shot", potted_balls=(), foul=0),
+        payload=ActionPayload(action="shot", potted_balls=(), foul=0),
         score_result=ScoreResult(player="p1", points=0),
     )
 

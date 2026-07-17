@@ -1,6 +1,5 @@
-from types import SimpleNamespace
-
 from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.processors.foul_processor import FoulResult
 from scoreboard.domain.processors.score_processor import (
     AwardPenaltyEffect,
@@ -21,9 +20,9 @@ def make_frame() -> Frame:
 
 
 def test_score_processor_scores_legal_red_and_removes_it():
-    context = SimpleNamespace(
+    context = FrameCalculationContext(
         frame=make_frame(),
-        payload=SimpleNamespace(action="shot", potted_balls=("red",), foul=0),
+        payload=ActionPayload(action="shot", potted_balls=("red",), foul=0),
         foul_result=FoulResult(is_foul=False),
     )
 
@@ -38,9 +37,9 @@ def test_score_processor_scores_legal_red_and_removes_it():
 
 
 def test_score_processor_awards_foul_penalty_to_opponent_and_removes_fouled_reds():
-    context = SimpleNamespace(
+    context = FrameCalculationContext(
         frame=make_frame(),
-        payload=SimpleNamespace(action="shot", potted_balls=("red", "black"), foul=0),
+        payload=ActionPayload(action="shot", potted_balls=("red", "black"), foul=0),
         foul_result=FoulResult(is_foul=True, points_awarded=7, fouled_with=("red", "black")),
     )
 

@@ -1,24 +1,26 @@
-from dataclasses import dataclass
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from scoreboard.domain.models.frame import Frame, FramePhase
+from scoreboard.domain.orchestrators.effects.frame_effects import SetPreviouslyFouledEffect
 from scoreboard.domain.rules import BALL_POINTS, COLOUR_BALLS, RED_BALL
+from scoreboard.domain.rules.frame_helpers import object_ball_equivalent_potted_balls, score_gap, scores_after_penalty
+
+from .results import FoulResult
+
+if TYPE_CHECKING:
+    from scoreboard.domain.orchestrators.contracts import FrameCalculationContext
+    from scoreboard.domain.orchestrators.effects.contracts import FrameEffect
 
 
 class FoulProcessor:
-    def process(self, context):
+    def process(self, context: "FrameCalculationContext") -> Sequence["FrameEffect"]:
         frame = context.frame
         shot = context.payload
 
-        if shot.action == "pass_shot":
-            context.foul_result = FoulResult(is_foul=False)
-            return [SetPreviouslyFouledEffect(False)]
+        assert shot.action == "shot"
 
-        if shot.action != "shot":
-            result = FoulResult(is_foul=False)
-            context.foul_result = result
-            return []
-
-        fouled_with = self._fouled_with(frame, self._object_ball_equivalent_potted_balls(frame, shot.potted_balls))
+        fouled_with = self._fouled_with(frame, object_ball_equivalent_potted_balls(frame, shot.potted_balls))
         declared_foul = shot.foul > 0
 
         if fouled_with:
@@ -57,24 +59,8 @@ class FoulProcessor:
 
         return ()
 
-    def _object_ball_equivalent_potted_balls(self, frame: Frame, potted_balls: tuple[str, ...]) -> tuple[str, ...]:
-        nominated_colour = frame.free_ball_nominated_colour
-        object_ball = frame.free_ball_object_ball
-        if not nominated_colour or not object_ball:
-            return potted_balls
-
-        return tuple(object_ball if ball == nominated_colour else ball for ball in potted_balls)
-
-    def _scores_after_penalty(self, frame: Frame, points_awarded: int) -> dict[str, int]:
-        scores = dict(frame.scores)
-        opponent_keys = [player_key for player_key in scores if player_key != frame.current_turn]
-        if opponent_keys:
-            scores[opponent_keys[0]] += points_awarded
-        return scores
-
     def _points_gap_after_penalty(self, frame: Frame, points_awarded: int) -> int:
-        scores = list(self._scores_after_penalty(frame, points_awarded).values())
-        return max(scores, default=0) - min(scores, default=0)
+        return score_gap(scores_after_penalty(frame, points_awarded))
 
     def _respots_black(self, frame: Frame, points_awarded: int) -> bool:
         return (
@@ -89,23 +75,6 @@ class FoulProcessor:
         if frame.phase == FramePhase.RESPOTTED_BLACK:
             return True
         return frame.phase == FramePhase.COLOURS and not self._respots_black(frame, points_awarded)
-
-
-@dataclass
-class FoulResult:
-    is_foul: bool
-    points_awarded: int = 0
-    fouled_with: tuple[str, ...] = ()
-    respots_black: bool = False
-    finishes_frame: bool = False
-
-
-@dataclass
-class SetPreviouslyFouledEffect:
-    value: bool
-
-    def apply(self, frame: Frame) -> None:
-        frame.set_previously_fouled(self.value)
 
 
 foul_processor = FoulProcessor()

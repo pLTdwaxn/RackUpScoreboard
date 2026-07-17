@@ -1,22 +1,24 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from scoreboard.domain.models.frame import Frame, FramePhase
+from scoreboard.domain.models.frame import FramePhase
+from scoreboard.domain.orchestrators.effects.frame_effects import RespotBlackEffect, UpdatePhaseEffect
 from scoreboard.domain.rules import RED_BALL
+
+from .results import PhaseResult
+
+if TYPE_CHECKING:
+    from scoreboard.domain.orchestrators.contracts import FrameCalculationContext
+    from scoreboard.domain.orchestrators.effects.contracts import FrameEffect
 
 
 class PhaseProcessor:
-    def process(self, context):
+    def process(self, context: FrameCalculationContext) -> Sequence[FrameEffect]:
         frame = context.frame
-        foul = context.foul_result
-        score = context.score_result
-        shot = context.payload
-
-        if shot.action == "declare_free_ball":
-            result = PhaseResult(frame.phase)
-            context.phase_result = result
-            return []
+        foul = context.require_foul_result("PhaseProcessor")
+        score = context.require_score_result("PhaseProcessor")
 
         if foul.respots_black:
             result = PhaseResult(FramePhase.RESPOTTED_BLACK, respot_black=True)
@@ -41,33 +43,13 @@ class PhaseProcessor:
         return [UpdatePhaseEffect(result)] if phase != frame.phase else []
 
     def _turn_changes(self, context) -> bool:
-        return context.turn_result.next_player != context.frame.current_turn
+        return context.require_turn_result("PhaseProcessor").next_player != context.frame.current_turn
 
     def _advances_after_turn_change(self, context) -> bool:
         shot = context.payload
-        return context.foul_result.is_foul or shot.action == "pass_shot" or not shot.potted_balls
-
-
-@dataclass
-class UpdatePhaseEffect:
-    result: PhaseResult
-
-    def apply(self, frame: Frame):
-        frame.phase = self.result.phase
-        frame.recalculate_score_context()
-
-
-@dataclass
-class RespotBlackEffect:
-    def apply(self, frame: Frame) -> None:
-        frame.respot_black()
-
-
-@dataclass
-class PhaseResult:
-    phase: FramePhase
-    finishes_frame: bool = False
-    respot_black: bool = False
+        return (
+            context.require_foul_result("PhaseProcessor").is_foul or shot.action == "pass_shot" or not shot.potted_balls
+        )
 
 
 phase_processor = PhaseProcessor()

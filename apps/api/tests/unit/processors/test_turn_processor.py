@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.processors.foul_processor import FoulResult
 from scoreboard.domain.processors.turn_processor import (
     TurnProcessor,
@@ -13,8 +14,8 @@ def make_frame():
 
 
 def test_turn_processor_keeps_current_turn_after_legal_pot():
-    context = SimpleNamespace(
-        payload=SimpleNamespace(action="shot", potted_balls=("red",)),
+    context = FrameCalculationContext(
+        payload=ActionPayload(action="shot", potted_balls=("red",)),
         foul_result=FoulResult(is_foul=False),
         frame=make_frame(),
     )
@@ -28,8 +29,8 @@ def test_turn_processor_keeps_current_turn_after_legal_pot():
 
 
 def test_turn_processor_switches_to_other_player_on_foul():
-    context = SimpleNamespace(
-        payload=SimpleNamespace(action="shot", potted_balls=()),
+    context = FrameCalculationContext(
+        payload=ActionPayload(action="shot", potted_balls=()),
         foul_result=FoulResult(is_foul=True),
         frame=make_frame(),
     )

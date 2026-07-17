@@ -1,21 +1,28 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.orchestrators.effects.frame_effects import (
+    BumpBreakEffect,
+    PreserveBreakEffect,
+    ResetBreakEffect,
+    UpdateHighestBreakEffect,
+)
+
+from .results import BreakResult
+
+if TYPE_CHECKING:
+    from scoreboard.domain.orchestrators.contracts import FrameCalculationContext
+    from scoreboard.domain.orchestrators.effects.contracts import FrameEffect
 
 
 class BreakProcessor:
-    def process(self, context):
+    def process(self, context: FrameCalculationContext) -> Sequence[FrameEffect]:
         frame = context.frame
         shot = context.payload
-        foul = context.foul_result
-        score = context.score_result
-
-        if shot.action == "declare_free_ball":
-            result = BreakResult(break_points=frame.current_break)
-            context.break_result = result
-            return []
+        foul = context.require_foul_result("BreakProcessor")
+        score = context.require_score_result("BreakProcessor")
 
         if foul.finishes_frame or foul.respots_black:
             result = BreakResult(
@@ -41,43 +48,6 @@ class BreakProcessor:
         )
         context.break_result = result
         return [BumpBreakEffect(score.break_points)]
-
-
-@dataclass
-class BumpBreakEffect:
-    increment: int
-
-    def apply(self, frame: Frame) -> None:
-        frame.bump_current_break(self.increment)
-
-
-@dataclass
-class UpdateHighestBreakEffect:
-    def apply(self, frame: Frame) -> None:
-        if frame.highest_break < frame.current_break:
-            frame.update_highest_break(frame.current_break)
-
-
-@dataclass
-class ResetBreakEffect:
-    def apply(self, frame: Frame) -> None:
-        frame.reset_current_break()
-
-
-@dataclass
-class PreserveBreakEffect:
-    result: BreakResult
-
-    def apply(self, frame: Frame) -> None:
-        frame.current_break = self.result.break_points
-
-
-@dataclass
-class BreakResult:
-    break_points: int
-    break_increment: int = 0
-    update_highest: bool = False
-    reset_break: bool = False
 
 
 break_processor = BreakProcessor()
