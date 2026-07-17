@@ -33,4 +33,4 @@ def test_dispatcher_reconciles_roster_then_no_pot_switches_turn() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.current_turn == "p2"
+    assert frame.turn_state.current_turn == "p2"

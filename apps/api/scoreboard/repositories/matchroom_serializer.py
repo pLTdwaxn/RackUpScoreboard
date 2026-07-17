@@ -3,7 +3,9 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from scoreboard.domain.models.frame import Frame, FramePhase, FrameStatus
+from scoreboard.domain.frame_calculation.rule_state import calculate_frame_rule_state
+from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.models.frame_state import FramePhase, FrameStatus
 from scoreboard.domain.models.match import Match, MatchStatus
 from scoreboard.domain.models.matchroom import Matchroom, MatchroomStatus
 from scoreboard.domain.models.player import Player
@@ -30,23 +32,27 @@ def deserialize_player(data: dict[str, Any]) -> Player:
 
 
 def serialize_frame(frame: Frame) -> dict[str, Any]:
+    scoring = frame.scoring_state
+    table = frame.table_state
+    turn = frame.turn_state
+    lifecycle = frame.lifecycle_state
     return {
         "id": frame.id,
         "match_id": frame.match_id,
-        "scores": dict(frame.scores),
-        "current_turn": frame.current_turn,
-        "opening_turn": frame.opening_turn,
-        "winner_key": frame.winner_key,
-        "current_break": frame.current_break,
-        "highest_break": frame.highest_break,
-        "status": frame.status.value,
-        "phase": frame.phase.value,
-        "reds_remaining": frame.reds_remaining,
-        "colours_on_table": dict(frame.colours_on_table),
-        "object_ball": frame.object_ball,
-        "free_ball_nominated_colour": frame.free_ball_nominated_colour,
-        "free_ball_object_ball": frame.free_ball_object_ball,
-        "previously_fouled": frame.previously_fouled,
+        "scores": dict(scoring.scores),
+        "current_turn": turn.current_turn,
+        "opening_turn": turn.opening_turn,
+        "winner_key": lifecycle.winner_key,
+        "current_break": scoring.current_break,
+        "highest_break": scoring.highest_break,
+        "status": lifecycle.status.value,
+        "phase": table.phase.value,
+        "reds_remaining": table.reds_remaining,
+        "colours_on_table": dict(table.colours_on_table),
+        "object_ball": table.object_ball,
+        "free_ball_nominated_colour": table.free_ball_nominated_colour,
+        "free_ball_object_ball": table.free_ball_object_ball,
+        "previously_fouled": turn.previously_fouled,
         "history": deepcopy(frame.history),
     }
 
@@ -59,19 +65,19 @@ def deserialize_frame(data: dict[str, Any]) -> Frame:
         current_turn=data.get("current_turn", ""),
         opening_turn=data.get("opening_turn", ""),
     )
-    frame.winner_key = data.get("winner_key")
-    frame.current_break = data.get("current_break", 0)
-    frame.highest_break = data.get("highest_break", 0)
-    frame.status = FrameStatus(data.get("status", FrameStatus.READY.value))
-    frame.phase = FramePhase(data.get("phase", FramePhase.REDS.value))
-    frame.reds_remaining = data.get("reds_remaining", 15)
-    frame.colours_on_table = dict(data.get("colours_on_table", frame.colours_on_table))
-    frame.object_ball = data.get("object_ball", frame.object_ball)
-    frame.free_ball_nominated_colour = data.get("free_ball_nominated_colour")
-    frame.free_ball_object_ball = data.get("free_ball_object_ball")
-    frame.previously_fouled = data.get("previously_fouled", False)
+    frame.lifecycle_state.winner_key = data.get("winner_key")
+    frame.scoring_state.current_break = data.get("current_break", 0)
+    frame.scoring_state.highest_break = data.get("highest_break", 0)
+    frame.lifecycle_state.status = FrameStatus(data.get("status", FrameStatus.READY.value))
+    frame.table_state.phase = FramePhase(data.get("phase", FramePhase.REDS.value))
+    frame.table_state.reds_remaining = data.get("reds_remaining", 15)
+    frame.table_state.colours_on_table = dict(data.get("colours_on_table", frame.table_state.colours_on_table))
+    frame.table_state.object_ball = data.get("object_ball", frame.table_state.object_ball)
+    frame.table_state.free_ball_nominated_colour = data.get("free_ball_nominated_colour")
+    frame.table_state.free_ball_object_ball = data.get("free_ball_object_ball")
+    frame.turn_state.previously_fouled = data.get("previously_fouled", False)
     frame.history = deepcopy(data.get("history", []))
-    frame.recalculate_score_context()
+    frame.rule_state = calculate_frame_rule_state(frame)
     return frame
 
 

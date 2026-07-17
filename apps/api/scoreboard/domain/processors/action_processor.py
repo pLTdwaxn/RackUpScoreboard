@@ -16,7 +16,7 @@ class PassShotProcessor:
     def process(self, context: FrameCalculationContext) -> Sequence[FrameEffect]:
         frame = context.frame
         context.foul_result = FoulResult(is_foul=False)
-        context.score_result = ScoreResult(player=frame.current_turn, points=0)
+        context.score_result = ScoreResult(player=frame.turn_state.current_turn, points=0)
         return [SetPreviouslyFouledEffect(False)]
 
 
@@ -24,7 +24,7 @@ class DeclareFreeBallProcessor:
     def process(self, context: FrameCalculationContext) -> Sequence[FrameEffect]:
         frame = context.frame
         shot = context.payload
-        result = NextBallResult(ball=shot.nominated_colour or frame.object_ball)
+        result = NextBallResult(ball=shot.nominated_colour or frame.table_state.object_ball)
         context.next_ball_result = result
         return [DeclareFreeBallEffect(result)]
 

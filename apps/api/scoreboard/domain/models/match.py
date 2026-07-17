@@ -54,6 +54,3 @@ class Match:
     def add_player(self, player_id: str) -> None:
         if len(self.player_ids) < 2:
             self.player_ids.append(player_id)
-
-    # def _highest_break(self) -> int:
-    # return max((frame.highest_break for frame in self.frames), default=0)

@@ -1,4 +1,5 @@
-from scoreboard.domain.models.frame import Frame, FrameStatus
+from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.models.frame_state import FrameStatus
 from scoreboard.domain.models.player import Player
 from scoreboard.domain.projectors.frame_log_projector import FrameLogProjector
 
@@ -143,7 +144,7 @@ def test_frame_log_projector_groups_consecutive_shots_by_visit() -> None:
 
 def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
     frame = _frame()
-    frame.current_turn = "p2"
+    frame.turn_state.current_turn = "p2"
     frame.history = [
         _history_entry(
             "h1",
@@ -206,7 +207,7 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
 
 def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
     frame = _frame()
-    frame.current_turn = "p1"
+    frame.turn_state.current_turn = "p1"
     frame.history = [
         _history_entry(
             "h1",
@@ -258,8 +259,8 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
 
 def test_frame_log_projector_message_mentions_frame_win() -> None:
     frame = _frame()
-    frame.status = FrameStatus.FINISHED
-    frame.winner_key = "p1"
+    frame.lifecycle_state.status = FrameStatus.FINISHED
+    frame.lifecycle_state.winner_key = "p1"
     frame.history = [
         _history_entry(
             "h1",
@@ -277,7 +278,7 @@ def test_frame_log_projector_message_mentions_frame_win() -> None:
 
 def test_frame_log_projector_uses_outcome_for_wrong_ball_foul() -> None:
     frame = _frame()
-    frame.current_turn = "p2"
+    frame.turn_state.current_turn = "p2"
     frame.history = [
         _history_entry(
             "h1",
@@ -305,7 +306,7 @@ def test_frame_log_projector_uses_outcome_for_wrong_ball_foul() -> None:
 
 def test_frame_log_projector_renders_declared_free_ball_as_visit() -> None:
     frame = _frame()
-    frame.current_turn = "p1"
+    frame.turn_state.current_turn = "p1"
     frame.history = [_declare_free_ball_entry("h1", "p2", "blue")]
 
     log = FrameLogProjector().project(

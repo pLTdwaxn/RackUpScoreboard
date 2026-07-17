@@ -3,16 +3,18 @@ from __future__ import annotations
 from math import ceil
 from typing import TYPE_CHECKING
 
-from . import BALL_POINTS, COLOUR_BALLS
+from scoreboard.domain.balls import BALL_POINTS, COLOUR_BALLS
 
 if TYPE_CHECKING:
     from scoreboard.domain.models.frame import Frame
 
 
-class SnookerCalculator:
+class FrameRuleStateCalculator:
     def points_remaining(self, frame: Frame) -> int:
-        effective_reds_remaining = frame.reds_remaining
-        if frame.free_ball_object_ball == "red":
+        table = frame.table_state
+
+        effective_reds_remaining = table.reds_remaining
+        if table.free_ball_object_ball == "red":
             effective_reds_remaining += 1
 
         if effective_reds_remaining > 0:
@@ -20,23 +22,26 @@ class SnookerCalculator:
 
             # After a red is potted, the incoming colour attempt is still available
             # in this visit until a miss/foul or successful colour pot resolves it.
-            if frame.object_ball == "colour":
+            if table.object_ball == "colour":
                 remaining += BALL_POINTS["black"]
 
             return remaining
 
-        return sum(BALL_POINTS[colour] for colour, on_table in frame.colours_on_table.items() if on_table)
+        return sum(BALL_POINTS[colour] for colour, on_table in table.colours_on_table.items() if on_table)
 
     def snookers_required(self, frame: Frame) -> int:
-        if len(frame.scores) < 2:
+        scoring = frame.scoring_state
+        table = frame.table_state
+
+        if len(scoring.scores) < 2:
             return 0
 
-        pink_on_table = frame.colours_on_table.get("pink", False)
+        pink_on_table = table.colours_on_table.get("pink", False)
         if not pink_on_table:
             return 0
 
-        leading_score = max(frame.scores.values(), default=0)
-        trailing_score = min(frame.scores.values(), default=0)
+        leading_score = max(scoring.scores.values(), default=0)
+        trailing_score = min(scoring.scores.values(), default=0)
         gap = leading_score - trailing_score
         if gap <= 0:
             return 0
@@ -49,5 +54,5 @@ class SnookerCalculator:
 
         # Baseline model: 4 foul points per successful snooker.
         # With reds on, account for a nominal free-ball red-black (+8) swing.
-        gain_per_snooker = 12 if frame.reds_remaining > 0 else 4
+        gain_per_snooker = 12 if table.reds_remaining > 0 else 4
         return ceil(shortfall / gain_per_snooker)

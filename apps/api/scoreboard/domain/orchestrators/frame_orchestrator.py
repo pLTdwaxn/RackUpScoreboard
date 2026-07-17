@@ -6,6 +6,7 @@ from .contracts import (
     FrameCalculationContext,
     FrameProcessor,
 )
+from .effects.contracts import FrameEffect
 from .frame_pipeline import (
     DECLARE_FREE_BALL_PIPELINE_PROCESSORS,
     PASS_SHOT_PIPELINE_PROCESSORS,
@@ -62,8 +63,12 @@ class FrameOrchestrator:
         context = FrameCalculationContext(frame=frame, payload=payload)
 
         effects = pipeline.calculate(context)
-        frame.apply(effects)
+        self._apply_effects(frame, effects)
         return self.outcome_factory.from_context(context)
+
+    def _apply_effects(self, frame: Frame, effects: list[FrameEffect]) -> None:
+        for effect in effects:
+            effect.apply(frame)
 
 
 frame_orchestrator = FrameOrchestrator()

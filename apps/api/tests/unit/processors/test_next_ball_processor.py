@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+from scoreboard.domain.balls import RED_BALL
 from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.processors.action_processor import DeclareFreeBallProcessor
@@ -11,7 +12,6 @@ from scoreboard.domain.processors.next_ball_processor import (
 )
 from scoreboard.domain.processors.phase_processor import PhaseResult
 from scoreboard.domain.processors.score_processor import ScoreResult
-from scoreboard.domain.rules import RED_BALL
 
 
 def make_frame() -> Frame:
@@ -28,7 +28,7 @@ def test_next_ball_processor_sets_colour_after_legal_red():
         frame=make_frame(),
         payload=ActionPayload(action="shot", potted_balls=("red",), foul=0),
         foul_result=FoulResult(is_foul=False),
-        phase_result=PhaseResult(phase=make_frame().phase),
+        phase_result=PhaseResult(phase=make_frame().table_state.phase),
         score_result=ScoreResult(player="p1", points=1, reds_removed=1, potted_ball=RED_BALL),
     )
 
@@ -46,7 +46,7 @@ def test_declare_free_ball_processor_uses_nomination():
         frame=frame,
         payload=SimpleNamespace(action="declare_free_ball", nominated_colour="blue", potted_balls=(), foul=0),
         foul_result=FoulResult(is_foul=False),
-        phase_result=PhaseResult(phase=frame.phase),
+        phase_result=PhaseResult(phase=frame.table_state.phase),
         score_result=ScoreResult(player="p1", points=0),
     )
 

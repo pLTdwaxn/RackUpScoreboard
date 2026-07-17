@@ -1,6 +1,7 @@
 import pytest
 
-from scoreboard.domain.models.frame import Frame, FramePhase, FrameStatus
+from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.models.frame_state import FramePhase, FrameStatus
 from scoreboard.domain.orchestrators.frame_orchestrator import (
     ActionPayload,
     FrameOrchestrator,
@@ -35,12 +36,12 @@ def test_legal_shot_flows_through_every_processor_and_commits_effects(
         ActionPayload(potted_balls=("red",)),
     )
 
-    assert dict(frame.scores) == {PLAYER_ONE: 13, PLAYER_TWO: 5}
-    assert frame.current_turn == PLAYER_ONE
-    assert frame.current_break == 1
-    assert frame.phase is FramePhase.REDS
-    assert frame.object_ball == "colour"
-    assert frame.reds_remaining == 14
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 13, PLAYER_TWO: 5}
+    assert frame.turn_state.current_turn == PLAYER_ONE
+    assert frame.scoring_state.current_break == 1
+    assert frame.table_state.phase is FramePhase.REDS
+    assert frame.table_state.object_ball == "colour"
+    assert frame.table_state.reds_remaining == 14
 
 
 def test_declared_foul_scores_penalty_and_hands_turn_to_opponent(
@@ -52,27 +53,27 @@ def test_declared_foul_scores_penalty_and_hands_turn_to_opponent(
         ActionPayload(potted_balls=(), foul=4),
     )
 
-    assert dict(frame.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 9}
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.current_break == 0
-    assert frame.object_ball == "red"
-    assert frame.previously_fouled is True
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 9}
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.scoring_state.current_break == 0
+    assert frame.table_state.object_ball == "red"
+    assert frame.turn_state.previously_fouled is True
 
 
 def test_declared_foul_updates_highest_break_and_resets_current_break(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.current_break = 12
-    frame.highest_break = 5
+    frame.scoring_state.current_break = 12
+    frame.scoring_state.highest_break = 5
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=(), foul=4))
 
-    assert dict(frame.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 9}
-    assert frame.highest_break == 12
-    assert frame.current_break == 0
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.object_ball == "red"
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 9}
+    assert frame.scoring_state.highest_break == 12
+    assert frame.scoring_state.current_break == 0
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.object_ball == "red"
 
 
 def test_illegal_colour_while_on_red_scores_calculated_penalty_and_removes_red(
@@ -84,24 +85,24 @@ def test_illegal_colour_while_on_red_scores_calculated_penalty_and_removes_red(
         ActionPayload(potted_balls=("red", "black")),
     )
 
-    assert dict(frame.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 12}
-    assert frame.reds_remaining == 14
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.object_ball == "red"
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 12}
+    assert frame.table_state.reds_remaining == 14
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.object_ball == "red"
 
 
 def test_red_potted_when_colour_is_on_is_foul_and_removes_red(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.object_ball = "colour"
+    frame.table_state.object_ball = "colour"
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("red",)))
 
-    assert dict(frame.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 9}
-    assert frame.reds_remaining == 14
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.object_ball == "red"
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 9}
+    assert frame.table_state.reds_remaining == 14
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.object_ball == "red"
 
 
 def test_declared_foul_on_legal_pot_uses_declared_penalty_without_removing_red(
@@ -110,10 +111,10 @@ def test_declared_foul_on_legal_pot_uses_declared_penalty_without_removing_red(
 ) -> None:
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("red",), foul=7))
 
-    assert dict(frame.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 12}
-    assert frame.reds_remaining == 15
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.object_ball == "red"
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 12}
+    assert frame.table_state.reds_remaining == 15
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.object_ball == "red"
 
 
 def test_consecutive_shots_use_state_committed_by_previous_orchestration(
@@ -123,10 +124,10 @@ def test_consecutive_shots_use_state_committed_by_previous_orchestration(
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=(), foul=4))
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("red",)))
 
-    assert dict(frame.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 10}
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.current_break == 1
-    assert frame.object_ball == "colour"
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 10}
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.scoring_state.current_break == 1
+    assert frame.table_state.object_ball == "colour"
 
 
 def test_calculation_failure_does_not_commit_any_accumulated_effects(
@@ -151,12 +152,12 @@ def test_final_black_pot_with_tied_score_respots_black(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.phase = FramePhase.COLOURS
-    frame.reds_remaining = 0
-    frame.object_ball = "black"
-    frame.scores[PLAYER_ONE] = 0
-    frame.scores[PLAYER_TWO] = 7
-    frame.colours_on_table = {
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.reds_remaining = 0
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.scores[PLAYER_ONE] = 0
+    frame.scoring_state.scores[PLAYER_TWO] = 7
+    frame.table_state.colours_on_table = {
         "yellow": False,
         "green": False,
         "brown": False,
@@ -167,21 +168,21 @@ def test_final_black_pot_with_tied_score_respots_black(
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("black",)))
 
-    assert frame.phase is FramePhase.RESPOTTED_BLACK
-    assert frame.object_ball == "black"
-    assert frame.status is not FrameStatus.FINISHED
+    assert frame.table_state.phase is FramePhase.RESPOTTED_BLACK
+    assert frame.table_state.object_ball == "black"
+    assert frame.lifecycle_state.status is not FrameStatus.FINISHED
 
 
 def test_final_black_pot_with_score_gap_finishes_frame(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.phase = FramePhase.COLOURS
-    frame.reds_remaining = 0
-    frame.object_ball = "black"
-    frame.scores[PLAYER_ONE] = 10
-    frame.scores[PLAYER_TWO] = 0
-    frame.colours_on_table = {
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.reds_remaining = 0
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.scores[PLAYER_ONE] = 10
+    frame.scoring_state.scores[PLAYER_TWO] = 0
+    frame.table_state.colours_on_table = {
         "yellow": False,
         "green": False,
         "brown": False,
@@ -192,18 +193,18 @@ def test_final_black_pot_with_score_gap_finishes_frame(
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("black",)))
 
-    assert frame.status is FrameStatus.FINISHED
-    assert frame.winner_key == PLAYER_ONE
+    assert frame.lifecycle_state.status is FrameStatus.FINISHED
+    assert frame.lifecycle_state.winner_key == PLAYER_ONE
 
 
 def test_non_pot_in_colours_advances_to_next_available_colour(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.reds_remaining = 0
-    frame.phase = FramePhase.COLOURS
-    frame.object_ball = "green"
-    frame.colours_on_table = {
+    frame.table_state.reds_remaining = 0
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.object_ball = "green"
+    frame.table_state.colours_on_table = {
         "yellow": False,
         "green": False,
         "brown": True,
@@ -214,18 +215,18 @@ def test_non_pot_in_colours_advances_to_next_available_colour(
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
 
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.object_ball == "brown"
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.object_ball == "brown"
 
 
 def test_non_pot_in_colours_keeps_object_ball_when_still_on_table(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.reds_remaining = 0
-    frame.phase = FramePhase.COLOURS
-    frame.object_ball = "yellow"
-    frame.colours_on_table = {
+    frame.table_state.reds_remaining = 0
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.object_ball = "yellow"
+    frame.table_state.colours_on_table = {
         "yellow": True,
         "green": True,
         "brown": True,
@@ -236,89 +237,89 @@ def test_non_pot_in_colours_keeps_object_ball_when_still_on_table(
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
 
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.object_ball == "yellow"
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.object_ball == "yellow"
 
 
 def test_non_pot_in_respotted_black_phase_finishes_frame_without_winner_on_tie(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.reds_remaining = 0
-    frame.phase = FramePhase.RESPOTTED_BLACK
-    frame.object_ball = "black"
-    frame.scores[PLAYER_ONE] = 12
-    frame.scores[PLAYER_TWO] = 12
+    frame.table_state.reds_remaining = 0
+    frame.table_state.phase = FramePhase.RESPOTTED_BLACK
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.scores[PLAYER_ONE] = 12
+    frame.scoring_state.scores[PLAYER_TWO] = 12
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
 
-    assert frame.status is FrameStatus.FINISHED
-    assert frame.winner_key is None
+    assert frame.lifecycle_state.status is FrameStatus.FINISHED
+    assert frame.lifecycle_state.winner_key is None
 
 
 def test_foul_on_black_in_colours_with_tie_respots_without_switching_turn(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.phase = FramePhase.COLOURS
-    frame.reds_remaining = 0
-    frame.object_ball = "black"
-    frame.current_break = 6
-    frame.highest_break = 0
-    frame.scores[PLAYER_ONE] = 4
-    frame.scores[PLAYER_TWO] = 0
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.reds_remaining = 0
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.current_break = 6
+    frame.scoring_state.highest_break = 0
+    frame.scoring_state.scores[PLAYER_ONE] = 4
+    frame.scoring_state.scores[PLAYER_TWO] = 0
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=(), foul=4))
 
-    assert frame.phase is FramePhase.RESPOTTED_BLACK
-    assert frame.object_ball == "black"
-    assert frame.current_turn == PLAYER_ONE
-    assert frame.current_break == 6
-    assert frame.highest_break == 6
+    assert frame.table_state.phase is FramePhase.RESPOTTED_BLACK
+    assert frame.table_state.object_ball == "black"
+    assert frame.turn_state.current_turn == PLAYER_ONE
+    assert frame.scoring_state.current_break == 6
+    assert frame.scoring_state.highest_break == 6
 
 
 def test_foul_on_black_in_colours_with_score_gap_finishes_without_switching_turn(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.phase = FramePhase.COLOURS
-    frame.reds_remaining = 0
-    frame.object_ball = "black"
-    frame.scores[PLAYER_ONE] = 0
-    frame.scores[PLAYER_TWO] = 0
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.reds_remaining = 0
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.scores[PLAYER_ONE] = 0
+    frame.scoring_state.scores[PLAYER_TWO] = 0
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=(), foul=4))
 
-    assert frame.status is FrameStatus.FINISHED
-    assert frame.winner_key == PLAYER_TWO
-    assert frame.current_turn == PLAYER_ONE
+    assert frame.lifecycle_state.status is FrameStatus.FINISHED
+    assert frame.lifecycle_state.winner_key == PLAYER_TWO
+    assert frame.turn_state.current_turn == PLAYER_ONE
 
 
 def test_non_pot_from_last_red_enters_colours_and_sets_yellow(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.reds_remaining = 0
-    frame.phase = FramePhase.REDS
-    frame.object_ball = "colour"
+    frame.table_state.reds_remaining = 0
+    frame.table_state.phase = FramePhase.REDS
+    frame.table_state.object_ball = "colour"
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
 
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.phase is FramePhase.COLOURS
-    assert frame.object_ball == "yellow"
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.phase is FramePhase.COLOURS
+    assert frame.table_state.object_ball == "yellow"
 
 
 def test_non_pot_in_colours_without_next_colour_respots_black_on_tie(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.reds_remaining = 0
-    frame.phase = FramePhase.COLOURS
-    frame.object_ball = "black"
-    frame.scores[PLAYER_ONE] = 0
-    frame.scores[PLAYER_TWO] = 0
-    frame.colours_on_table = {
+    frame.table_state.reds_remaining = 0
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.scores[PLAYER_ONE] = 0
+    frame.scoring_state.scores[PLAYER_TWO] = 0
+    frame.table_state.colours_on_table = {
         "yellow": False,
         "green": False,
         "brown": False,
@@ -329,32 +330,32 @@ def test_non_pot_in_colours_without_next_colour_respots_black_on_tie(
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
 
-    assert frame.phase is FramePhase.RESPOTTED_BLACK
-    assert frame.object_ball == "black"
+    assert frame.table_state.phase is FramePhase.RESPOTTED_BLACK
+    assert frame.table_state.object_ball == "black"
 
 
 def test_specific_colour_mismatch_is_foul_with_potted_colour_value(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.object_ball = "green"
-    frame.scores[PLAYER_ONE] = 0
-    frame.scores[PLAYER_TWO] = 0
+    frame.table_state.object_ball = "green"
+    frame.scoring_state.scores[PLAYER_ONE] = 0
+    frame.scoring_state.scores[PLAYER_TWO] = 0
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("blue",)))
 
-    assert dict(frame.scores) == {PLAYER_ONE: 0, PLAYER_TWO: 5}
-    assert frame.current_turn == PLAYER_TWO
-    assert frame.object_ball == "red"
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 0, PLAYER_TWO: 5}
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.table_state.object_ball == "red"
 
 
 def test_free_ball_colour_counts_as_ball_on_during_colours_phase(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.phase = FramePhase.COLOURS
-    frame.object_ball = "yellow"
-    frame.colours_on_table = {
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.object_ball = "yellow"
+    frame.table_state.colours_on_table = {
         "yellow": True,
         "green": True,
         "brown": True,
@@ -369,25 +370,25 @@ def test_free_ball_colour_counts_as_ball_on_during_colours_phase(
     )
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("green",)))
 
-    assert dict(frame.scores) == {PLAYER_ONE: 14, PLAYER_TWO: 5}
-    assert frame.current_break == 2
-    assert frame.colours_on_table["yellow"] is True
-    assert frame.colours_on_table["green"] is True
-    assert frame.object_ball == "green"
-    assert frame.free_ball_nominated_colour is None
-    assert frame.free_ball_object_ball is None
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 14, PLAYER_TWO: 5}
+    assert frame.scoring_state.current_break == 2
+    assert frame.table_state.colours_on_table["yellow"] is True
+    assert frame.table_state.colours_on_table["green"] is True
+    assert frame.table_state.object_ball == "green"
+    assert frame.table_state.free_ball_nominated_colour is None
+    assert frame.table_state.free_ball_object_ball is None
 
 
 def test_pink_potted_then_final_black_missed_with_large_gap_finishes_frame(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.phase = FramePhase.COLOURS
-    frame.reds_remaining = 0
-    frame.object_ball = "pink"
-    frame.scores[PLAYER_ONE] = 20
-    frame.scores[PLAYER_TWO] = 0
-    frame.colours_on_table = {
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.reds_remaining = 0
+    frame.table_state.object_ball = "pink"
+    frame.scoring_state.scores[PLAYER_ONE] = 20
+    frame.scoring_state.scores[PLAYER_TWO] = 0
+    frame.table_state.colours_on_table = {
         "yellow": False,
         "green": False,
         "brown": False,
@@ -399,26 +400,26 @@ def test_pink_potted_then_final_black_missed_with_large_gap_finishes_frame(
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("pink",)))
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
 
-    assert frame.object_ball == "black"
-    assert frame.status is FrameStatus.FINISHED
-    assert frame.winner_key == PLAYER_ONE
+    assert frame.table_state.object_ball == "black"
+    assert frame.lifecycle_state.status is FrameStatus.FINISHED
+    assert frame.lifecycle_state.winner_key == PLAYER_ONE
 
 
 def test_foul_on_black_in_respotted_black_phase_finishes_immediately(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
-    frame.phase = FramePhase.RESPOTTED_BLACK
-    frame.reds_remaining = 0
-    frame.object_ball = "black"
-    frame.scores[PLAYER_ONE] = 0
-    frame.scores[PLAYER_TWO] = 0
+    frame.table_state.phase = FramePhase.RESPOTTED_BLACK
+    frame.table_state.reds_remaining = 0
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.scores[PLAYER_ONE] = 0
+    frame.scoring_state.scores[PLAYER_TWO] = 0
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=(), foul=4))
 
-    assert frame.status is FrameStatus.FINISHED
-    assert frame.winner_key == PLAYER_TWO
-    assert frame.current_turn == PLAYER_ONE
+    assert frame.lifecycle_state.status is FrameStatus.FINISHED
+    assert frame.lifecycle_state.winner_key == PLAYER_TWO
+    assert frame.turn_state.current_turn == PLAYER_ONE
 
 
 @pytest.mark.parametrize(
@@ -439,6 +440,6 @@ def test_shot_payload_is_carried_across_the_full_pipeline(
 ) -> None:
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=potted_balls))
 
-    assert dict(frame.scores) == expected_scores
-    assert frame.current_turn == expected_turn
-    assert frame.current_break == expected_break
+    assert dict(frame.scoring_state.scores) == expected_scores
+    assert frame.turn_state.current_turn == expected_turn
+    assert frame.scoring_state.current_break == expected_break

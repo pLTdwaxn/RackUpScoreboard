@@ -34,3 +34,26 @@ def test_frame_pipeline_calls_processors_in_order_and_collects_effects() -> None
         call.processor_b.process(ANY),
         call.processor_c.process(ANY),
     ]
+
+
+def test_frame_pipeline_exposes_pending_effects_to_processors() -> None:
+    frame = Mock()
+    context = FrameCalculationContext(frame=frame, payload=ActionPayload(potted_balls=("red",)))
+
+    effect = Mock(name="effect")
+    score_processor = Mock()
+    score_processor.process.return_value = [effect]
+
+    observed_pending_effects = []
+    observer_processor = Mock()
+
+    def observe_pending_effects(observed_context):
+        observed_pending_effects.append(observed_context.pending_effects)
+        return []
+
+    observer_processor.process.side_effect = observe_pending_effects
+
+    FramePipeline([score_processor, observer_processor]).calculate(context)
+
+    assert observed_pending_effects == [(effect,)]
+    assert context.pending_effects == (effect,)

@@ -20,13 +20,14 @@ if TYPE_CHECKING:
 class BreakProcessor:
     def process(self, context: FrameCalculationContext) -> Sequence[FrameEffect]:
         frame = context.frame
+        scoring = frame.scoring_state
         shot = context.payload
         foul = context.require_foul_result("BreakProcessor")
         score = context.require_score_result("BreakProcessor")
 
         if foul.finishes_frame or foul.respots_black:
             result = BreakResult(
-                break_points=frame.current_break,
+                break_points=scoring.current_break,
                 update_highest=True,
                 reset_break=False,
             )
@@ -43,7 +44,7 @@ class BreakProcessor:
             return [UpdateHighestBreakEffect(), ResetBreakEffect()]
 
         result = BreakResult(
-            break_points=frame.current_break + score.break_points,
+            break_points=scoring.current_break + score.break_points,
             break_increment=score.break_points,
         )
         context.break_result = result

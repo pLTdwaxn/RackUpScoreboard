@@ -8,13 +8,14 @@ from scoreboard.action_handlers import (
     DeclareFreeBallActionHandler,
     NextFrameActionHandler,
     PassShotActionHandler,
+    ResetShotActionHandler,
     ShotActionHandler,
     UndoActionHandler,
 )
-from scoreboard.domain.models.frame import FrameStatus
+from scoreboard.domain.actions.validator import validate_event
+from scoreboard.domain.models.frame_state import FrameStatus
 from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.domain.orchestrators.frame_orchestrator import FrameOrchestrator
-from scoreboard.domain.rules.validator import validate_event
 from scoreboard.services.action_services import (
     FramePhaseTransitionService,
     MatchResultService,
@@ -31,6 +32,7 @@ class FrameStatusStateMachine(StateMachine):
     shot = ready.to(active) | active.to(active)
     undo = ready.to(ready) | active.to(ready)
     pass_shot = active.to(active)
+    reset_shot = active.to(active)
     declare_free_ball = active.to(active)
 
 
@@ -46,6 +48,7 @@ class MatchroomActionDispatcher:
         self._action_handlers = {
             "shot": ShotActionHandler(),
             "pass_shot": PassShotActionHandler(),
+            "reset_shot": ResetShotActionHandler(),
             "declare_free_ball": DeclareFreeBallActionHandler(),
             "undo": UndoActionHandler(),
             "concede": ConcedeActionHandler(),
@@ -70,7 +73,7 @@ class MatchroomActionDispatcher:
             if player_key not in match.player_ids:
                 match.add_player(player_key)
             match.match_scores.setdefault(player_key, 0)
-            frame.scores.setdefault(player_key, 0)
+            frame.scoring_state.scores.setdefault(player_key, 0)
 
         return True, None
 

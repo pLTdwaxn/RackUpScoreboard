@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from scoreboard.domain.models.frame import Frame, FrameStatus
+from scoreboard.domain.balls import BALL_POINTS
+from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.models.frame_state import FrameStatus
 from scoreboard.domain.models.player import Player
-from scoreboard.domain.rules.constants import BALL_POINTS
 
 
 class FrameLogProjector:
@@ -21,7 +22,7 @@ class FrameLogProjector:
             action = outcome["action"]
 
             visit = visits[-1] if visits and visits[-1]["player_key"] == actor_key else None
-            if visit is None or visit["result"] == "foul" or action in {"pass_shot", "declare_free_ball"}:
+            if visit is None or visit["result"] == "foul" or action in {"pass_shot", "reset_shot", "declare_free_ball"}:
                 visit = self._new_visit(history_entry, actor_key, players_by_key)
                 visits.append(visit)
 
@@ -30,6 +31,8 @@ class FrameLogProjector:
 
             if action == "pass_shot":
                 visit["message_override"] = f"{visit['player_name']}: passed shot back"
+            elif action == "reset_shot":
+                visit["message_override"] = f"{visit['player_name']}: reset shot"
             elif action == "declare_free_ball":
                 visit["message_override"] = f"{visit['player_name']}: nominated {outcome['nominated_colour']} free ball"
             elif outcome["foul_points"]:
@@ -41,9 +44,11 @@ class FrameLogProjector:
 
         if visits:
             last_visit = visits[-1]
-            if frame.status == FrameStatus.FINISHED:
-                last_visit["result"] = "frame_won" if frame.winner_key == last_visit["player_key"] else "ended"
-            elif last_visit["result"] != "foul" and frame.current_turn == last_visit["player_key"]:
+            lifecycle = frame.lifecycle_state
+            turn = frame.turn_state
+            if lifecycle.status == FrameStatus.FINISHED:
+                last_visit["result"] = "frame_won" if lifecycle.winner_key == last_visit["player_key"] else "ended"
+            elif last_visit["result"] != "foul" and turn.current_turn == last_visit["player_key"]:
                 last_visit["result"] = "in_progress"
 
         for visit in visits:

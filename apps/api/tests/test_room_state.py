@@ -1,3 +1,4 @@
+from scoreboard.domain.frame_calculation.rule_state import calculate_frame_rule_state
 from scoreboard.domain.projectors.match_state_projector import MatchStateProjector
 from scoreboard.domain.services.matchroom_service import MatchroomService
 from scoreboard.repositories.matchroom_repository import MatchroomRepository
@@ -43,6 +44,10 @@ def test_state_payload_exposes_matchroom_match_and_current_frame() -> None:
     assert payload["current_frame"]["reds_remaining"] == 15
     assert payload["current_frame"]["object_ball"] == "red"
     assert payload["frame_log"] == []
+    assert payload["available_actions"]["reset_shot"] == {
+        "available": False,
+        "reason": "Current frame is not active.",
+    }
     assert payload["players"][0]["session_key"] == "p1"
     assert payload["players"][1]["session_key"] == "p2"
 
@@ -68,10 +73,10 @@ def test_dispatch_shot_updates_scores_break_and_history() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.scores["p1"] == 1
-    assert frame.object_ball == "colour"
-    assert frame.reds_remaining == 14
-    assert frame.current_break == 1
+    assert frame.scoring_state.scores["p1"] == 1
+    assert frame.table_state.object_ball == "colour"
+    assert frame.table_state.reds_remaining == 14
+    assert frame.scoring_state.current_break == 1
     assert len(frame.history) == 1
     assert frame.history[0]["id"]
     assert isinstance(frame.history[0]["id"], str)
@@ -105,10 +110,10 @@ def test_dispatch_foul_awards_opponent_and_switches_turn() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.scores["p2"] == 6
-    assert frame.current_turn == "p2"
-    assert frame.current_break == 0
-    assert frame.object_ball == "red"
+    assert frame.scoring_state.scores["p2"] == 6
+    assert frame.turn_state.current_turn == "p2"
+    assert frame.scoring_state.current_break == 0
+    assert frame.table_state.object_ball == "red"
     assert frame.history[0]["outcome"] == {
         "action": "shot",
         "result": "foul",
@@ -121,6 +126,125 @@ def test_dispatch_foul_awards_opponent_and_switches_turn() -> None:
     }
 
 
+def test_dispatch_reset_shot_restores_table_and_turn_but_keeps_foul_points() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_reset_shot")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": ["red", "pink"], "foul": 6}},
+    )
+    assert handled is True
+    assert error is None
+    assert frame.scoring_state.scores["p2"] == 6
+    assert frame.table_state.reds_remaining == 14
+    assert frame.turn_state.current_turn == "p2"
+    assert frame.turn_state.previously_fouled is True
+    assert state_payload(room)["available_actions"]["reset_shot"] == {
+        "available": True,
+        "reason": None,
+    }
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "reset_shot", "data": {}},
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.scoring_state.scores["p2"] == 6
+    assert frame.table_state.reds_remaining == 15
+    assert frame.table_state.object_ball == "red"
+    assert frame.turn_state.current_turn == "p1"
+    assert frame.turn_state.previously_fouled is False
+    assert frame.rule_state.miss_rule_available is True
+    assert len(frame.history) == 2
+    assert state_payload(room)["available_actions"]["reset_shot"] == {
+        "available": False,
+        "reason": "Cannot reset shot when the previous shot was not foul and a miss.",
+    }
+    assert frame.history[1]["outcome"] == {
+        "action": "reset_shot",
+        "result": "reset",
+        "player_key": None,
+        "potted_balls": [],
+        "break_points": 0,
+        "foul_points": 0,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
+    assert state_payload(room)["frame_log"][1]["message"] == "Player 2: reset shot"
+
+
+def test_reset_shot_is_rejected_when_snookers_were_required_before_foul() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_reset_before_snookers")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+    frame.scoring_state.scores["p1"] = 200
+    frame.scoring_state.scores["p2"] = 0
+    frame.rule_state = calculate_frame_rule_state(frame)
+    assert frame.rule_state.miss_rule_available is False
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": [], "foul": 4}},
+    )
+    assert handled is True
+    assert error is None
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "reset_shot", "data": {}},
+    )
+
+    assert handled is False
+    assert error == "Foul and a miss is not available when snookers are required before the shot."
+
+
+def test_reset_shot_is_rejected_when_snookers_are_required_after_foul() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_reset_after_snookers")
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+    frame.scoring_state.scores["p2"] = 146
+    frame.rule_state = calculate_frame_rule_state(frame)
+    assert frame.rule_state.miss_rule_available is True
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": [], "foul": 4}},
+    )
+    assert handled is True
+    assert error is None
+    assert frame.rule_state.miss_rule_available is False
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "reset_shot", "data": {}},
+    )
+
+    assert handled is False
+    assert error == "Foul and a miss is not available when snookers are required after the shot."
+
+
 def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
     matchroom_service = make_matchroom_service()
     dispatcher = MatchroomActionDispatcher()
@@ -129,8 +253,8 @@ def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
     assert room.match is not None
     assert room.current_frame_id is not None
     frame = room.match.frames[room.current_frame_id]
-    frame.status = frame.status.__class__("active")
-    frame.object_ball = "blue"
+    frame.lifecycle_state.status = frame.lifecycle_state.status.__class__("active")
+    frame.table_state.object_ball = "blue"
 
     handled, error = dispatcher.dispatch(
         room,
@@ -184,8 +308,8 @@ def test_dispatch_pass_shot_adds_frame_log_entry_and_can_be_undone() -> None:
     )
     assert handled is True
     assert error is None
-    assert frame.current_turn == "p2"
-    assert frame.previously_fouled is True
+    assert frame.turn_state.current_turn == "p2"
+    assert frame.turn_state.previously_fouled is True
 
     handled, error = dispatcher.dispatch(
         room,
@@ -195,8 +319,8 @@ def test_dispatch_pass_shot_adds_frame_log_entry_and_can_be_undone() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.current_turn == "p1"
-    assert frame.previously_fouled is False
+    assert frame.turn_state.current_turn == "p1"
+    assert frame.turn_state.previously_fouled is False
     assert len(frame.history) == 2
     assert frame.history[1]["actor"] == "p2"
     assert frame.history[1]["event"] == {"action": "pass_shot", "data": {}}
@@ -220,8 +344,8 @@ def test_dispatch_pass_shot_adds_frame_log_entry_and_can_be_undone() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.current_turn == "p2"
-    assert frame.previously_fouled is True
+    assert frame.turn_state.current_turn == "p2"
+    assert frame.turn_state.previously_fouled is True
     assert len(frame.history) == 1
 
 
@@ -241,9 +365,9 @@ def test_dispatch_declare_free_ball_adds_history_outcome_and_can_be_undone() -> 
     )
     assert handled is True
     assert error is None
-    assert frame.current_turn == "p2"
-    assert frame.object_ball == "red"
-    assert frame.previously_fouled is True
+    assert frame.turn_state.current_turn == "p2"
+    assert frame.table_state.object_ball == "red"
+    assert frame.turn_state.previously_fouled is True
 
     handled, error = dispatcher.dispatch(
         room,
@@ -253,11 +377,11 @@ def test_dispatch_declare_free_ball_adds_history_outcome_and_can_be_undone() -> 
 
     assert handled is True
     assert error is None
-    assert frame.current_turn == "p2"
-    assert frame.object_ball == "red"
-    assert frame.free_ball_nominated_colour == "blue"
-    assert frame.free_ball_object_ball == "red"
-    assert frame.previously_fouled is False
+    assert frame.turn_state.current_turn == "p2"
+    assert frame.table_state.object_ball == "red"
+    assert frame.table_state.free_ball_nominated_colour == "blue"
+    assert frame.table_state.free_ball_object_ball == "red"
+    assert frame.turn_state.previously_fouled is False
     assert len(frame.history) == 2
     assert frame.history[1]["actor"] == "p2"
     assert frame.history[1]["event"] == {
@@ -283,11 +407,11 @@ def test_dispatch_declare_free_ball_adds_history_outcome_and_can_be_undone() -> 
 
     assert handled is True
     assert error is None
-    assert frame.current_turn == "p2"
-    assert frame.object_ball == "red"
-    assert frame.free_ball_nominated_colour is None
-    assert frame.free_ball_object_ball is None
-    assert frame.previously_fouled is True
+    assert frame.turn_state.current_turn == "p2"
+    assert frame.table_state.object_ball == "red"
+    assert frame.table_state.free_ball_nominated_colour is None
+    assert frame.table_state.free_ball_object_ball is None
+    assert frame.turn_state.previously_fouled is True
     assert len(frame.history) == 1
 
 
@@ -315,10 +439,10 @@ def test_free_ball_colour_counts_as_extra_red_and_then_colour_is_on() -> None:
     )
     assert handled is True
     assert error is None
-    assert frame.object_ball == "red"
-    assert frame.free_ball_nominated_colour == "green"
-    assert frame.free_ball_object_ball == "red"
-    assert frame.points_remaining == 155
+    assert frame.table_state.object_ball == "red"
+    assert frame.table_state.free_ball_nominated_colour == "green"
+    assert frame.table_state.free_ball_object_ball == "red"
+    assert frame.rule_state.points_remaining == 155
 
     handled, error = dispatcher.dispatch(
         room,
@@ -328,14 +452,14 @@ def test_free_ball_colour_counts_as_extra_red_and_then_colour_is_on() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.scores["p2"] == 5
-    assert frame.current_break == 1
-    assert frame.points_remaining == 154
-    assert frame.reds_remaining == 15
-    assert frame.colours_on_table["green"] is True
-    assert frame.object_ball == "colour"
-    assert frame.free_ball_nominated_colour is None
-    assert frame.free_ball_object_ball is None
+    assert frame.scoring_state.scores["p2"] == 5
+    assert frame.scoring_state.current_break == 1
+    assert frame.rule_state.points_remaining == 154
+    assert frame.table_state.reds_remaining == 15
+    assert frame.table_state.colours_on_table["green"] is True
+    assert frame.table_state.object_ball == "colour"
+    assert frame.table_state.free_ball_nominated_colour is None
+    assert frame.table_state.free_ball_object_ball is None
     assert frame.history[2]["outcome"] == {
         "action": "shot",
         "result": "scoring",
@@ -364,7 +488,7 @@ def test_undo_restores_previous_frame_state() -> None:
     )
     assert handled is True
     assert error is None
-    assert frame.scores["p1"] == 1
+    assert frame.scoring_state.scores["p1"] == 1
 
     handled, error = dispatcher.dispatch(
         room,
@@ -374,11 +498,11 @@ def test_undo_restores_previous_frame_state() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.scores["p1"] == 0
-    assert frame.reds_remaining == 15
-    assert frame.object_ball == "red"
-    assert frame.points_remaining == 147
-    assert frame.status.value == "ready"
+    assert frame.scoring_state.scores["p1"] == 0
+    assert frame.table_state.reds_remaining == 15
+    assert frame.table_state.object_ball == "red"
+    assert frame.rule_state.points_remaining == 147
+    assert frame.lifecycle_state.status.value == "ready"
     assert len(frame.history) == 0
 
 
@@ -398,7 +522,7 @@ def test_undo_restores_active_frame_status_after_later_shot() -> None:
     )
     assert handled is True
     assert error is None
-    assert frame.status.value == "active"
+    assert frame.lifecycle_state.status.value == "active"
 
     handled, error = dispatcher.dispatch(
         room,
@@ -407,7 +531,7 @@ def test_undo_restores_active_frame_status_after_later_shot() -> None:
     )
     assert handled is True
     assert error is None
-    assert frame.scores["p1"] == 8
+    assert frame.scoring_state.scores["p1"] == 8
 
     handled, error = dispatcher.dispatch(
         room,
@@ -417,9 +541,9 @@ def test_undo_restores_active_frame_status_after_later_shot() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.status.value == "active"
-    assert frame.scores["p1"] == 1
-    assert frame.object_ball == "colour"
+    assert frame.lifecycle_state.status.value == "active"
+    assert frame.scoring_state.scores["p1"] == 1
+    assert frame.table_state.object_ball == "colour"
     assert len(frame.history) == 1
 
 
@@ -451,8 +575,8 @@ def test_dispatch_concede_marks_winner_and_match_score() -> None:
 
     assert handled is True
     assert error is None
-    assert frame.winner_key == "p2"
-    assert frame.status.value == "finished"
+    assert frame.lifecycle_state.winner_key == "p2"
+    assert frame.lifecycle_state.status.value == "finished"
     assert room.match.match_scores["p2"] == 1
 
 
@@ -470,7 +594,7 @@ def test_dispatch_next_frame_creates_new_frame_and_rotates_opening_turn() -> Non
     handled, error = dispatcher.dispatch(room, "p1", {"action": "concede", "data": {}})
     assert handled is True
     assert error is None
-    assert first_frame.status.value == "finished"
+    assert first_frame.lifecycle_state.status.value == "finished"
 
     handled, error = dispatcher.dispatch(room, "p1", {"action": "next_frame", "data": {}})
     assert handled is True
@@ -487,10 +611,10 @@ def test_dispatch_next_frame_creates_new_frame_and_rotates_opening_turn() -> Non
     assert len(room.match.frames) == 2
 
     next_frame = room.match.frames[room.current_frame_id]
-    assert next_frame.opening_turn == "p2"
-    assert next_frame.current_turn == "p2"
-    assert next_frame.scores == {"p1": 0, "p2": 0}
-    assert next_frame.status.value == "ready"
-    assert next_frame.winner_key is None
+    assert next_frame.turn_state.opening_turn == "p2"
+    assert next_frame.turn_state.current_turn == "p2"
+    assert next_frame.scoring_state.scores == {"p1": 0, "p2": 0}
+    assert next_frame.lifecycle_state.status.value == "ready"
+    assert next_frame.lifecycle_state.winner_key is None
     assert next_frame.history == []
     assert room.pending_next_frame_confirmations == set()

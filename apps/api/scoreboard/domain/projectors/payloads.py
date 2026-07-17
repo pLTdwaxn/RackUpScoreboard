@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Mapping
 
+from scoreboard.domain.frame_calculation.helpers import score_gap
 from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.matchroom import Matchroom
@@ -44,28 +45,33 @@ def match_payload(match: Match) -> dict:
 
 
 def frame_payload(frame: Frame) -> dict:
+    scoring = frame.scoring_state
+    table = frame.table_state
+    turn = frame.turn_state
+    lifecycle = frame.lifecycle_state
+    rules = frame.rule_state
     return {
-        "status": frame.status.value,
-        "scores": dict(frame.scores),
-        "phase": frame.phase.value,
-        "reds_remaining": frame.reds_remaining,
-        "colours_on_table": dict(frame.colours_on_table),
-        "object_ball": frame.object_ball,
+        "status": lifecycle.status.value,
+        "scores": dict(scoring.scores),
+        "phase": table.phase.value,
+        "reds_remaining": table.reds_remaining,
+        "colours_on_table": dict(table.colours_on_table),
+        "object_ball": table.object_ball,
         "free_ball": (
             {
-                "nominated_colour": frame.free_ball_nominated_colour,
-                "object_ball": frame.free_ball_object_ball,
+                "nominated_colour": table.free_ball_nominated_colour,
+                "object_ball": table.free_ball_object_ball,
             }
-            if frame.free_ball_nominated_colour and frame.free_ball_object_ball
+            if table.free_ball_nominated_colour and table.free_ball_object_ball
             else None
         ),
-        "current_turn": frame.current_turn,
-        "current_break": frame.current_break,
-        "previously_fouled": frame.previously_fouled,
-        "points_remaining": frame.points_remaining,
-        "points_gap": frame.points_gap(),
-        "snookers_required": frame.snookers_required,
-        "highest_break": frame.highest_break if frame.highest_break > 0 else None,
-        "opening_turn": frame.opening_turn,
-        "winner_key": frame.winner_key,
+        "current_turn": turn.current_turn,
+        "current_break": scoring.current_break,
+        "previously_fouled": turn.previously_fouled,
+        "points_remaining": rules.points_remaining,
+        "points_gap": score_gap(scoring.scores),
+        "snookers_required": rules.snookers_required,
+        "highest_break": scoring.highest_break if scoring.highest_break > 0 else None,
+        "opening_turn": turn.opening_turn,
+        "winner_key": lifecycle.winner_key,
     }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from scoreboard.domain.frame_calculation.helpers import score_gap
 from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.matchroom import Matchroom
@@ -54,7 +55,7 @@ def test_round_trip_fresh_matchroom_rehydrates_domain_objects() -> None:
     assert _state_payload(restored) == _state_payload(room)
 
 
-def test_round_trip_preserves_scored_frame_history_and_reactive_scores() -> None:
+def test_round_trip_preserves_scored_frame_history_and_plain_scores() -> None:
     room = _create_room_with_two_players()
     dispatcher = MatchroomActionDispatcher()
 
@@ -71,15 +72,15 @@ def test_round_trip_preserves_scored_frame_history_and_reactive_scores() -> None
     assert restored.current_frame_id is not None
     frame = restored.match.frames[restored.current_frame_id]
 
-    assert frame.scores["p1"] == 1
-    assert frame.current_break == 1
-    assert frame.object_ball == "colour"
-    assert frame.reds_remaining == 14
+    assert frame.scoring_state.scores["p1"] == 1
+    assert frame.scoring_state.current_break == 1
+    assert frame.table_state.object_ball == "colour"
+    assert frame.table_state.reds_remaining == 14
     assert frame.history == room.match.frames[room.current_frame_id].history
     assert _state_payload(restored) == _state_payload(room)
 
-    frame.scores["p1"] += 6
-    assert frame.points_gap() == 7
+    frame.scoring_state.scores["p1"] += 6
+    assert score_gap(frame.scoring_state.scores) == 7
 
 
 def test_round_trip_preserves_pending_next_frame_confirmations() -> None:

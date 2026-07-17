@@ -1,8 +1,8 @@
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from scoreboard.domain.frame_calculation.helpers import leading_player_key, scores_after_points
 from scoreboard.domain.orchestrators.effects.frame_effects import FinishFrameEffect
-from scoreboard.domain.rules.frame_helpers import leading_player_key, scores_after_points
 
 from .results import WinConditionResult
 
@@ -31,7 +31,7 @@ class WinConditionProcessor:
         return [FinishFrameEffect(result)]
 
     def _winner_after_effects(self, context) -> str | None:
-        scores = dict(context.frame.scores)
+        scores = dict(context.frame.scoring_state.scores)
         score = context.require_score_result("WinConditionProcessor")
 
         if score.is_scoring_shot:

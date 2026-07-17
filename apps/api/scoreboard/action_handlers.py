@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scoreboard.domain.models.frame import Frame, FrameStatus
+from scoreboard.domain.actions.messages import ShotMessage
+from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.models.frame_state import FrameStatus
 from scoreboard.domain.models.match import Match
 from scoreboard.domain.models.matchroom import Matchroom
 from scoreboard.domain.orchestrators.frame_orchestrator import (
+    ActionOutcome,
     ActionPayload,
     FrameOrchestrator,
 )
-from scoreboard.domain.rules.messages import ShotMessage
 from scoreboard.services.action_services import (
     FramePhaseTransitionService,
     MatchResultService,
@@ -17,6 +19,8 @@ from scoreboard.services.action_services import (
     OpponentResolver,
     ScoreKeeperPolicy,
 )
+from scoreboard.services.frame_history_service import FrameHistoryService
+from scoreboard.services.frame_reset_shot_service import FrameResetShotService
 from scoreboard.services.frame_undo_service import FrameUndoService
 
 
@@ -37,8 +41,8 @@ class ActionContext:
 
 
 class ShotActionHandler:
-    def __init__(self, frame_undo_service: FrameUndoService | None = None) -> None:
-        self._frame_undo_service = frame_undo_service or FrameUndoService()
+    def __init__(self, frame_history_service: FrameHistoryService | None = None) -> None:
+        self._frame_history_service = frame_history_service or FrameHistoryService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         if not context.score_keeper_policy.can_player_keep_score(
@@ -48,7 +52,7 @@ class ShotActionHandler:
         ):
             return False, "You are not allowed to keep score in this turn."
 
-        state_before = self._frame_undo_service.snapshot(context)
+        state_before = self._frame_history_service.snapshot(context)
 
         transitioned, transition_error = context.transition_service.transition(
             context.frame,
@@ -58,8 +62,10 @@ class ShotActionHandler:
             return False, transition_error
 
         shot = ShotMessage.from_dict(context.data)
-        scoring_player_key = context.frame.current_turn or context.actor_key
-        was_finished = context.frame.status == FrameStatus.FINISHED
+        frame_turn = context.frame.turn_state
+        frame_lifecycle = context.frame.lifecycle_state
+        scoring_player_key = frame_turn.current_turn or context.actor_key
+        was_finished = frame_lifecycle.status == FrameStatus.FINISHED
 
         outcome = context.frame_orchestrator.orchestrate(
             context.frame,
@@ -70,7 +76,7 @@ class ShotActionHandler:
             ),
         )
 
-        self._frame_undo_service.push(
+        self._frame_history_service.push(
             context,
             scoring_player_key,
             context.data,
@@ -78,11 +84,11 @@ class ShotActionHandler:
             state_before,
         )
 
-        if not was_finished and context.frame.status == FrameStatus.FINISHED and context.frame.winner_key:
+        if not was_finished and frame_lifecycle.status == FrameStatus.FINISHED and frame_lifecycle.winner_key:
             context.pending_next_frame_confirmations.clear()
             context.match_result_service.record_finished_frame_result(
                 context.match,
-                context.frame.winner_key,
+                frame_lifecycle.winner_key,
             )
 
         return True, None
@@ -104,7 +110,8 @@ class ConcedeActionHandler:
         if len(context.matchroom.players) < 2:
             return False, "Cannot concede when there is no opponent."
 
-        if context.frame.status != FrameStatus.ACTIVE and context.frame.status != FrameStatus.READY:
+        lifecycle = context.frame.lifecycle_state
+        if lifecycle.status != FrameStatus.ACTIVE and lifecycle.status != FrameStatus.READY:
             return False, "Current frame is not in progress."
 
         winner_key = context.opponent_resolver.resolve(
@@ -112,8 +119,8 @@ class ConcedeActionHandler:
             context.actor_key,
         )
         context.pending_next_frame_confirmations.clear()
-        context.frame.winner_key = winner_key
-        context.frame.status = FrameStatus.FINISHED
+        lifecycle.winner_key = winner_key
+        lifecycle.status = FrameStatus.FINISHED
         context.match_result_service.record_finished_frame_result(
             context.match,
             winner_key,
@@ -124,10 +131,11 @@ class ConcedeActionHandler:
 
 class NextFrameActionHandler:
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
-        if context.frame.status != FrameStatus.FINISHED:
+        lifecycle = context.frame.lifecycle_state
+        if lifecycle.status != FrameStatus.FINISHED:
             return False, "Current frame is not finished yet."
 
-        if not context.frame.winner_key:
+        if not lifecycle.winner_key:
             return False, "Current frame is finished but winner is missing."
 
         if context.match.is_finished:
@@ -143,18 +151,20 @@ class NextFrameActionHandler:
 
 
 class PassShotActionHandler:
-    def __init__(self, frame_undo_service: FrameUndoService | None = None) -> None:
-        self._frame_undo_service = frame_undo_service or FrameUndoService()
+    def __init__(self, frame_history_service: FrameHistoryService | None = None) -> None:
+        self._frame_history_service = frame_history_service or FrameHistoryService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
-        if context.frame.status != FrameStatus.ACTIVE:
+        lifecycle = context.frame.lifecycle_state
+        turn = context.frame.turn_state
+        if lifecycle.status != FrameStatus.ACTIVE:
             return False, "Current frame is not active."
 
-        if not context.frame.previously_fouled:
+        if not turn.previously_fouled:
             return False, "Cannot pass shot when the player has not fouled."
 
-        state_before = self._frame_undo_service.snapshot(context)
-        passing_player_key = context.frame.current_turn or context.actor_key
+        state_before = self._frame_history_service.snapshot(context)
+        passing_player_key = turn.current_turn or context.actor_key
 
         transitioned, transition_error = context.transition_service.transition(
             context.frame,
@@ -168,7 +178,7 @@ class PassShotActionHandler:
             ActionPayload(action="pass_shot", potted_balls=()),
         )
 
-        self._frame_undo_service.push(
+        self._frame_history_service.push(
             context,
             passing_player_key,
             {"action": "pass_shot", "data": {}},
@@ -179,19 +189,59 @@ class PassShotActionHandler:
         return True, None
 
 
-class DeclareFreeBallActionHandler:
-    def __init__(self, frame_undo_service: FrameUndoService | None = None) -> None:
-        self._frame_undo_service = frame_undo_service or FrameUndoService()
+class ResetShotActionHandler:
+    def __init__(
+        self,
+        frame_history_service: FrameHistoryService | None = None,
+        frame_reset_shot_service: FrameResetShotService | None = None,
+    ) -> None:
+        self._frame_history_service = frame_history_service or FrameHistoryService()
+        self._frame_reset_shot_service = frame_reset_shot_service or FrameResetShotService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
-        if context.frame.status != FrameStatus.ACTIVE:
+        turn = context.frame.turn_state
+        can_reset, reset_error = self._frame_reset_shot_service.can_reset_shot(context)
+        if not can_reset:
+            return False, reset_error
+
+        state_before = self._frame_history_service.snapshot(context)
+        resetting_player_key = turn.current_turn or context.actor_key
+
+        transitioned, transition_error = context.transition_service.transition(
+            context.frame,
+            "reset_shot",
+        )
+        if not transitioned:
+            return False, transition_error
+
+        if not self._frame_reset_shot_service.reset_shot(context):
+            return False, "No shot is available to reset."
+
+        self._frame_history_service.push(
+            context,
+            resetting_player_key,
+            {"action": "reset_shot", "data": {}},
+            ActionOutcome(action="reset_shot", result="reset").to_dict(),
+            state_before,
+        )
+        return True, None
+
+
+class DeclareFreeBallActionHandler:
+    def __init__(self, frame_history_service: FrameHistoryService | None = None) -> None:
+        self._frame_history_service = frame_history_service or FrameHistoryService()
+
+    def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        lifecycle = context.frame.lifecycle_state
+        turn = context.frame.turn_state
+        if lifecycle.status != FrameStatus.ACTIVE:
             return False, "Current frame is not active."
 
-        if not context.frame.previously_fouled:
+        if not turn.previously_fouled:
             return False, "Cannot declare a free ball when the player has not fouled."
 
-        state_before = self._frame_undo_service.snapshot(context)
-        declaring_player_key = context.frame.current_turn or context.actor_key
+        state_before = self._frame_history_service.snapshot(context)
+        declaring_player_key = turn.current_turn or context.actor_key
 
         transitioned, transition_error = context.transition_service.transition(
             context.frame,
@@ -213,7 +263,7 @@ class DeclareFreeBallActionHandler:
             ),
         )
 
-        self._frame_undo_service.push(
+        self._frame_history_service.push(
             context,
             declaring_player_key,
             {"action": "declare_free_ball", "data": dict(context.data)},

@@ -9,10 +9,10 @@ from scoreboard.domain.models.frame import Frame
 from ..processors.results import (
     BreakResult,
     FoulResult,
+    FrameRuleStateResult,
     NextBallResult,
     PhaseResult,
     ScoreResult,
-    SnookersRequiredResult,
     TurnResult,
     WinConditionResult,
 )
@@ -63,7 +63,8 @@ class FrameCalculationContext:
     phase_result: Optional[PhaseResult] = None
     next_ball_result: Optional[NextBallResult] = None
     win_condition_result: Optional[WinConditionResult] = None
-    snookers_required_result: Optional[SnookersRequiredResult] = None
+    frame_rule_state_result: Optional[FrameRuleStateResult] = None
+    pending_effects: tuple[FrameEffect, ...] = ()
 
     def require_foul_result(self, processor_name: str) -> FoulResult:
         if self.foul_result is None:

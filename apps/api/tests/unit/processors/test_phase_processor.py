@@ -1,4 +1,5 @@
-from scoreboard.domain.models.frame import Frame, FramePhase
+from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.models.frame_state import FramePhase
 from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.processors.foul_processor import FoulResult
 from scoreboard.domain.processors.phase_processor import PhaseProcessor, PhaseResult, UpdatePhaseEffect
@@ -17,7 +18,7 @@ def make_frame() -> Frame:
 
 def test_phase_processor_enters_colours_after_last_red_and_turn_change():
     frame = make_frame()
-    frame.reds_remaining = 1
+    frame.table_state.reds_remaining = 1
     context = FrameCalculationContext(
         frame=frame,
         payload=ActionPayload(action="shot", potted_balls=(), foul=0),

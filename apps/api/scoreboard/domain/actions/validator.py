@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from scoreboard.domain.rules.messages import ShotMessage
-
-from . import BALL_POINTS, COLOUR_BALLS
+from scoreboard.domain.actions.messages import ShotMessage
+from scoreboard.domain.balls import BALL_POINTS, COLOUR_BALLS
 
 VALID_ACTIONS = {
     "shot",
     "undo",
     "pass_shot",
+    "reset_shot",
     "declare_free_ball",
     "concede",
     "next_frame",
@@ -44,6 +44,11 @@ def validate_event(event: dict) -> None:
     if action == "pass_shot":
         if data:
             raise ValueError("Pass shot action does not accept payload data.")
+        return
+
+    if action == "reset_shot":
+        if data:
+            raise ValueError("Reset shot action does not accept payload data.")
         return
 
     if action == "declare_free_ball":

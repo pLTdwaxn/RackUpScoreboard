@@ -1,10 +1,15 @@
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from scoreboard.domain.models.frame import Frame, FramePhase
+from scoreboard.domain.balls import BALL_POINTS, COLOUR_BALLS, RED_BALL
+from scoreboard.domain.frame_calculation.helpers import (
+    object_ball_equivalent_potted_balls,
+    score_gap,
+    scores_after_penalty,
+)
+from scoreboard.domain.models.frame import Frame
+from scoreboard.domain.models.frame_state import FramePhase
 from scoreboard.domain.orchestrators.effects.frame_effects import SetPreviouslyFouledEffect
-from scoreboard.domain.rules import BALL_POINTS, COLOUR_BALLS, RED_BALL
-from scoreboard.domain.rules.frame_helpers import object_ball_equivalent_potted_balls, score_gap, scores_after_penalty
 
 from .results import FoulResult
 
@@ -43,18 +48,19 @@ class FoulProcessor:
         return [SetPreviouslyFouledEffect(result.is_foul and not result.respots_black and not result.finishes_frame)]
 
     def _fouled_with(self, frame: Frame, potted_balls: tuple[str, ...]) -> tuple[str, ...]:
+        table = frame.table_state
         if not potted_balls:
             return ()
 
-        if frame.object_ball == RED_BALL:
+        if table.object_ball == RED_BALL:
             return potted_balls if any(ball in COLOUR_BALLS for ball in potted_balls) else ()
 
-        if frame.object_ball == "colour":
+        if table.object_ball == "colour":
             if len(potted_balls) != 1 or potted_balls[0] == RED_BALL or potted_balls[0] not in COLOUR_BALLS:
                 return potted_balls
             return ()
 
-        if len(potted_balls) != 1 or potted_balls[0] == RED_BALL or potted_balls[0] != frame.object_ball:
+        if len(potted_balls) != 1 or potted_balls[0] == RED_BALL or potted_balls[0] != table.object_ball:
             return potted_balls
 
         return ()
@@ -63,18 +69,20 @@ class FoulProcessor:
         return score_gap(scores_after_penalty(frame, points_awarded))
 
     def _respots_black(self, frame: Frame, points_awarded: int) -> bool:
+        table = frame.table_state
         return (
-            frame.object_ball == "black"
-            and frame.phase == FramePhase.COLOURS
+            table.object_ball == "black"
+            and table.phase == FramePhase.COLOURS
             and self._points_gap_after_penalty(frame, points_awarded) == 0
         )
 
     def _finishes_frame(self, frame: Frame, points_awarded: int) -> bool:
-        if frame.object_ball != "black":
+        table = frame.table_state
+        if table.object_ball != "black":
             return False
-        if frame.phase == FramePhase.RESPOTTED_BLACK:
+        if table.phase == FramePhase.RESPOTTED_BLACK:
             return True
-        return frame.phase == FramePhase.COLOURS and not self._respots_black(frame, points_awarded)
+        return table.phase == FramePhase.COLOURS and not self._respots_black(frame, points_awarded)
 
 
 foul_processor = FoulProcessor()

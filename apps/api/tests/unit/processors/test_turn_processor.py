@@ -1,5 +1,4 @@
-from types import SimpleNamespace
-
+from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.processors.foul_processor import FoulResult
 from scoreboard.domain.processors.turn_processor import (
@@ -10,7 +9,12 @@ from scoreboard.domain.processors.turn_processor import (
 
 
 def make_frame():
-    return SimpleNamespace(scores={"player1": 0, "player2": 0}, current_turn="player1")
+    return Frame(
+        id="frame-test",
+        match_id="match-test",
+        scores={"player1": 0, "player2": 0},
+        current_turn="player1",
+    )
 
 
 def test_turn_processor_keeps_current_turn_after_legal_pot():

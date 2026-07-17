@@ -1,6 +1,6 @@
 import pytest
 
-from scoreboard.domain.rules.validator import validate_event
+from scoreboard.domain.actions.validator import validate_event
 
 
 @pytest.mark.parametrize(
@@ -10,6 +10,7 @@ from scoreboard.domain.rules.validator import validate_event
         {"action": "shot", "data": {"potted_balls": [], "foul": 0}},
         {"action": "undo", "data": {}},
         {"action": "pass_shot", "data": {}},
+        {"action": "reset_shot", "data": {}},
         {"action": "declare_free_ball", "data": {"nominated_colour": "blue"}},
         {"action": "concede", "data": {}},
         {"action": "next_frame", "data": {}},
@@ -53,6 +54,10 @@ def test_validate_event_rejects_undo_with_extra_fields(event):
         (
             {"action": "pass_shot", "data": {"nominated_colour": "blue"}},
             "Pass shot action does not accept payload data.",
+        ),
+        (
+            {"action": "reset_shot", "data": {"nominated_colour": "blue"}},
+            "Reset shot action does not accept payload data.",
         ),
         (
             {"action": "declare_free_ball", "data": {}},

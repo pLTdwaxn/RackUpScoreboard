@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scoreboard.domain.models.frame import FramePhase
+from scoreboard.domain.models.frame_state import FramePhase, FrameRuleState
 
 
 @dataclass
@@ -49,8 +49,8 @@ class ScoreResult:
 
 
 @dataclass
-class SnookersRequiredResult:
-    count: int
+class FrameRuleStateResult:
+    rule_state: FrameRuleState
 
 
 @dataclass
