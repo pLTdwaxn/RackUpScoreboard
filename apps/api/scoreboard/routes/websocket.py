@@ -38,13 +38,17 @@ async def send_error(websocket: WebSocket, message: str, action_id: str | None =
 async def handle_client_event(
     websocket: WebSocket,
     matchroom_id: str,
-    matchroom: Matchroom,
     session_key: str,
     event: dict,
 ):
     action_id = event.get("action_id") if isinstance(event, dict) else None
     if action_id is not None and not isinstance(action_id, str):
         await send_error(websocket, "Action id must be a string.")
+        return
+
+    matchroom = matchroom_service.get_matchroom_by_id(matchroom_id)
+    if matchroom is None:
+        await send_error(websocket, "Matchroom not found.", action_id)
         return
 
     handled, error = matchroom_action_dispatcher.dispatch(matchroom, session_key, event)
@@ -93,7 +97,7 @@ async def websocket_endpoint(
         while True:
             data = await websocket.receive_text()
             event = json.loads(data)
-            await handle_client_event(websocket, matchroom_id, matchroom, session_key, event)
+            await handle_client_event(websocket, matchroom_id, session_key, event)
 
     except WebSocketDisconnect:
         await handle_disconnect(matchroom_id, session_key)
