@@ -45,3 +45,40 @@ def test_save_matchroom_delegates_to_repository() -> None:
 
     assert repository.save_count == save_count_after_create + 1
     assert repository.get(room.id) is room
+
+
+def test_close_matchroom_delegates_to_repository() -> None:
+    repository = MatchroomRepository()
+    matchroom_service = MatchroomService(repository=repository)
+    room = matchroom_service.connect_player_to_matchroom(
+        {"id": "room_to_close"},
+        {"id": "", "session_key": "p1", "display_name": "P1"},
+        {"id": "", "match_importance": "practice match", "frames_to_win": 3},
+    )
+
+    matchroom_service.close_matchroom(room.id)
+
+    assert repository.get(room.id) is None
+
+
+def test_get_opponent_requires_exactly_two_players_and_returns_other_player() -> None:
+    matchroom_service = MatchroomService(repository=MatchroomRepository())
+    room = matchroom_service.connect_player_to_matchroom(
+        {"id": "room_opponent"},
+        {"id": "", "session_key": "p1", "display_name": "P1"},
+        {"id": "", "match_importance": "practice match", "frames_to_win": 3},
+    )
+
+    assert matchroom_service.get_opponent(room, "p1") is None
+
+    matchroom_service.connect_player_to_matchroom(
+        {"id": room.id},
+        {"id": "", "session_key": "p2", "display_name": "P2"},
+        {"id": "", "match_importance": "practice match", "frames_to_win": 3},
+    )
+
+    opponent = matchroom_service.get_opponent(room, "p1")
+
+    assert opponent is not None
+    assert opponent.session_key == "p2"
+    assert matchroom_service.get_opponent(room, "unknown") is not None
