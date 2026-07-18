@@ -77,7 +77,7 @@ jobs:
       API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
       REGISTRY: ${{ vars.VULTR_REGISTRY }}
       APP_ENV: preview
-      STUB_REDIS: "true"
+      STUB_REDIS: "false"
       REDIS_KEY_PREFIX: rackup:scoreboard:preview
       REDIS_URL: ${{ secrets.REDIS_URL }}
       RACKUP_URL: ${{ vars.RACKUP_URL }}
@@ -174,7 +174,7 @@ jobs:
       API_IMAGE_NAME: ${{ vars.VULTR_IMAGE_NAME }}
       REGISTRY: ${{ vars.VULTR_REGISTRY }}
       APP_ENV: production
-      STUB_REDIS: "true"
+      STUB_REDIS: "false"
       REDIS_KEY_PREFIX: rackup:scoreboard
       REDIS_URL: ${{ secrets.REDIS_URL }}
       RACKUP_URL: ${{ vars.RACKUP_URL }}

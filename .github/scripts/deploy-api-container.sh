@@ -18,6 +18,11 @@ append_env() {
   fi
 }
 
+if [ "$STUB_REDIS" = "false" ] && [ -z "${REDIS_URL:-}" ]; then
+  echo "REDIS_URL is required when STUB_REDIS=false." >&2
+  exit 1
+fi
+
 append_env PORT "$API_PORT"
 append_env ENV "$APP_ENV"
 append_env STUB_REDIS "$STUB_REDIS"
