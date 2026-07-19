@@ -55,7 +55,7 @@ export default async function HealthPage() {
   const health = await getHealth();
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-center px-6 py-16">
+    <main className="flex h-full w-full items-center px-4 py-8">
       <Card className="w-full">
         <CardHeader className="flex-col items-start gap-2">
           <h1 className="text-2xl font-semibold tracking-tight">

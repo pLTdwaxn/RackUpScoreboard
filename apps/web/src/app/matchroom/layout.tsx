@@ -45,7 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <MatchroomProvider matchroomId={matchroomId}>
       <Surface
         variant="tertiary"
-        className="flex h-dvh w-full max-w-md flex-col overflow-hidden p-0"
+        className="flex h-full w-full flex-col overflow-hidden p-0"
       >
         <TopRow>
           <Menu />

@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <Surface
       variant="tertiary"
-      className="flex mx-auto h-dvh w-full max-w-md flex-col overflow-hidden p-0 items-center justify-center"
+      className="flex h-full w-full flex-col items-center justify-center overflow-hidden p-0"
     >
       <Button onClick={() => (window.location.href = "/matchroom")}>
         Snooker Scoreboard

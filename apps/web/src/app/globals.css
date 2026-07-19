@@ -3,6 +3,7 @@
 
 :root {
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --desktop-device-forehead: 0px;
   --background: #fafafa;
   --foreground: #171717;
   --scoreboard-screen-bg: #f0f4f0;
@@ -52,15 +53,46 @@ body {
   overflow-x: hidden;
 }
 
-.scoreboard-shell {
-  min-height: 100svh;
-  height: 100dvh;
-  padding-bottom: max(0.5rem, var(--safe-area-bottom));
+.app-device-frame {
+  width: 100%;
+  min-height: 100dvh;
+}
+
+.app-device-screen {
+  height: 100%;
+  min-height: 100dvh;
 }
 
 @media (min-width: 640px) {
   body {
+    display: grid;
+    place-items: center;
     padding: 1.5rem;
+  }
+
+  .app-device-frame {
+    --desktop-device-forehead: 2rem;
+    width: min(100%, 430px);
+    height: min(calc(100dvh - 3rem), 932px);
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 2rem;
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(0, 0, 0, 0.08);
+  }
+
+  .app-device-screen {
+    height: 100%;
+    min-height: 0;
+    padding-top: var(--desktop-device-forehead);
+    background: var(--background);
+  }
+
+  .dark .app-device-frame {
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
   }
 }
 

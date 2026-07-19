@@ -26,7 +26,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <div className="app-device-frame">
+            <div className="app-device-screen">{children}</div>
+          </div>
+        </Providers>
       </body>
     </html>
   );
