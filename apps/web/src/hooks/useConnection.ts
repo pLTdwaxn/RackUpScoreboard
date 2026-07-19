@@ -38,13 +38,18 @@ function persistSession(connection: MatchroomConnection): void {
 type ConnectParams = {
   displayName: string;
   matchroomId?: string;
+  scoreKeeper?: "self" | "opp" | "ref" | "any";
 };
 
 export function useConnection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const connect = async ({ displayName, matchroomId }: ConnectParams) => {
+  const connect = async ({
+    displayName,
+    matchroomId,
+    scoreKeeper,
+  }: ConnectParams) => {
     const trimmedName = displayName.trim();
     if (!trimmedName) {
       throw new Error("Enter your name to continue.");
@@ -69,6 +74,7 @@ export function useConnection() {
         body: JSON.stringify({
           display_name: trimmedName,
           matchroom_id: matchroomId?.trim() || undefined,
+          score_keeper: scoreKeeper,
         }),
       });
 

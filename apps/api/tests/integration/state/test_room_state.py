@@ -44,6 +44,7 @@ def test_state_payload_exposes_matchroom_match_and_current_frame() -> None:
     assert payload["current_frame"]["reds_remaining"] == 15
     assert payload["current_frame"]["object_ball"] == "red"
     assert payload["frame_log"] == []
+    assert payload["score_keeper"] == "opp"
     assert payload["available_actions"]["reset_shot"] == {
         "available": False,
         "reason": "Current frame is not active.",
@@ -560,6 +561,50 @@ def test_dispatch_rejects_player_at_table_under_opp_score_keeper() -> None:
 
     assert handled is False
     assert error == "You are not allowed to keep score in this turn."
+
+
+def test_dispatch_self_score_keeper_allows_only_player_at_table() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_self_keeper", score_keeper="self")
+
+    rejected, reject_error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": ["red"], "foul": 0}},
+    )
+    assert rejected is False
+    assert reject_error == "You are not allowed to keep score in this turn."
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "shot", "data": {"potted_balls": ["red"], "foul": 0}},
+    )
+    assert handled is True
+    assert error is None
+
+
+def test_dispatch_any_score_keeper_allows_player_at_table_and_opponent() -> None:
+    matchroom_service = make_matchroom_service()
+    dispatcher = MatchroomActionDispatcher()
+    room = _create_room_with_two_players(matchroom_service, "room_any_keeper", score_keeper="any")
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p1",
+        {"action": "shot", "data": {"potted_balls": ["red"], "foul": 0}},
+    )
+    assert handled is True
+    assert error is None
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "shot", "data": {"potted_balls": ["black"], "foul": 0}},
+    )
+    assert handled is True
+    assert error is None
 
 
 def test_dispatch_concede_marks_winner_and_match_score() -> None:

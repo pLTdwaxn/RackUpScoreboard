@@ -327,6 +327,7 @@ export default function Controls() {
               coloursOnTable={coloursOnTable}
               objectBall={objectBall}
               freeBall={freeBall}
+              scoreKeeper={scoreKeeper}
               canKeepScore={canKeepScore}
               canUseFoulOptions={canUseFoulOptions}
               freeBallMode={freeBallMode}

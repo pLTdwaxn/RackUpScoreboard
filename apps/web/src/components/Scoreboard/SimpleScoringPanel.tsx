@@ -1,4 +1,4 @@
-import { TableState } from "@/types";
+import { GameStateMessage, TableState } from "@/types";
 
 import SimpleControl, {
   SimpleBallRail,
@@ -11,6 +11,7 @@ type SimpleScoringPanelProps = {
   coloursOnTable: TableState["colours_on_table"];
   objectBall: string;
   freeBall: TableState["free_ball"];
+  scoreKeeper: GameStateMessage["score_keeper"];
   canKeepScore: boolean;
   canUseFoulOptions: boolean;
   freeBallMode: boolean;
@@ -30,6 +31,7 @@ export default function SimpleScoringPanel({
   coloursOnTable,
   objectBall,
   freeBall,
+  scoreKeeper,
   canKeepScore,
   canUseFoulOptions,
   freeBallMode,
@@ -50,7 +52,11 @@ export default function SimpleScoringPanel({
           <span className="text-center">
             {freeBallMode
               ? "Nominate the free ball"
-              : "Scorekeeping for your opponent"}
+              : scoreKeeper === "self"
+                ? "Scorekeeping for your turn"
+                : scoreKeeper === "any"
+                  ? "Scorekeeping is open to both players"
+                  : "Scorekeeping for your opponent"}
           </span>
         </div>
       }

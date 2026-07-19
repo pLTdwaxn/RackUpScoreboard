@@ -16,16 +16,19 @@ import {
 
 import { useConnection } from "@/hooks/useConnection";
 
+type ScoreKeeperMode = "opp" | "self" | "any";
+
 const NewMatchForm = () => {
   const router = useRouter();
   const { connect, isSubmitting, error, setError } = useConnection();
   const [displayName, setDisplayName] = useState("");
+  const [scoreKeeper, setScoreKeeper] = useState<ScoreKeeperMode>("opp");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     try {
-      const connection = await connect({ displayName });
+      const connection = await connect({ displayName, scoreKeeper });
       router.push(`/matchroom/${encodeURIComponent(connection.matchroomId)}`);
     } catch {
       // Error state is already handled in the connection hook.
@@ -66,9 +69,13 @@ const NewMatchForm = () => {
           </Radio.Content>
         </Radio>
       </RadioGroup>
-      <RadioGroup defaultValue="opponent" variant="secondary">
+      <RadioGroup
+        value={scoreKeeper}
+        onChange={(value) => setScoreKeeper(value as ScoreKeeperMode)}
+        variant="secondary"
+      >
         <Label>Scorekeeping By</Label>
-        <Radio value="opponent">
+        <Radio value="opp">
           <Radio.Content>
             <Radio.Control>
               <Radio.Indicator />
@@ -97,12 +104,12 @@ const NewMatchForm = () => {
           </Radio.Content>
           <Description>A referee is scorekeeping for both players.</Description>
         </Radio>
-        <Radio value="ffa" isDisabled>
+        <Radio value="any">
           <Radio.Content>
             <Radio.Control>
               <Radio.Indicator />
             </Radio.Control>
-            Free for All (TBA)
+            Free for All
           </Radio.Content>
           <Description>Any player can scorekeep.</Description>
         </Radio>

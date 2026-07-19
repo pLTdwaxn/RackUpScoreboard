@@ -36,6 +36,7 @@ class MatchStateProjector:
             "current_frame": frame_payload(current_frame) if current_frame else None,
             "frame_log": self._frame_log_projector.project(current_frame, players),
             "available_actions": self._action_availability_projector.project(current_frame),
+            "score_keeper": matchroom.score_keeper,
             "match_scores": match_scores,
             "next_frame_confirmations": sorted(matchroom.pending_next_frame_confirmations),
         }

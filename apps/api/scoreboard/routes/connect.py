@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +12,7 @@ router = APIRouter()
 class ConnectRequest(BaseModel):
     display_name: str
     matchroom_id: str | None = None
+    score_keeper: Literal["self", "opp", "ref", "any"] = "opp"
 
 
 class ConnectResponse(BaseModel):
@@ -30,7 +32,10 @@ def connect_player(payload: ConnectRequest) -> ConnectResponse:
     session_key = uuid4().hex[:8]
 
     matchroom = matchroom_service.connect_player_to_matchroom(
-        {"id": (payload.matchroom_id or "").strip()},
+        {
+            "id": (payload.matchroom_id or "").strip(),
+            "score_keeper": payload.score_keeper,
+        },
         {"id": "", "session_key": session_key, "display_name": display_name},
         {"id": "", "match_importance": "practice match", "frames_to_win": 3},
     )

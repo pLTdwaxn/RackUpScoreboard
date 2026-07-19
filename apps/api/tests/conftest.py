@@ -28,10 +28,16 @@ def client(clean_engine):
 
 @pytest.fixture
 def connect_player(client):
-    def _connect(display_name: str, matchroom_id: str | None = None) -> dict:
+    def _connect(
+        display_name: str,
+        matchroom_id: str | None = None,
+        score_keeper: str | None = None,
+    ) -> dict:
         payload = {"display_name": display_name}
         if matchroom_id is not None:
             payload["matchroom_id"] = matchroom_id
+        if score_keeper is not None:
+            payload["score_keeper"] = score_keeper
 
         response = client.post("/connect", json=payload)
         assert response.status_code == 200

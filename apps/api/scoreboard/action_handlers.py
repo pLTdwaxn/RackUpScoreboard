@@ -45,12 +45,9 @@ class ShotActionHandler:
         self._frame_history_service = frame_history_service or FrameHistoryService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
-        if not context.score_keeper_policy.can_player_keep_score(
-            context.matchroom,
-            context.frame,
-            context.actor_key,
-        ):
-            return False, "You are not allowed to keep score in this turn."
+        allowed, error = ensure_actor_can_keep_score(context)
+        if not allowed:
+            return False, error
 
         state_before = self._frame_history_service.snapshot(context)
 
@@ -92,6 +89,17 @@ class ShotActionHandler:
             )
 
         return True, None
+
+
+def ensure_actor_can_keep_score(context: ActionContext) -> tuple[bool, str | None]:
+    if context.score_keeper_policy.can_player_keep_score(
+        context.matchroom,
+        context.frame,
+        context.actor_key,
+    ):
+        return True, None
+
+    return False, "You are not allowed to keep score in this turn."
 
 
 class UndoActionHandler:
@@ -155,6 +163,10 @@ class PassShotActionHandler:
         self._frame_history_service = frame_history_service or FrameHistoryService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        allowed, error = ensure_actor_can_keep_score(context)
+        if not allowed:
+            return False, error
+
         lifecycle = context.frame.lifecycle_state
         turn = context.frame.turn_state
         if lifecycle.status != FrameStatus.ACTIVE:
@@ -199,6 +211,10 @@ class ResetShotActionHandler:
         self._frame_reset_shot_service = frame_reset_shot_service or FrameResetShotService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        allowed, error = ensure_actor_can_keep_score(context)
+        if not allowed:
+            return False, error
+
         turn = context.frame.turn_state
         can_reset, reset_error = self._frame_reset_shot_service.can_reset_shot(context)
         if not can_reset:
@@ -232,6 +248,10 @@ class DeclareFreeBallActionHandler:
         self._frame_history_service = frame_history_service or FrameHistoryService()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        allowed, error = ensure_actor_can_keep_score(context)
+        if not allowed:
+            return False, error
+
         lifecycle = context.frame.lifecycle_state
         turn = context.frame.turn_state
         if lifecycle.status != FrameStatus.ACTIVE:

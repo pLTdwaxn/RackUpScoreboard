@@ -10,6 +10,7 @@ def test_websocket_initial_payload_includes_current_frame_state(client, connect_
 
     assert payload["type"] == "game_state"
     assert payload["matchroom"]["id"] == p1["matchroom_id"]
+    assert payload["score_keeper"] == "opp"
     assert payload["current_frame"]["current_turn"] == p1["player_key"]
     assert payload["current_frame"]["points_remaining"] == 147
 
