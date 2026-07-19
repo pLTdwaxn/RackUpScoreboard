@@ -25,6 +25,9 @@ Required runtime variables:
 Optional runtime variables:
 
 - NEXT_PUBLIC_LOCAL_API_PORT: Local fallback backend port for localhost/private-network development. Defaults to 8004.
+- NEXT_PUBLIC_APP_ENV: Build environment embedded into the frontend bundle. Supported values are `dev`, `preview`, and `production`.
+- NEXT_PUBLIC_APP_VERSION: Version label embedded into the frontend bundle. For production, use the release tag.
+- NEXT_PUBLIC_GIT_SHA: Git commit SHA embedded into the frontend bundle. Short or full SHA is fine.
 - ALLOWED_DEV_ORIGINS: Comma-separated dev origins for Next.js allowedDevOrigins.
 
 ## Local Setup
@@ -39,7 +42,7 @@ Open <http://localhost:3000>.
 
 ## Docker Build Args
 
-The Dockerfile accepts NEXT_PUBLIC_API_BASE and NEXT_PUBLIC_LOCAL_API_PORT as build args because the client needs them at build time.
+The Dockerfile accepts NEXT_PUBLIC_API_BASE, NEXT_PUBLIC_LOCAL_API_PORT, NEXT_PUBLIC_APP_ENV, NEXT_PUBLIC_APP_VERSION, and NEXT_PUBLIC_GIT_SHA as build args because the client needs them at build time.
 
 Example:
 
@@ -47,8 +50,17 @@ Example:
 docker build \
   --build-arg NEXT_PUBLIC_API_BASE=https://api.example.com \
   --build-arg NEXT_PUBLIC_LOCAL_API_PORT=8004 \
+  --build-arg NEXT_PUBLIC_APP_ENV=preview \
+  --build-arg NEXT_PUBLIC_APP_VERSION="$(git describe --tags --always)" \
+  --build-arg NEXT_PUBLIC_GIT_SHA="$(git rev-parse --short HEAD)" \
   -t rackup-web .
 ```
+
+Displayed version labels:
+
+- Dev: `dev-<git-sha>` or `dev-local`.
+- Preview: `preview-<git-sha>`.
+- Production: `<git-tag>`.
 
 ## Notes
 
