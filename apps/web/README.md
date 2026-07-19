@@ -62,6 +62,16 @@ Displayed version labels:
 - Preview: `preview-<git-sha>`.
 - Production: `<git-tag>`.
 
+## Vercel Build Command
+
+Use the short build command below in Vercel because Vercel limits custom build commands to 256 characters:
+
+```bash
+npm run build:vercel
+```
+
+The script derives NEXT_PUBLIC_APP_ENV from VERCEL_ENV, NEXT_PUBLIC_GIT_SHA from VERCEL_GIT_COMMIT_SHA, and NEXT_PUBLIC_APP_VERSION from an exact Git tag when available, falling back to package.json.
+
 ## Notes
 
 - The app intentionally fails fast on non-local hosts if NEXT_PUBLIC_API_BASE is missing.
