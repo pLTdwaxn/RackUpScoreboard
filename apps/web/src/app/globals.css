@@ -55,12 +55,13 @@ body {
 
 .app-device-frame {
   width: 100%;
-  min-height: 100dvh;
+  height: 100dvh;
+  min-height: 100svh;
 }
 
 .app-device-screen {
   height: 100%;
-  min-height: 100dvh;
+  min-height: 0;
 }
 
 @media (min-width: 640px) {
