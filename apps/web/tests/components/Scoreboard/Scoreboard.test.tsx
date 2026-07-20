@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import Scoreboard from "./Scoreboard";
+import Scoreboard from "@/components/Scoreboard/Scoreboard";
 
 vi.mock("@heroui/react", () => ({
   toast: {
@@ -18,7 +18,7 @@ vi.mock("@/hooks/useSocket", () => ({
   }),
 }));
 
-vi.mock(".", () => ({
+vi.mock("@/components/Scoreboard", () => ({
   Controls: () => <div data-testid="controls" />,
   FrameLog: () => <div data-testid="frame-log" />,
   FrameOverview: () => <div data-testid="frame-overview" />,

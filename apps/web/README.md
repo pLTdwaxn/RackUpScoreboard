@@ -40,6 +40,19 @@ npm run dev
 
 Open <http://localhost:3000>.
 
+## Testing
+
+The frontend test suite uses Vitest, jsdom, and Testing Library.
+
+```bash
+npm test
+npm run test:watch
+```
+
+Test files live next to the code they exercise as `*.test.ts` or
+`*.test.tsx` under `tests/`, mirroring the `src/` structure. Shared browser
+matchers are loaded from `tests/setup.ts`.
+
 ## Docker Build Args
 
 The Dockerfile accepts NEXT_PUBLIC_API_BASE, NEXT_PUBLIC_LOCAL_API_PORT, NEXT_PUBLIC_APP_ENV, NEXT_PUBLIC_APP_VERSION, and NEXT_PUBLIC_GIT_SHA as build args because the client needs them at build time.

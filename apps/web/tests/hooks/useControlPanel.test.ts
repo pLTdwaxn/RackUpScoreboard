@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { useControlPanel } from "@/hooks/useControlPanel";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
-
-import { useControlPanel } from "./useControlPanel";
 
 describe("useControlPanel scorekeeping modes", () => {
   it("allows only the player at the table in self scorekeeping mode", () => {
