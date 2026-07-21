@@ -46,3 +46,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 *project_refactor.md
+
+# === Local Development ===
+local_scripts/

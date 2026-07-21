@@ -1,4 +1,62 @@
 import json
+import signal
+from contextlib import contextmanager
+
+
+class WebSocketReceiveTimeout(TimeoutError):
+    pass
+
+
+@contextmanager
+def websocket_receive_timeout(seconds: float):
+    previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def timeout_handler(signum, frame):
+        raise WebSocketReceiveTimeout(f"Timed out after {seconds}s waiting for websocket message")
+
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+
+
+def receive_matching_json(ws, predicate, label: str, max_messages: int = 5, timeout: float = 1.0):
+    messages = []
+
+    for _ in range(max_messages):
+        try:
+            with websocket_receive_timeout(timeout):
+                message = ws.receive_json()
+        except WebSocketReceiveTimeout as exc:
+            raise AssertionError(f"Timed out waiting for {label}. Messages received: {messages!r}") from exc
+
+        messages.append(message)
+        if predicate(message):
+            return message
+
+    raise AssertionError(f"Did not receive {label}. Messages received: {messages!r}")
+
+
+def is_next_frame_confirmation(player_key: str):
+    return lambda message: (
+        message["type"] == "game_state"
+        and message["current_frame"]["status"] == "finished"
+        and message["next_frame_confirmations"] == [player_key]
+    )
+
+
+def is_new_frame_for_player(player_key: str):
+    return lambda message: (
+        message["type"] == "game_state"
+        and message["current_frame"]["status"] == "ready"
+        and message["current_frame"]["current_turn"] == player_key
+        and message["current_frame"]["opening_turn"] == player_key
+        and message["next_frame_confirmations"] == []
+    )
 
 
 def test_websocket_initial_payload_includes_current_frame_state(client, connect_player):
@@ -116,12 +174,28 @@ def test_next_frame_flow_updates_state_over_websocket_for_both_players(client, c
             conceded_p2 = json.loads(ws2.receive_text())
 
             ws1.send_text(json.dumps({"action": "next_frame", "data": {}}))
-            first_confirm_p1 = json.loads(ws1.receive_text())
-            first_confirm_p2 = json.loads(ws2.receive_text())
+            first_confirm_p1 = receive_matching_json(
+                ws1,
+                is_next_frame_confirmation(p1["player_key"]),
+                "p1 next-frame confirmation",
+            )
+            first_confirm_p2 = receive_matching_json(
+                ws2,
+                is_next_frame_confirmation(p1["player_key"]),
+                "p2 next-frame confirmation",
+            )
 
             ws2.send_text(json.dumps({"action": "next_frame", "data": {}}))
-            next_frame_p1 = json.loads(ws1.receive_text())
-            next_frame_p2 = json.loads(ws2.receive_text())
+            next_frame_p2 = receive_matching_json(
+                ws2,
+                is_new_frame_for_player(p2["player_key"]),
+                "p2 new frame update",
+            )
+            next_frame_p1 = receive_matching_json(
+                ws1,
+                is_new_frame_for_player(p2["player_key"]),
+                "p1 new frame update",
+            )
 
     assert initial_p1["type"] == "game_state"
     assert initial_p1["current_frame"]["current_turn"] == p1["player_key"]

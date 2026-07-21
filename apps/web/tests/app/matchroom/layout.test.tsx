@@ -1,14 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import MatchroomLayout from "@/app/matchroom/layout";
+import AppShell from "@/app/app-shell";
 
 const providerMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
-  useParams: () => ({
-    id: "room-1",
-  }),
+  usePathname: () => "/matchroom/room-1",
   useRouter: () => ({
     push: vi.fn(),
   }),
@@ -47,12 +45,12 @@ vi.mock("@/components/ThemeToggle", () => ({
   default: () => <button type="button">Theme</button>,
 }));
 
-describe("Matchroom layout", () => {
+describe("App shell", () => {
   it("wraps children in the matchroom provider for the route room", () => {
     render(
-      <MatchroomLayout>
+      <AppShell>
         <div data-testid="page-content">Room content</div>
-      </MatchroomLayout>,
+      </AppShell>,
     );
 
     expect(providerMock).toHaveBeenCalledWith("room-1");
