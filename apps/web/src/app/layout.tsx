@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import AppShell from "./app-shell";
 import Providers from "./providers";
 
 import { Geist, Geist_Mono } from "next/font/google";
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body>
         <Providers>
           <div className="app-device-frame">
-            <div className="app-device-screen">{children}</div>
+            <div className="app-device-screen">
+              <AppShell>{children}</AppShell>
+            </div>
           </div>
         </Providers>
       </body>
