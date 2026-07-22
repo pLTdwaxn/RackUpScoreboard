@@ -21,7 +21,6 @@ type SimpleScoringPanelProps = {
   onEnterAdvancedMode: () => void;
   onDeclareFoul: () => void;
   onEndTurn: () => void;
-  onUndo: () => void;
   onPassShot?: () => void;
   onDeclareFreeBall?: () => void;
 };
@@ -41,7 +40,6 @@ export default function SimpleScoringPanel({
   onEnterAdvancedMode,
   onDeclareFoul,
   onEndTurn,
-  onUndo,
   onPassShot,
   onDeclareFreeBall,
 }: SimpleScoringPanelProps) {
@@ -80,7 +78,6 @@ export default function SimpleScoringPanel({
           onEnterAdvancedMode={onEnterAdvancedMode}
           onDeclareFoul={onDeclareFoul}
           onEndTurn={onEndTurn}
-          onUndo={onUndo}
           onPassShot={onPassShot}
           onDeclareFreeBall={onDeclareFreeBall}
         />

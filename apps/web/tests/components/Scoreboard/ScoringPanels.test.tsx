@@ -6,16 +6,16 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import AdvancedScoringPanel from "@/components/Scoreboard/AdvancedScoringPanel";
+import AdvancedScoringPanel from "@/components/Scoreboard/ControlPanel/Advanced/AdvancedScoringPanel";
 import {
   AdvancedBallRail,
   AdvancedBottomActions,
-} from "@/components/Scoreboard/AdvancedControl";
-import SimpleScoringPanel from "@/components/Scoreboard/SimpleScoringPanel";
+} from "@/components/Scoreboard/ControlPanel/Advanced/AdvancedControl";
+import SimpleScoringPanel from "@/components/Scoreboard/ControlPanel/Simple/SimpleScoringPanel";
 import {
   SimpleBallRail,
   SimpleBottomActions,
-} from "@/components/Scoreboard/SimpleControl";
+} from "@/components/Scoreboard/ControlPanel/Simple/SimpleControl";
 import { DEFAULT_TABLE } from "@/lib/viewModel";
 
 const coloursOnTable = DEFAULT_TABLE.colours_on_table;
@@ -52,7 +52,6 @@ describe("Simple scoring controls", () => {
         onEnterAdvancedMode={vi.fn()}
         onDeclareFoul={vi.fn()}
         onEndTurn={vi.fn()}
-        onUndo={vi.fn()}
       />,
     );
 
@@ -76,7 +75,6 @@ describe("Simple scoring controls", () => {
         onEnterAdvancedMode={vi.fn()}
         onDeclareFoul={vi.fn()}
         onEndTurn={vi.fn()}
-        onUndo={vi.fn()}
       />,
     );
 
@@ -100,7 +98,6 @@ describe("Simple scoring controls", () => {
         onEnterAdvancedMode={vi.fn()}
         onDeclareFoul={vi.fn()}
         onEndTurn={vi.fn()}
-        onUndo={vi.fn()}
       />,
     );
 

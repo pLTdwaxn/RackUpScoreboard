@@ -6,10 +6,10 @@ import { Surface } from "@heroui/react";
 
 import { Frame } from "@/types";
 
-import AdvancedScoringPanel from "./AdvancedScoringPanel";
+import { AdvancedScoringPanel } from "./Advanced";
 import ConcedeFrameDialog from "./ConcedeFrameDialog";
 import FinishedFramePanel from "./FinishedFramePanel";
-import SimpleScoringPanel from "./SimpleScoringPanel";
+import { SimpleScoringPanel } from "./Simple";
 import { useGameActions } from "@/hooks/useGameActions";
 import { useMatchroomActions } from "@/hooks/useSocket";
 import { useMatchroomFrame } from "@/hooks/useMatchroomFrame";
@@ -69,7 +69,7 @@ function summarizeBalls(pottedBalls: BallName[]): string {
     .join(", ");
 }
 
-export default function Controls() {
+export default function ControlPanel() {
   const { currentPlayerKey } = useMatchroomPlayers();
   const { hasFrame, frame, scoreKeeper, nextFrameConfirmations } =
     useMatchroomFrame();
@@ -77,7 +77,6 @@ export default function Controls() {
   const {
     sendShot,
     sendEndTurn,
-    sendUndo,
     sendConcede,
     sendPassShot,
     sendDeclareFreeBall,
@@ -343,7 +342,6 @@ export default function Controls() {
               }}
               onDeclareFoul={toggleFoulMode}
               onEndTurn={sendEndTurn}
-              onUndo={sendUndo}
               onPassShot={sendPassShot}
               onDeclareFreeBall={startFreeBallMode}
             />

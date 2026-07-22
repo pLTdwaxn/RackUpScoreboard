@@ -13,7 +13,7 @@ import {
 import { Frame } from "@/types";
 import { BALL_BY_NAME, BALL_NAMES, BallName } from "@/lib/controlPanelShared";
 
-import ControlPanelLayout from "./ControlPanelLayout";
+import ControlPanelLayout from "../ControlPanelLayout";
 
 const BALL_CLASS: Record<BallName, string> = {
   red: "bg-gradient-to-br from-red-300 to-red-500 hover:from-red-400 hover:to-red-600",
@@ -169,7 +169,6 @@ export type SimpleBottomActionsProps = {
   onEnterAdvancedMode: () => void;
   onDeclareFoul: () => void;
   onEndTurn: () => void;
-  onUndo: () => void;
   onPassShot?: () => void;
   onDeclareFreeBall?: () => void;
 };
@@ -181,7 +180,6 @@ export function SimpleBottomActions({
   onEnterAdvancedMode,
   onDeclareFoul,
   onEndTurn,
-  onUndo,
   onPassShot,
   onDeclareFreeBall,
 }: SimpleBottomActionsProps) {

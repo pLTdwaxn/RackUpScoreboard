@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import FinishedFramePanel from "@/components/Scoreboard/FinishedFramePanel";
+import FinishedFramePanel from "@/components/Scoreboard/ControlPanel/FinishedFramePanel";
 
 describe("FinishedFramePanel", () => {
   it("shows a win message and starts the next frame", () => {

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import Controls from "@/components/Scoreboard/Controls";
+import ControlPanel from "@/components/Scoreboard/ControlPanel";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
 
 const hookMock = vi.hoisted(() => ({
@@ -34,7 +34,7 @@ const activeFrame = {
   },
 };
 
-function arrangeControls({
+function arrangeControlPanel({
   frame = activeFrame,
   currentPlayerKey = "p1",
   scoreKeeper = "self",
@@ -55,7 +55,7 @@ function arrangeControls({
     nextFrameConfirmations,
   });
   hookMock.actions.mockReturnValue({ sendAction });
-  render(<Controls />);
+  render(<ControlPanel />);
   return { sendAction };
 }
 
@@ -63,7 +63,7 @@ function buttons() {
   return screen.getAllByRole("button", { hidden: true });
 }
 
-describe("Controls", () => {
+describe("ControlPanel", () => {
   afterEach(() => {
     cleanup();
     hookMock.players.mockReset();
@@ -81,14 +81,14 @@ describe("Controls", () => {
     });
     hookMock.actions.mockReturnValue({ sendAction: vi.fn() });
 
-    const { container } = render(<Controls />);
+    const { container } = render(<ControlPanel />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
   it("sends a legal single-ball shot from simple controls", () => {
     const sendAction = vi.fn();
-    arrangeControls({ sendAction });
+    arrangeControlPanel({ sendAction });
 
     fireEvent.click(screen.getByRole("button", { name: "red" }));
 
@@ -103,7 +103,7 @@ describe("Controls", () => {
 
   it("shows finished frame controls", () => {
     const sendAction = vi.fn();
-    arrangeControls({
+    arrangeControlPanel({
       sendAction,
       frame: {
         ...activeFrame,
@@ -122,7 +122,7 @@ describe("Controls", () => {
 
   it("enters advanced composer for an illegal simple ball and submits it", () => {
     const sendAction = vi.fn();
-    arrangeControls({ sendAction });
+    arrangeControlPanel({ sendAction });
 
     fireEvent.click(screen.getByRole("button", { name: "blue" }));
 
@@ -143,7 +143,7 @@ describe("Controls", () => {
 
   it("declares a foul on a selected ball", () => {
     const sendAction = vi.fn();
-    arrangeControls({ sendAction });
+    arrangeControlPanel({ sendAction });
 
     fireEvent.click(buttons()[11]);
     expect(screen.getByText("Tap the ball fouled on")).toBeInTheDocument();
@@ -164,7 +164,7 @@ describe("Controls", () => {
 
   it("uses previous-foul options for pass shot and free-ball nomination", () => {
     const sendAction = vi.fn();
-    arrangeControls({
+    arrangeControlPanel({
       sendAction,
       frame: {
         ...activeFrame,
@@ -192,7 +192,7 @@ describe("Controls", () => {
 
   it("infers foul points for illegal free-ball composer shots", () => {
     const sendAction = vi.fn();
-    arrangeControls({
+    arrangeControlPanel({
       sendAction,
       frame: {
         ...activeFrame,
@@ -219,7 +219,7 @@ describe("Controls", () => {
 
   it("opens and confirms the concede dialog", () => {
     const sendAction = vi.fn();
-    arrangeControls({ sendAction });
+    arrangeControlPanel({ sendAction });
 
     fireEvent.click(buttons()[7]);
     fireEvent.click(screen.getByRole("button", { name: "Concede" }));

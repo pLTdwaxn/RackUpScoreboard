@@ -5,7 +5,7 @@ import { toast } from "@heroui/react";
 
 import { useMatchroomSession } from "@/hooks/useSocket";
 
-import { Controls, FrameOverview, FrameLog } from ".";
+import { ControlPanel, FrameOverview, FrameLog } from ".";
 
 export default function Scoreboard() {
   const { connectionStatus, reconnectAttempt, reconnectDelayMs, socketError } =
@@ -42,7 +42,7 @@ export default function Scoreboard() {
       <div className="flex-1 min-h-0 overflow-visible">
         <FrameLog />
       </div>
-      <Controls />
+      <ControlPanel />
     </div>
   );
 }

@@ -19,7 +19,7 @@ vi.mock("@/hooks/useSocket", () => ({
 }));
 
 vi.mock("@/components/Scoreboard", () => ({
-  Controls: () => <div data-testid="controls" />,
+  ControlPanel: () => <div data-testid="control-panel" />,
   FrameLog: () => <div data-testid="frame-log" />,
   FrameOverview: () => <div data-testid="frame-overview" />,
 }));

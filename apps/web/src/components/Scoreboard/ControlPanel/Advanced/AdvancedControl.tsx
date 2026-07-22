@@ -6,7 +6,7 @@ import { IconCheck, IconX } from "@tabler/icons-react";
 import { TableState } from "@/types";
 import { BALL_BY_NAME, BALL_NAMES, BallName } from "@/lib/controlPanelShared";
 
-import ControlPanelLayout from "./ControlPanelLayout";
+import ControlPanelLayout from "../ControlPanelLayout";
 
 const BALL_CLASS: Record<BallName, string> = {
   red: "bg-gradient-to-br from-red-300 to-red-500 hover:from-red-400 hover:to-red-600",
