@@ -2,10 +2,9 @@ import { Chip } from "@heroui/react";
 
 import { Frame } from "@/types";
 
-import AdvancedControl, {
-  AdvancedBallRail,
-  AdvancedBottomActions,
-} from "./AdvancedControl";
+import ControlPanelLayout from "../ControlPanelLayout";
+import AdvancedBallRail from "./AdvancedBallRail";
+import AdvancedBottomActions from "./AdvancedBottomActions";
 import { BallName } from "@/lib/controlPanelShared";
 
 type AdvancedScoringPanelProps = {
@@ -50,7 +49,7 @@ export default function AdvancedScoringPanel({
   onSubmit,
 }: AdvancedScoringPanelProps) {
   return (
-    <AdvancedControl
+    <ControlPanelLayout
       messageRow={
         <div className="flex items-center justify-center gap-2 text-sm leading-5 text-muted">
           <span className="text-center">{summary}</span>

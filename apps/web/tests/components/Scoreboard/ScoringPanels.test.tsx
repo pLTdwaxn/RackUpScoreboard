@@ -7,15 +7,11 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import AdvancedScoringPanel from "@/components/Scoreboard/ControlPanel/Advanced/AdvancedScoringPanel";
-import {
-  AdvancedBallRail,
-  AdvancedBottomActions,
-} from "@/components/Scoreboard/ControlPanel/Advanced/AdvancedControl";
+import AdvancedBallRail from "@/components/Scoreboard/ControlPanel/Advanced/AdvancedBallRail";
+import AdvancedBottomActions from "@/components/Scoreboard/ControlPanel/Advanced/AdvancedBottomActions";
 import SimpleScoringPanel from "@/components/Scoreboard/ControlPanel/Simple/SimpleScoringPanel";
-import {
-  SimpleBallRail,
-  SimpleBottomActions,
-} from "@/components/Scoreboard/ControlPanel/Simple/SimpleControl";
+import SimpleBallRail from "@/components/Scoreboard/ControlPanel/Simple/SimpleBallRail";
+import SimpleBottomActions from "@/components/Scoreboard/ControlPanel/Simple/SimpleBottomActions";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
 
 const coloursOnTable = DEFAULT_FRAME.colours_on_table;

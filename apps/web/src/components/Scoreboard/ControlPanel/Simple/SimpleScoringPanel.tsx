@@ -1,9 +1,8 @@
 import { Frame, GameStateMessage } from "@/types";
 
-import SimpleControl, {
-  SimpleBallRail,
-  SimpleBottomActions,
-} from "./SimpleControl";
+import ControlPanelLayout from "../ControlPanelLayout";
+import SimpleBallRail from "./SimpleBallRail";
+import SimpleBottomActions from "./SimpleBottomActions";
 import { BallName } from "@/lib/controlPanelShared";
 
 type SimpleScoringPanelProps = {
@@ -44,7 +43,7 @@ export default function SimpleScoringPanel({
   onDeclareFreeBall,
 }: SimpleScoringPanelProps) {
   return (
-    <SimpleControl
+    <ControlPanelLayout
       messageRow={
         <div className="flex items-center justify-center gap-2 text-sm leading-5 text-muted">
           <span className="text-center">
