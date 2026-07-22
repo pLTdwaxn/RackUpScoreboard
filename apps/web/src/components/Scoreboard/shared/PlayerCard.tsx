@@ -26,15 +26,8 @@ export default function PlayerCard({
   const reverseDirection = getReverseDirection(direction);
 
   return (
-    <Card
-      variant="transparent"
-      className="w-full min-w-0 items-stretch rounded-full p-0"
-    >
-      <Card.Content
-        className={`flex w-full min-w-0 items-center gap-2 p-0 ${
-          reverseDirection ? "flex-row-reverse" : "flex-row"
-        }`}
-      >
+    <Card variant="transparent" className="w-full min-w-0 p-0 ">
+      <Card.Content className={"flex w-full min-w-0 items-center p-0"}>
         <Badge.Anchor className="shrink-0">
           <PlayerAvatar
             isFrameWinner={isFrameWinner}

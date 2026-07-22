@@ -31,11 +31,7 @@ export default function ScoreCard({
           : ""
       }`}
     >
-      <Card.Content className="flex min-w-0 flex-col items-stretch gap-1 p-0">
-        <div className="score-secondary">{matchScore}</div>
-        <div className={"score-primary shrink-0 tabular-nums"}>
-          {frameScore}
-        </div>
+      <Card.Content className="flex min-w-0 flex-col items-stretch gap-1 p-1">
         {player ? (
           <PlayerCard
             player={player}
@@ -43,6 +39,8 @@ export default function ScoreCard({
             isFrameWinner={isFrameWinner}
           />
         ) : null}
+        <div className="score-primary">{frameScore}</div>
+        <div className="score-secondary">{matchScore}</div>
       </Card.Content>
     </Card>
   );
