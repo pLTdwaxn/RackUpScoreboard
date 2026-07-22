@@ -1,6 +1,6 @@
 import { Chip } from "@heroui/react";
 
-import { TableState } from "@/types";
+import { Frame } from "@/types";
 
 import AdvancedControl, {
   AdvancedBallRail,
@@ -12,13 +12,14 @@ type AdvancedScoringPanelProps = {
   summary: string;
   statusChip: { label: string; color: "danger" | "success" } | null;
   redsRemaining: number;
-  coloursOnTable: TableState["colours_on_table"];
+  coloursOnTable: Frame["colours_on_table"];
   objectBall: string;
-  freeBall: TableState["free_ball"];
+  freeBall: Frame["free_ball"];
   canKeepScore: boolean;
   redSelections: number;
   foulMode: boolean;
   selectedBalls: BallName[];
+  isRedFoulWithoutPot: boolean;
   comboIsFoul: boolean;
   hasSelectedBalls: boolean;
   onBallTap: (ball: BallName) => void;
@@ -39,6 +40,7 @@ export default function AdvancedScoringPanel({
   redSelections,
   foulMode,
   selectedBalls,
+  isRedFoulWithoutPot,
   comboIsFoul,
   hasSelectedBalls,
   onBallTap,
@@ -73,6 +75,7 @@ export default function AdvancedScoringPanel({
           canKeepScore={canKeepScore}
           redSelections={redSelections}
           selectedBalls={selectedBalls}
+          isRedFoulWithoutPot={isRedFoulWithoutPot}
           foulMode={foulMode}
           comboIsFoul={comboIsFoul}
           onBallTap={onBallTap}

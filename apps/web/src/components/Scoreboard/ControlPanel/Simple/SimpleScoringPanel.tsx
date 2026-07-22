@@ -1,4 +1,4 @@
-import { GameStateMessage, TableState } from "@/types";
+import { Frame, GameStateMessage } from "@/types";
 
 import SimpleControl, {
   SimpleBallRail,
@@ -8,9 +8,9 @@ import { BallName } from "@/lib/controlPanelShared";
 
 type SimpleScoringPanelProps = {
   redsRemaining: number;
-  coloursOnTable: TableState["colours_on_table"];
+  coloursOnTable: Frame["colours_on_table"];
   objectBall: string;
-  freeBall: TableState["free_ball"];
+  freeBall: Frame["free_ball"];
   scoreKeeper: GameStateMessage["score_keeper"];
   canKeepScore: boolean;
   canUseFoulOptions: boolean;

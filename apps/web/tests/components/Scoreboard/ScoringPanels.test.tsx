@@ -16,9 +16,9 @@ import {
   SimpleBallRail,
   SimpleBottomActions,
 } from "@/components/Scoreboard/ControlPanel/Simple/SimpleControl";
-import { DEFAULT_TABLE } from "@/lib/viewModel";
+import { DEFAULT_FRAME } from "@/lib/viewModel";
 
-const coloursOnTable = DEFAULT_TABLE.colours_on_table;
+const coloursOnTable = DEFAULT_FRAME.colours_on_table;
 
 describe("Simple scoring controls", () => {
   afterEach(cleanup);
@@ -120,8 +120,9 @@ describe("Advanced scoring controls", () => {
         objectBall="red"
         freeBall={null}
         canKeepScore
-        redSelections={1}
+        redSelections={15}
         selectedBalls={["red"]}
+        isRedFoulWithoutPot={false}
         foulMode={false}
         onBallTap={onBallTap}
         onRedLongPress={onRedLongPress}
@@ -131,7 +132,10 @@ describe("Advanced scoring controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "black" }));
     expect(onBallTap).toHaveBeenCalledWith("black");
 
-    fireEvent.pointerDown(screen.getByRole("button", { name: "red" }));
+    const redButton = screen.getByRole("button", { name: "red" });
+    expect(redButton).not.toBeDisabled();
+
+    fireEvent.pointerDown(redButton);
     vi.advanceTimersByTime(450);
     expect(onRedLongPress).toHaveBeenCalledOnce();
     vi.useRealTimers();
@@ -173,6 +177,7 @@ describe("Advanced scoring controls", () => {
         redSelections={1}
         foulMode={false}
         selectedBalls={["red"]}
+        isRedFoulWithoutPot={false}
         comboIsFoul={false}
         hasSelectedBalls
         onBallTap={vi.fn()}

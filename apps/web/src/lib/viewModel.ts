@@ -4,7 +4,6 @@ import {
   Match,
   Matchroom,
   Player,
-  TableState,
 } from "@/types";
 
 export const DEFAULT_MATCH: Match = {
@@ -37,23 +36,6 @@ export const DEFAULT_FRAME: Frame = {
   snookers_required: 0,
   highest_break: null,
   winner_key: null,
-};
-
-export const DEFAULT_TABLE: TableState = {
-  reds_remaining: 15,
-  colours_on_table: {
-    yellow: true,
-    green: true,
-    brown: true,
-    blue: true,
-    pink: true,
-    black: true,
-  },
-  object_ball: "red",
-  free_ball: null,
-  current_turn: "",
-  current_break: 0,
-  points_remaining: 0,
 };
 
 export const DEFAULT_MATCHROOM: Matchroom = {

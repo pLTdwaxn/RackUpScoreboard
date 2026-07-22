@@ -11,51 +11,15 @@ import {
 } from "@tabler/icons-react";
 
 import { Frame } from "@/types";
-import { BALL_BY_NAME, BALL_NAMES, BallName } from "@/lib/controlPanelShared";
+import { BALL_BY_NAME, BallName } from "@/lib/controlPanelShared";
 
 import ControlPanelLayout from "../ControlPanelLayout";
-
-const BALL_CLASS: Record<BallName, string> = {
-  red: "bg-gradient-to-br from-red-300 to-red-500 hover:from-red-400 hover:to-red-600",
-  yellow:
-    "bg-gradient-to-br from-yellow-300 to-yellow-500 hover:from-yellow-400 hover:to-yellow-600",
-  green:
-    "bg-gradient-to-br from-green-300 to-green-500 hover:from-green-400 hover:to-green-600",
-  brown:
-    "bg-gradient-to-br from-amber-600 to-amber-800 hover:from-amber-700 hover:to-amber-900",
-  blue: "bg-gradient-to-br from-blue-300 to-blue-500 hover:from-blue-400 hover:to-blue-600",
-  pink: "bg-gradient-to-br from-pink-300 to-pink-500 hover:from-pink-400 hover:to-pink-600",
-  black:
-    "bg-gradient-to-br from-slate-700 to-slate-950 hover:from-slate-800 hover:to-black",
-};
-
-const ALL_BALLS = BALL_NAMES;
-
-function isBallLegal(
-  ball: BallName,
-  objectBall: Frame["object_ball"],
-  redsRemaining: number,
-  coloursOnTable: Frame["colours_on_table"],
-  freeBall: Frame["free_ball"],
-): boolean {
-  if (freeBall) {
-    return ball === freeBall.nominated_colour && coloursOnTable[ball];
-  }
-
-  if (ball === "red") {
-    return objectBall === "red" && redsRemaining > 0;
-  }
-
-  if (!coloursOnTable[ball]) {
-    return false;
-  }
-
-  if (objectBall === "colour") {
-    return true;
-  }
-
-  return objectBall === ball;
-}
+import {
+  ALL_BALLS,
+  BALL_CLASS,
+  countSelectedBalls,
+  isBallLegal,
+} from "../shared/ballRail";
 
 type SimpleBallRailProps = {
   redsRemaining: number;
@@ -78,24 +42,18 @@ export function SimpleBallRail({
   selectedBalls,
   onBallTap,
 }: SimpleBallRailProps) {
-  const selectedBallCounts = selectedBalls.reduce<Record<string, number>>(
-    (acc, ball) => {
-      acc[ball] = (acc[ball] ?? 0) + 1;
-      return acc;
-    },
-    {},
-  );
+  const selectedBallCounts = countSelectedBalls(selectedBalls);
 
   return (
     <div className="flex w-full flex-row items-stretch justify-between gap-1">
       {ALL_BALLS.map((ball) => {
-        const legal = isBallLegal(
+        const legal = isBallLegal({
           ball,
           objectBall,
           redsRemaining,
           coloursOnTable,
           freeBall,
-        );
+        });
         const picked = (selectedBallCounts[ball] ?? 0) > 0;
         const unavailable =
           ball === "red" ? redsRemaining <= 0 : !coloursOnTable[ball];

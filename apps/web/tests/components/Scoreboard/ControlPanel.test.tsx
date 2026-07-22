@@ -162,6 +162,90 @@ describe("ControlPanel", () => {
     });
   });
 
+  it("declares a foul on a red without potting it", () => {
+    const sendAction = vi.fn();
+    arrangeControlPanel({ sendAction });
+
+    fireEvent.click(buttons()[11]);
+    expect(screen.getByText("Tap the ball fouled on")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "red" }));
+
+    expect(screen.getByRole("button", { name: "red" })).toHaveTextContent("-");
+    expect(screen.getByText("Foul on a red (no pot)")).toBeInTheDocument();
+    expect(screen.getByText("FOUL 4")).toBeInTheDocument();
+    expect(screen.queryByText("LEGAL")).not.toBeInTheDocument();
+
+    fireEvent.click(buttons().at(-2)!);
+
+    expect(sendAction).toHaveBeenCalledWith({
+      action: "shot",
+      data: {
+        potted_balls: [],
+        foul: 4,
+      },
+    });
+  });
+
+  it("declares a colour foul with reds potted", () => {
+    const sendAction = vi.fn();
+    arrangeControlPanel({ sendAction });
+
+    fireEvent.click(buttons()[11]);
+    fireEvent.click(screen.getByRole("button", { name: "red" }));
+    fireEvent.click(screen.getByRole("button", { name: "red" }));
+
+    expect(screen.getByRole("button", { name: "red" })).toHaveTextContent("1");
+    expect(screen.getByText("Foul with 1 red potted")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "red" }));
+
+    expect(screen.getByRole("button", { name: "red" })).toHaveTextContent("2");
+    expect(screen.getByText("Foul with 2 reds potted")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "black" }));
+
+    expect(
+      screen.getByText("Foul on black with 2 reds potted"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("FOUL 7")).toBeInTheDocument();
+    expect(screen.queryByText("LEGAL")).not.toBeInTheDocument();
+
+    fireEvent.click(buttons().at(-2)!);
+
+    expect(sendAction).toHaveBeenCalledWith({
+      action: "shot",
+      data: {
+        potted_balls: ["red", "red"],
+        foul: 7,
+      },
+    });
+  });
+
+  it("cycles selected reds back to none after the maximum count", () => {
+    const sendAction = vi.fn();
+    arrangeControlPanel({
+      sendAction,
+      frame: {
+        ...activeFrame,
+        reds_remaining: 2,
+      },
+    });
+
+    fireEvent.click(buttons().at(-1)!);
+
+    const redButton = screen.getByRole("button", { name: "red" });
+    fireEvent.click(redButton);
+    expect(redButton).toHaveTextContent("1");
+
+    fireEvent.click(redButton);
+    expect(redButton).toHaveTextContent("2");
+
+    fireEvent.click(redButton);
+    expect(redButton).toHaveTextContent("");
+    expect(screen.getByText("Tap the balls potted")).toBeInTheDocument();
+  });
+
   it("uses previous-foul options for pass shot and free-ball nomination", () => {
     const sendAction = vi.fn();
     arrangeControlPanel({

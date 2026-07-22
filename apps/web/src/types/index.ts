@@ -43,16 +43,6 @@ export type RoomSocketMessage =
   | ErrorMessage
   | PlayerStatusChangeMessage;
 
-export type TableState = {
-  reds_remaining: number;
-  colours_on_table: Record<string, boolean>;
-  object_ball: string;
-  free_ball: FreeBallState | null;
-  current_turn: string;
-  current_break: number;
-  points_remaining: number;
-};
-
 export type FreeBallState = {
   nominated_colour: string;
   object_ball: string;
