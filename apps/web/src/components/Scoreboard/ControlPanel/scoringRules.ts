@@ -1,5 +1,5 @@
 import { Frame } from "@/types";
-import { BALL_BY_NAME, BallName } from "@/lib/controlPanelShared";
+import { BALL_BY_NAME, BallName } from "@/domain/balls";
 
 export function isLegalShot(
   pottedBalls: BallName[],

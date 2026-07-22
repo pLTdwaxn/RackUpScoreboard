@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import { Frame } from "@/types";
-import { BALL_BY_NAME, BallName } from "@/lib/controlPanelShared";
+import { BALL_BY_NAME, BallName } from "@/domain/balls";
 
 import {
   inferFoulPoints,

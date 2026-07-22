@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { BALL_BY_NAME, BALL_NAMES, BALLS } from "@/lib/controlPanelShared";
+import { BALL_BY_NAME, BALL_NAMES, BALLS } from "@/domain/balls";
 
-describe("control panel ball metadata", () => {
+describe("snooker ball metadata", () => {
   it("keeps balls ordered by snooker value", () => {
     expect(BALL_NAMES).toEqual([
       "red",

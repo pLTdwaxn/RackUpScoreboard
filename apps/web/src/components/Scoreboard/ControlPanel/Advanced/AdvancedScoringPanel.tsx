@@ -5,7 +5,7 @@ import { Frame } from "@/types";
 import ControlPanelLayout from "../ControlPanelLayout";
 import AdvancedBallRail from "./AdvancedBallRail";
 import AdvancedBottomActions from "./AdvancedBottomActions";
-import { BallName } from "@/lib/controlPanelShared";
+import { BallName } from "@/domain/balls";
 
 type AdvancedScoringPanelProps = {
   summary: string;

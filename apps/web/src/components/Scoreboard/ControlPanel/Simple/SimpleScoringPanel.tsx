@@ -3,7 +3,7 @@ import { Frame, GameStateMessage } from "@/types";
 import ControlPanelLayout from "../ControlPanelLayout";
 import SimpleBallRail from "./SimpleBallRail";
 import SimpleBottomActions from "./SimpleBottomActions";
-import { BallName } from "@/lib/controlPanelShared";
+import { BallName } from "@/domain/balls";
 
 type SimpleScoringPanelProps = {
   redsRemaining: number;

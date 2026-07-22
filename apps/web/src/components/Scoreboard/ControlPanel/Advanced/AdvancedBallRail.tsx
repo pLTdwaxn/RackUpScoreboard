@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { Badge, Button } from "@heroui/react";
 
 import { Frame } from "@/types";
-import { BALL_BY_NAME, BallName } from "@/lib/controlPanelShared";
+import { BALL_BY_NAME, BallName } from "@/domain/balls";
 
 import {
   ALL_BALLS,

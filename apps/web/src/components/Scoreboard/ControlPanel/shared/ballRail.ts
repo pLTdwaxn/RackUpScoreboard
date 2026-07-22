@@ -1,5 +1,5 @@
 import { Frame } from "@/types";
-import { BALL_BY_NAME, BALL_NAMES, BallName } from "@/lib/controlPanelShared";
+import { BALL_BY_NAME, BALL_NAMES, BallName } from "@/domain/balls";
 
 export const ALL_BALLS = BALL_NAMES;
 
