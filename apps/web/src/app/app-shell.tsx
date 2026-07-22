@@ -42,6 +42,7 @@ function MatchroomTopRowContent() {
   return (
     <MatchroomOverview
       roomReady={viewModel.roomReady}
+      playerCount={viewModel.players.length}
       matchroomId={matchroomId}
       match={viewModel.match}
       resetRoom={() => {

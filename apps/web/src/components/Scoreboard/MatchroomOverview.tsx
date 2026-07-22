@@ -15,6 +15,7 @@ import { Match } from "@/types";
 
 type MatchroomOverviewProps = {
   roomReady: boolean;
+  playerCount: number;
   matchroomId: string;
   match: Match | null;
   resetRoom: () => void;
@@ -22,11 +23,38 @@ type MatchroomOverviewProps = {
 
 export default function MatchroomOverview({
   roomReady,
+  playerCount,
   matchroomId,
   match,
   resetRoom,
 }: MatchroomOverviewProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <MatchroomOverviewPopover
+      key={playerCount}
+      defaultOpen={playerCount === 1}
+      roomReady={roomReady}
+      matchroomId={matchroomId}
+      match={match}
+      resetRoom={resetRoom}
+    />
+  );
+}
+
+type MatchroomOverviewPopoverProps = Omit<
+  MatchroomOverviewProps,
+  "playerCount"
+> & {
+  defaultOpen: boolean;
+};
+
+function MatchroomOverviewPopover({
+  defaultOpen,
+  roomReady,
+  matchroomId,
+  match,
+  resetRoom,
+}: MatchroomOverviewPopoverProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [qrCodeError, setQrCodeError] = useState<string | null>(null);
 

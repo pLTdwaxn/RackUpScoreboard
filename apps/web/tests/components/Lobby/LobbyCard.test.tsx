@@ -29,6 +29,14 @@ describe("LobbyCard", () => {
     ).toBeInTheDocument();
   });
 
+  it("prefills the matchroom ID when provided", () => {
+    render(<LobbyCard initialMatchroomId="room-1" />);
+
+    expect(screen.getByPlaceholderText("Enter matchroom ID")).toHaveValue(
+      "room-1",
+    );
+  });
+
   it("switches to the create workflow", () => {
     render(<LobbyCard />);
 

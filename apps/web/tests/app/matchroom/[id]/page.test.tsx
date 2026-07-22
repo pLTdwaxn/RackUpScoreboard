@@ -22,8 +22,11 @@ vi.mock("@/hooks/useSocket", () => ({
 }));
 
 vi.mock("@/components/Lobby", () => ({
-  JoinMatchForm: ({ initialMatchroomId }: { initialMatchroomId?: string }) => (
-    <section data-initial-matchroom-id={initialMatchroomId} data-testid="join-form" />
+  LobbyCard: ({ initialMatchroomId }: { initialMatchroomId?: string }) => (
+    <section
+      data-initial-matchroom-id={initialMatchroomId}
+      data-testid="lobby-card"
+    />
   ),
 }));
 
@@ -46,7 +49,7 @@ describe("Matchroom detail page", () => {
 
     render(<MatchPage />);
 
-    expect(screen.getByTestId("join-form")).toHaveAttribute(
+    expect(screen.getByTestId("lobby-card")).toHaveAttribute(
       "data-initial-matchroom-id",
       "room-1",
     );

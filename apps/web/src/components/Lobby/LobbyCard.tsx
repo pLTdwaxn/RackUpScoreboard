@@ -1,7 +1,11 @@
 import { Card, Tabs } from "@heroui/react";
 import { JoinMatchForm, NewMatchForm } from ".";
 
-const LobbyCard = () => {
+type LobbyCardProps = {
+  initialMatchroomId?: string;
+};
+
+const LobbyCard = ({ initialMatchroomId }: LobbyCardProps) => {
   return (
     <Tabs className="w-full h-full">
       <Card className="h-full">
@@ -21,7 +25,7 @@ const LobbyCard = () => {
         </Card.Header>
         <Card.Content>
           <Tabs.Panel id="join-matchroom">
-            <JoinMatchForm />
+            <JoinMatchForm initialMatchroomId={initialMatchroomId} />
           </Tabs.Panel>
           <Tabs.Panel id="create-matchroom">
             <NewMatchForm />
