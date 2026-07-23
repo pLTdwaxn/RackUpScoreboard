@@ -1,12 +1,4 @@
-const BALL_CLASS: Record<string, string> = {
-  red: "bg-red-500",
-  yellow: "bg-yellow-400",
-  green: "bg-green-500",
-  brown: "bg-amber-800",
-  blue: "bg-blue-500",
-  pink: "bg-pink-400",
-  black: "bg-slate-950",
-};
+import SnookerBallToken from "@/components/Scoreboard/shared/SnookerBallToken";
 
 type BallGroup = {
   ball: string;
@@ -52,15 +44,13 @@ export default function BallComposition({
   return (
     <div className="flex min-w-0 items-center gap-1 overflow-hidden px-1">
       {composition.map(({ ball, count }, index) => (
-        <span
+        <SnookerBallToken
           key={`${entryId}-${index}-${ball}`}
-          aria-label={count > 1 ? `${count} ${ball}` : ball}
-          className={`flex h-6 w-6 items-center justify-center rounded-full ${
-            BALL_CLASS[ball] ?? "bg-default"
-          } ${ball === "yellow" ? "text-slate-950" : "text-white"}`}
+          ball={ball}
+          label={count > 1 ? `${count} ${ball}` : ball}
         >
           {count > 1 ? count : null}
-        </span>
+        </SnookerBallToken>
       ))}
     </div>
   );

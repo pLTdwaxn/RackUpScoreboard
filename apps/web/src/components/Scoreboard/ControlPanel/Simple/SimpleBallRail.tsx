@@ -6,6 +6,7 @@ import { BALL_BY_NAME, BallName } from "@/domain/balls";
 import {
   ALL_BALLS,
   BALL_CLASS,
+  BALL_SURFACE_CLASS,
   countSelectedBalls,
   isBallLegal,
 } from "../shared/ballRail";
@@ -70,9 +71,11 @@ export default function SimpleBallRail({
               onPress={() => onBallTap(ball)}
               size="lg"
               type="button"
-              className={BALL_CLASS[ball]}
+              className={`${BALL_SURFACE_CLASS} ${BALL_CLASS[ball]}`}
             >
-              {ball === "red" && redsRemaining}
+              <span className="relative z-10">
+                {ball === "red" && redsRemaining}
+              </span>
             </Button>
             <Badge
               className="font-bold"

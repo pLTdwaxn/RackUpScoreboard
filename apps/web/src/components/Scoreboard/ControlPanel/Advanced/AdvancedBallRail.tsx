@@ -8,6 +8,7 @@ import { BALL_BY_NAME, BallName } from "@/domain/balls";
 import {
   ALL_BALLS,
   BALL_CLASS,
+  BALL_SURFACE_CLASS,
   ballPoints,
   countSelectedBalls,
   isBallLegal,
@@ -154,13 +155,15 @@ export default function AdvancedBallRail({
               onPointerCancel={ball === "red" ? clearRedPressTimer : undefined}
               size="lg"
               type="button"
-              className={BALL_CLASS[ball]}
+              className={`${BALL_SURFACE_CLASS} ${BALL_CLASS[ball]}`}
             >
-              {ball === "red"
-                ? isRedFoulWithoutPot
-                  ? "-"
-                  : redSelections || null
-                : null}
+              <span className="relative z-10">
+                {ball === "red"
+                  ? isRedFoulWithoutPot
+                    ? "-"
+                    : redSelections || null
+                  : null}
+              </span>
             </Button>
             <Badge
               className="font-bold"

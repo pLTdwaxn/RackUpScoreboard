@@ -81,6 +81,7 @@ describe("FrameLog parts", () => {
     expect(screen.getByLabelText("2 red")).toBeInTheDocument();
     expect(screen.getByLabelText("2 black")).toBeInTheDocument();
     expect(screen.getByLabelText("pink")).toBeInTheDocument();
+    expect(screen.getByLabelText("2 red")).toHaveClass("bg-red-500");
   });
 
   it("renders a log entry and calls undo", () => {
