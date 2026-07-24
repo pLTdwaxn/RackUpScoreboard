@@ -14,7 +14,7 @@ from scoreboard.domain.orchestrators.effects.frame_effects import (
     ScoreRedsEffect,
 )
 
-from .results import ScoreResult
+from .results import FreeBallPot, ScoreResult
 
 if TYPE_CHECKING:
     from scoreboard.domain.orchestrators.contracts import FrameCalculationContext
@@ -56,7 +56,13 @@ class ScoreProcessor:
 
         equivalent_potted_balls = object_ball_equivalent_potted_balls(frame, shot.potted_balls)
         nominated_colour = table.free_ball_nominated_colour
+        free_ball_object_ball = table.free_ball_object_ball
         free_ball_potted = bool(nominated_colour and nominated_colour in shot.potted_balls)
+        free_ball_pots = (
+            (FreeBallPot(potted_ball=nominated_colour, counts_as=free_ball_object_ball),)
+            if free_ball_potted and nominated_colour and free_ball_object_ball
+            else ()
+        )
 
         if table.object_ball == RED_BALL:
             reds_potted = equivalent_potted_balls.count(RED_BALL)
@@ -78,6 +84,8 @@ class ScoreProcessor:
                 points=points,
                 reds_removed=actual_reds_potted,
                 break_points=points,
+                scored_balls=equivalent_potted_balls,
+                free_ball_pots=free_ball_pots,
                 potted_ball=RED_BALL,
                 is_scoring_shot=True,
             )
@@ -101,6 +109,8 @@ class ScoreProcessor:
             player=turn.current_turn,
             points=points,
             break_points=points,
+            scored_balls=equivalent_potted_balls,
+            free_ball_pots=free_ball_pots,
             colours_removed=() if free_ball_potted else (actual_colour,),
             colours_respotted=(
                 (nominated_colour,)

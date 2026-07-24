@@ -33,6 +33,8 @@ class ActionOutcomeFactory:
                 result="frame_won",
                 player_key=score.player if score else None,
                 potted_balls=payload.potted_balls,
+                scored_balls=score.scored_balls if score else (),
+                free_ball_pots=score.free_ball_pots if score else (),
                 break_points=score.break_points if score else 0,
                 winner_key=win.winner_key,
             )
@@ -42,6 +44,8 @@ class ActionOutcomeFactory:
             result="scoring" if score and score.break_points else "no_score",
             player_key=score.player if score else None,
             potted_balls=payload.potted_balls if score and score.break_points else (),
+            scored_balls=score.scored_balls if score and score.break_points else (),
+            free_ball_pots=score.free_ball_pots if score and score.break_points else (),
             break_points=score.break_points if score else 0,
         )
 

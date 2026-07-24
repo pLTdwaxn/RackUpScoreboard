@@ -40,6 +40,8 @@ class FrameLogProjector:
                 visit["result"] = "foul"
             else:
                 visit["potted_balls"].extend(outcome["potted_balls"])
+                visit["scored_balls"].extend(outcome["scored_balls"])
+                visit["free_ball_pots"].extend(outcome["free_ball_pots"])
                 visit["break_points"] += outcome["break_points"]
 
         if visits:
@@ -67,6 +69,8 @@ class FrameLogProjector:
             "player_name": player_name,
             "history_ids": [],
             "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
             "shot_count": 0,
             "break_points": 0,
             "foul_points": 0,
@@ -77,9 +81,12 @@ class FrameLogProjector:
     def _outcome_for_history_entry(self, history_entry: dict) -> dict:
         outcome = history_entry.get("outcome")
         if isinstance(outcome, dict):
+            potted_balls = list(outcome.get("potted_balls", []))
             return {
                 "action": outcome.get("action", "shot"),
-                "potted_balls": list(outcome.get("potted_balls", [])),
+                "potted_balls": potted_balls,
+                "scored_balls": list(outcome.get("scored_balls", potted_balls)),
+                "free_ball_pots": list(outcome.get("free_ball_pots", [])),
                 "break_points": int(outcome.get("break_points", 0)),
                 "foul_points": int(outcome.get("foul_points", 0)),
                 "nominated_colour": outcome.get("nominated_colour"),
@@ -93,6 +100,8 @@ class FrameLogProjector:
         return {
             "action": action,
             "potted_balls": [] if foul_points else potted_balls,
+            "scored_balls": [] if foul_points else potted_balls,
+            "free_ball_pots": [],
             "break_points": 0 if foul_points else sum(BALL_POINTS.get(ball, 0) for ball in potted_balls),
             "foul_points": foul_points,
             "nominated_colour": data.get("nominated_colour"),

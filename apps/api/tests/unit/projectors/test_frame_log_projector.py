@@ -85,10 +85,12 @@ def _shot_outcome(
     result: str,
     player_key: str,
     potted_balls: list[str] | None = None,
+    scored_balls: list[str] | None = None,
+    free_ball_pots: list[dict] | None = None,
     break_points: int = 0,
     foul_points: int = 0,
 ) -> dict:
-    return {
+    outcome = {
         "action": "shot",
         "result": result,
         "player_key": player_key,
@@ -98,6 +100,11 @@ def _shot_outcome(
         "winner_key": None,
         "nominated_colour": None,
     }
+    if scored_balls is not None:
+        outcome["scored_balls"] = scored_balls
+    if free_ball_pots is not None:
+        outcome["free_ball_pots"] = free_ball_pots
+    return outcome
 
 
 def test_frame_log_projector_returns_empty_log_without_frame() -> None:
@@ -133,6 +140,8 @@ def test_frame_log_projector_groups_consecutive_shots_by_visit() -> None:
             "player_name": "Player 1",
             "history_ids": ["h1", "h2"],
             "potted_balls": ["red", "black"],
+            "scored_balls": ["red", "black"],
+            "free_ball_pots": [],
             "shot_count": 2,
             "break_points": 8,
             "foul_points": 0,
@@ -183,6 +192,8 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
             "player_name": "Player 1",
             "history_ids": ["h1", "h2"],
             "potted_balls": ["red"],
+            "scored_balls": ["red"],
+            "free_ball_pots": [],
             "shot_count": 2,
             "break_points": 1,
             "foul_points": 6,
@@ -196,6 +207,8 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
             "player_name": "Player 2",
             "history_ids": ["h3"],
             "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
             "shot_count": 1,
             "break_points": 0,
             "foul_points": 0,
@@ -235,6 +248,8 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
             "player_name": "Player 1",
             "history_ids": ["h1"],
             "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
             "shot_count": 1,
             "break_points": 0,
             "foul_points": 4,
@@ -248,6 +263,8 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
             "player_name": "Player 2",
             "history_ids": ["h2"],
             "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
             "shot_count": 1,
             "break_points": 0,
             "foul_points": 0,
@@ -298,6 +315,8 @@ def test_frame_log_projector_uses_outcome_for_wrong_ball_foul() -> None:
     )
 
     assert log[0]["potted_balls"] == []
+    assert log[0]["scored_balls"] == []
+    assert log[0]["free_ball_pots"] == []
     assert log[0]["break_points"] == 0
     assert log[0]["foul_points"] == 5
     assert log[0]["result"] == "foul"
@@ -318,7 +337,35 @@ def test_frame_log_projector_renders_declared_free_ball_as_visit() -> None:
     )
 
     assert log[0]["potted_balls"] == []
+    assert log[0]["scored_balls"] == []
+    assert log[0]["free_ball_pots"] == []
     assert log[0]["break_points"] == 0
     assert log[0]["foul_points"] == 0
     assert log[0]["result"] == "ended"
     assert log[0]["message"] == "Player 2: nominated blue free ball"
+
+
+def test_frame_log_projector_projects_free_ball_scoring_metadata() -> None:
+    frame = _frame()
+    frame.history = [
+        _history_entry(
+            "h1",
+            "p1",
+            ["blue", "red"],
+            outcome=_shot_outcome(
+                result="scoring",
+                player_key="p1",
+                potted_balls=["blue", "red"],
+                scored_balls=["red", "red"],
+                free_ball_pots=[{"potted_ball": "blue", "counts_as": "red"}],
+                break_points=2,
+            ),
+        )
+    ]
+
+    log = FrameLogProjector().project(frame, [_player("p1", "Player 1")])
+
+    assert log[0]["potted_balls"] == ["blue", "red"]
+    assert log[0]["scored_balls"] == ["red", "red"]
+    assert log[0]["free_ball_pots"] == [{"potted_ball": "blue", "counts_as": "red"}]
+    assert log[0]["break_points"] == 2

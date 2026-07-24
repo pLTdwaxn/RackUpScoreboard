@@ -37,11 +37,25 @@ class PhaseResult:
 
 
 @dataclass
+class FreeBallPot:
+    potted_ball: str
+    counts_as: str
+
+    def to_dict(self) -> dict:
+        return {
+            "potted_ball": self.potted_ball,
+            "counts_as": self.counts_as,
+        }
+
+
+@dataclass
 class ScoreResult:
     player: str
     points: int
     reds_removed: int = 0
     break_points: int = 0
+    scored_balls: tuple[str, ...] = ()
+    free_ball_pots: tuple[FreeBallPot, ...] = ()
     colours_removed: tuple[str, ...] = ()
     colours_respotted: tuple[str, ...] = ()
     potted_ball: str | None = None

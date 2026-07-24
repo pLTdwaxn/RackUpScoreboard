@@ -32,6 +32,8 @@ def test_score_processor_scores_legal_red_and_removes_it():
     assert context.score_result.player == "p1"
     assert context.score_result.points == 1
     assert context.score_result.break_points == 1
+    assert context.score_result.scored_balls == ("red",)
+    assert context.score_result.free_ball_pots == ()
     assert context.score_result.reds_removed == 1
     assert [type(effect) for effect in effects] == [RemoveRedsEffect, ScoreRedsEffect]
 
@@ -49,3 +51,43 @@ def test_score_processor_awards_foul_penalty_to_opponent_and_removes_fouled_reds
     assert context.score_result.points == 7
     assert context.score_result.reds_removed == 1
     assert [type(effect) for effect in effects] == [RemoveRedsEffect, AwardPenaltyEffect]
+
+
+def test_score_processor_reports_free_ball_colour_as_object_ball():
+    frame = make_frame()
+    frame.table_state.free_ball_nominated_colour = "blue"
+    frame.table_state.free_ball_object_ball = "red"
+    context = FrameCalculationContext(
+        frame=frame,
+        payload=ActionPayload(action="shot", potted_balls=("blue",), foul=0),
+        foul_result=FoulResult(is_foul=False),
+    )
+
+    ScoreProcessor().process(context)
+
+    assert isinstance(context.score_result, ScoreResult)
+    assert context.score_result.break_points == 1
+    assert context.score_result.scored_balls == ("red",)
+    assert [pot.to_dict() for pot in context.score_result.free_ball_pots] == [
+        {"potted_ball": "blue", "counts_as": "red"}
+    ]
+
+
+def test_score_processor_reports_free_ball_and_actual_red_as_two_scored_reds():
+    frame = make_frame()
+    frame.table_state.free_ball_nominated_colour = "blue"
+    frame.table_state.free_ball_object_ball = "red"
+    context = FrameCalculationContext(
+        frame=frame,
+        payload=ActionPayload(action="shot", potted_balls=("blue", "red"), foul=0),
+        foul_result=FoulResult(is_foul=False),
+    )
+
+    ScoreProcessor().process(context)
+
+    assert isinstance(context.score_result, ScoreResult)
+    assert context.score_result.break_points == 2
+    assert context.score_result.scored_balls == ("red", "red")
+    assert [pot.to_dict() for pot in context.score_result.free_ball_pots] == [
+        {"potted_ball": "blue", "counts_as": "red"}
+    ]

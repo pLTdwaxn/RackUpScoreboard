@@ -10,6 +10,7 @@ from ..processors.results import (
     BreakResult,
     FoulResult,
     FrameRuleStateResult,
+    FreeBallPot,
     NextBallResult,
     PhaseResult,
     ScoreResult,
@@ -33,6 +34,8 @@ class ActionOutcome:
     result: str
     player_key: str | None = None
     potted_balls: tuple[str, ...] = ()
+    scored_balls: tuple[str, ...] = ()
+    free_ball_pots: tuple[FreeBallPot, ...] = ()
     break_points: int = 0
     foul_points: int = 0
     winner_key: str | None = None
@@ -44,6 +47,8 @@ class ActionOutcome:
             "result": self.result,
             "player_key": self.player_key,
             "potted_balls": list(self.potted_balls),
+            "scored_balls": list(self.scored_balls),
+            "free_ball_pots": [pot.to_dict() for pot in self.free_ball_pots],
             "break_points": self.break_points,
             "foul_points": self.foul_points,
             "winner_key": self.winner_key,

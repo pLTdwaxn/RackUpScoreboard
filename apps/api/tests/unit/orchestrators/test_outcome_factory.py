@@ -3,7 +3,7 @@ from typing import cast
 from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.orchestrators.contracts import ActionPayload, FrameCalculationContext
 from scoreboard.domain.orchestrators.outcome_factory import ActionOutcomeFactory
-from scoreboard.domain.processors.results import FoulResult, ScoreResult, WinConditionResult
+from scoreboard.domain.processors.results import FoulResult, FreeBallPot, ScoreResult, WinConditionResult
 
 
 def make_context(
@@ -46,6 +46,8 @@ def test_outcome_factory_maps_declared_free_ball() -> None:
         "result": "declared",
         "player_key": None,
         "potted_balls": [],
+        "scored_balls": [],
+        "free_ball_pots": [],
         "break_points": 0,
         "foul_points": 0,
         "winner_key": None,
@@ -71,13 +73,14 @@ def test_outcome_factory_maps_frame_won() -> None:
     outcome = ActionOutcomeFactory().from_context(
         make_context(
             payload=ActionPayload(action="shot", potted_balls=("black",)),
-            score_result=ScoreResult(player="p1", points=7, break_points=7),
+            score_result=ScoreResult(player="p1", points=7, break_points=7, scored_balls=("black",)),
             win_condition_result=WinConditionResult(finishes_frame=True, winner_key="p1"),
         )
     )
 
     assert outcome.result == "frame_won"
     assert outcome.potted_balls == ("black",)
+    assert outcome.scored_balls == ("black",)
     assert outcome.break_points == 7
     assert outcome.winner_key == "p1"
 
@@ -86,7 +89,7 @@ def test_outcome_factory_maps_scoring_and_no_score() -> None:
     scoring = ActionOutcomeFactory().from_context(
         make_context(
             payload=ActionPayload(action="shot", potted_balls=("red",)),
-            score_result=ScoreResult(player="p1", points=1, break_points=1),
+            score_result=ScoreResult(player="p1", points=1, break_points=1, scored_balls=("red",)),
         )
     )
     no_score = ActionOutcomeFactory().from_context(
@@ -98,5 +101,26 @@ def test_outcome_factory_maps_scoring_and_no_score() -> None:
 
     assert scoring.result == "scoring"
     assert scoring.potted_balls == ("red",)
+    assert scoring.scored_balls == ("red",)
     assert no_score.result == "no_score"
     assert no_score.potted_balls == ()
+    assert no_score.scored_balls == ()
+
+
+def test_outcome_factory_maps_free_ball_scoring_metadata() -> None:
+    outcome = ActionOutcomeFactory().from_context(
+        make_context(
+            payload=ActionPayload(action="shot", potted_balls=("blue", "red")),
+            score_result=ScoreResult(
+                player="p1",
+                points=2,
+                break_points=2,
+                scored_balls=("red", "red"),
+                free_ball_pots=(FreeBallPot(potted_ball="blue", counts_as="red"),),
+            ),
+        )
+    )
+
+    assert outcome.to_dict()["potted_balls"] == ["blue", "red"]
+    assert outcome.to_dict()["scored_balls"] == ["red", "red"]
+    assert outcome.to_dict()["free_ball_pots"] == [{"potted_ball": "blue", "counts_as": "red"}]
