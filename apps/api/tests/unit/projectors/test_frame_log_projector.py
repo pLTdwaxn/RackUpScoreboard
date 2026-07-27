@@ -156,7 +156,6 @@ def test_frame_log_projector_groups_consecutive_shots_by_visit() -> None:
                     "free_ball_pots": [],
                     "break_points": 1,
                     "foul_points": 0,
-                    "message": "Player 1 potted a red.",
                 },
                 {
                     "history_id": "h2",
@@ -166,7 +165,6 @@ def test_frame_log_projector_groups_consecutive_shots_by_visit() -> None:
                     "free_ball_pots": [],
                     "break_points": 7,
                     "foul_points": 0,
-                    "message": "Player 1 potted the black.",
                 },
             ],
             "potted_balls": ["red", "black"],
@@ -176,7 +174,6 @@ def test_frame_log_projector_groups_consecutive_shots_by_visit() -> None:
             "break_points": 8,
             "foul_points": 0,
             "result": "in_progress",
-            "message": "Player 1: break 8",
         }
     ]
 
@@ -230,7 +227,6 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
                     "free_ball_pots": [],
                     "break_points": 1,
                     "foul_points": 0,
-                    "message": "Player 1 potted a red.",
                 },
                 {
                     "history_id": "h2",
@@ -240,7 +236,6 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
                     "free_ball_pots": [],
                     "break_points": 0,
                     "foul_points": 6,
-                    "message": "Player 1 fouled for 6.",
                 },
             ],
             "potted_balls": ["red"],
@@ -250,7 +245,6 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
             "break_points": 1,
             "foul_points": 6,
             "result": "foul",
-            "message": "Player 1: break 1, foul 6",
         },
         {
             "id": "h3",
@@ -267,7 +261,6 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
                     "free_ball_pots": [],
                     "break_points": 0,
                     "foul_points": 0,
-                    "message": "Player 2 did not score.",
                 }
             ],
             "potted_balls": [],
@@ -277,7 +270,6 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
             "break_points": 0,
             "foul_points": 0,
             "result": "in_progress",
-            "message": "Player 2: no score",
         },
     ]
 
@@ -320,7 +312,6 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
                     "free_ball_pots": [],
                     "break_points": 0,
                     "foul_points": 4,
-                    "message": "Player 1 fouled for 4.",
                 }
             ],
             "potted_balls": [],
@@ -330,7 +321,6 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
             "break_points": 0,
             "foul_points": 4,
             "result": "foul",
-            "message": "Player 1: foul 4",
         },
         {
             "id": "h2",
@@ -347,7 +337,6 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
                     "free_ball_pots": [],
                     "break_points": 0,
                     "foul_points": 0,
-                    "message": "Player 2 passed the shot back.",
                 }
             ],
             "potted_balls": [],
@@ -357,12 +346,18 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
             "break_points": 0,
             "foul_points": 0,
             "result": "ended",
-            "message": "Player 2: passed shot back",
         },
+    ]
+    assert log[1]["facts"] == [
+        {
+            "kind": "pass_shot",
+            "player_key": "p2",
+            "result": "passed",
+        }
     ]
 
 
-def test_frame_log_projector_message_mentions_frame_win() -> None:
+def test_frame_log_projector_facts_mark_frame_win() -> None:
     frame = _frame()
     frame.lifecycle_state.status = FrameStatus.FINISHED
     frame.lifecycle_state.winner_key = "p1"
@@ -378,7 +373,7 @@ def test_frame_log_projector_message_mentions_frame_win() -> None:
     log = FrameLogProjector().project(frame, [_player("p1", "Player 1")])
 
     assert log[0]["result"] == "frame_won"
-    assert log[0]["message"] == "Player 1: won the frame"
+    assert log[0]["facts"][0]["result"] == "frame_won"
 
 
 def test_frame_log_projector_uses_outcome_for_wrong_ball_foul() -> None:
@@ -408,7 +403,7 @@ def test_frame_log_projector_uses_outcome_for_wrong_ball_foul() -> None:
     assert log[0]["break_points"] == 0
     assert log[0]["foul_points"] == 5
     assert log[0]["result"] == "foul"
-    assert log[0]["message"] == "Player 1: foul 5"
+    assert log[0]["facts"][0]["foul_points"] == 5
 
 
 def test_frame_log_projector_renders_declared_free_ball_as_visit() -> None:
@@ -430,7 +425,14 @@ def test_frame_log_projector_renders_declared_free_ball_as_visit() -> None:
     assert log[0]["break_points"] == 0
     assert log[0]["foul_points"] == 0
     assert log[0]["result"] == "ended"
-    assert log[0]["message"] == "Player 2: nominated blue free ball"
+    assert log[0]["facts"] == [
+        {
+            "kind": "free_ball_nomination",
+            "player_key": "p2",
+            "nominated_colour": "blue",
+            "result": "declared",
+        }
+    ]
 
 
 def test_frame_log_projector_summarises_break_after_declared_free_ball_is_potted() -> None:
@@ -463,12 +465,12 @@ def test_frame_log_projector_summarises_break_after_declared_free_ball_is_potted
     assert log[0]["history_ids"] == ["h1", "h2", "h3"]
     assert log[0]["potted_balls"] == ["green", "brown"]
     assert log[0]["break_points"] == 5
-    assert log[0]["message"] == "Player 1: break 5"
-    assert [shot["message"] for shot in log[0]["shots"]] == [
-        "Player 1 nominated the green free ball.",
-        "Player 1 potted the green as a red.",
-        "Player 1 potted the brown.",
+    assert [shot["facts"][0]["kind"] for shot in log[0]["shots"]] == [
+        "free_ball_nomination",
+        "shot_result",
+        "shot_result",
     ]
+    assert log[0]["facts"][0]["break_points"] == 5
 
 
 def test_frame_log_projector_projects_free_ball_scoring_metadata() -> None:
@@ -504,7 +506,6 @@ def test_frame_log_projector_projects_free_ball_scoring_metadata() -> None:
             "free_ball_pots": [{"potted_ball": "blue", "counts_as": "red"}],
             "break_points": 2,
             "foul_points": 0,
-            "message": "Player 1 potted the blue as a red and a red.",
         }
     ]
     assert log[0]["facts"] == [

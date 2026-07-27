@@ -195,7 +195,13 @@ def test_dispatch_reset_shot_restores_table_and_turn_but_keeps_foul_points() -> 
         "winner_key": None,
         "nominated_colour": None,
     }
-    assert state_payload(room)["frame_log"][1]["message"] == "Player 2: reset shot"
+    assert state_payload(room)["frame_log"][1]["facts"] == [
+        {
+            "kind": "reset_shot",
+            "player_key": "p2",
+            "result": "reset",
+        }
+    ]
 
 
 def test_reset_shot_is_rejected_when_snookers_were_required_before_foul() -> None:
@@ -308,7 +314,6 @@ def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
                     "free_ball_pots": [],
                     "break_points": 5,
                     "foul_points": 0,
-                    "message": "Player 1 potted the blue.",
                 }
             ],
             "potted_balls": ["blue"],
@@ -318,7 +323,6 @@ def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
             "break_points": 5,
             "foul_points": 0,
             "result": "in_progress",
-            "message": "Player 1: break 5",
         }
     ]
     assert payload["frame_log"][0]["facts"] == [
@@ -394,7 +398,13 @@ def test_dispatch_pass_shot_adds_frame_log_entry_and_can_be_undone() -> None:
         "winner_key": None,
         "nominated_colour": None,
     }
-    assert state_payload(room)["frame_log"][1]["message"] == "Player 2: passed shot back"
+    assert state_payload(room)["frame_log"][1]["facts"] == [
+        {
+            "kind": "pass_shot",
+            "player_key": "p2",
+            "result": "passed",
+        }
+    ]
 
     handled, error = dispatcher.dispatch(
         room,

@@ -159,7 +159,6 @@ def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client, 
                     "free_ball_pots": [],
                     "break_points": 1,
                     "foul_points": 0,
-                    "message": "Player One potted a red.",
                 }
             ],
             "potted_balls": ["red"],
@@ -169,7 +168,6 @@ def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client, 
             "break_points": 1,
             "foul_points": 0,
             "result": "in_progress",
-            "message": "Player One: break 1",
         }
     ]
     assert shot_update["frame_log"][0]["facts"] == [
