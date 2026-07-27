@@ -310,7 +310,7 @@ def test_non_pot_from_last_red_enters_colours_and_sets_yellow(
     assert frame.table_state.object_ball == "yellow"
 
 
-def test_non_pot_in_colours_without_next_colour_respots_black_on_tie(
+def test_non_pot_on_final_black_with_tied_score_keeps_frame_active(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
@@ -330,8 +330,38 @@ def test_non_pot_in_colours_without_next_colour_respots_black_on_tie(
 
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
 
-    assert frame.table_state.phase is FramePhase.RESPOTTED_BLACK
+    assert frame.lifecycle_state.status is not FrameStatus.FINISHED
+    assert frame.lifecycle_state.winner_key is None
+    assert frame.table_state.phase is FramePhase.COLOURS
     assert frame.table_state.object_ball == "black"
+    assert frame.turn_state.current_turn == PLAYER_TWO
+
+
+def test_non_pot_on_final_black_with_gap_under_black_value_keeps_frame_active(
+    orchestrator: FrameOrchestrator,
+    frame: Frame,
+) -> None:
+    frame.table_state.reds_remaining = 0
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.object_ball = "black"
+    frame.scoring_state.scores[PLAYER_ONE] = 6
+    frame.scoring_state.scores[PLAYER_TWO] = 0
+    frame.table_state.colours_on_table = {
+        "yellow": False,
+        "green": False,
+        "brown": False,
+        "blue": False,
+        "pink": False,
+        "black": True,
+    }
+
+    orchestrator.orchestrate(frame, ActionPayload(potted_balls=()))
+
+    assert frame.lifecycle_state.status is not FrameStatus.FINISHED
+    assert frame.lifecycle_state.winner_key is None
+    assert frame.table_state.phase is FramePhase.COLOURS
+    assert frame.table_state.object_ball == "black"
+    assert frame.turn_state.current_turn == PLAYER_TWO
 
 
 def test_specific_colour_mismatch_is_foul_with_potted_colour_value(

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from scoreboard.domain.balls import RED_BALL
+from scoreboard.domain.balls import BALL_POINTS, RED_BALL
 from scoreboard.domain.frame_calculation.helpers import remaining_colour_after, score_gap, scores_after_points
 from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.models.frame_state import FramePhase
@@ -76,6 +76,9 @@ class NextBallProcessor:
         if table.phase == FramePhase.COLOURS:
             if table.object_ball != "black" and table.colours_on_table.get(table.object_ball, False):
                 return table.object_ball
+
+            if table.object_ball == "black" and table.colours_on_table.get("black", False):
+                return None if score_gap(frame.scoring_state.scores) > BALL_POINTS["black"] else "black"
 
             return remaining_colour_after(frame, table.object_ball)
 
