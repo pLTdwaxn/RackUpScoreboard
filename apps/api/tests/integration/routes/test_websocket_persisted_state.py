@@ -120,7 +120,13 @@ def test_undo_reloads_latest_room_state_after_cross_socket_shot(
         assert update["current_frame"]["scores"][p1["player_key"]] == 0
         assert update["current_frame"]["current_break"] == 0
         assert update["current_frame"]["object_ball"] == "red"
-        assert update["frame_log"] == []
+        assert update["frame_log"][0]["facts"] == [
+            {
+                "kind": "break_off",
+                "player_key": p1["player_key"],
+                "result": "in_progress",
+            }
+        ]
 
 
 def test_next_frame_confirmation_reloads_latest_room_state_after_concede(
