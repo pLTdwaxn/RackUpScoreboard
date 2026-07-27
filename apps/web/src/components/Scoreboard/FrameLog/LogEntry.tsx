@@ -1,11 +1,13 @@
 import { Accordion, Button, ScrollShadow } from "@heroui/react";
 import { IconArrowBackUp, IconChevronDown } from "@tabler/icons-react";
 import { useEffect, useMemo, useRef } from "react";
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import { FrameLogEntry, FrameLogFact, FreeBallPot, Player } from "@/types";
 import PlayerAvatar from "@/components/Scoreboard/shared/PlayerAvatar";
 import { PlayerNameText } from "@/components/Scoreboard/shared/PlayerName";
+import { getSnookerBallNameTextClass } from "@/components/Scoreboard/shared/snookerBallStyles";
+import { getFrameLogDictionary } from "@/i18n";
 import {
   getPlayerAvatarTheme,
   getPlayerInitials,
@@ -36,6 +38,8 @@ type ShotHistoryProps = {
 
 type ScrollAxis = "horizontal" | "vertical";
 
+const frameLogDictionary = getFrameLogDictionary();
+
 export default function LogEntry({
   entry,
   canUndo,
@@ -47,6 +51,7 @@ export default function LogEntry({
 }: LogEntryProps) {
   const initials = getPlayerInitials(entry.player_name);
   const isCurrentBreak = entry.result === "in_progress";
+  const hasShotHistory = !isSyntheticEntry(entry);
 
   return (
     <li className="flex w-full flex-col gap-1 py-1">
@@ -110,7 +115,7 @@ export default function LogEntry({
             </Button>
           </Accordion.Heading>
 
-          {isExpanded ? (
+          {isExpanded && hasShotHistory ? (
             <Accordion.Panel className="rounded-lg bg-default-100/60 p-4 text-muted">
               <ShotHistory
                 entry={entry}
@@ -123,6 +128,11 @@ export default function LogEntry({
       </Accordion>
     </li>
   );
+}
+
+function isSyntheticEntry(entry: FrameLogEntry): boolean {
+  const factKind = entry.facts[0]?.kind;
+  return factKind === "break_off" || factKind === "turn_started";
 }
 
 function FrameLogFactMessage({
@@ -179,7 +189,7 @@ function FactContent({
             fallbackPlayerName={fallbackPlayerName}
             players={players}
           />
-          {shotResultSuffix(fact)}
+          <ShotResultContent fact={fact} />
         </>
       );
     case "free_ball_nomination":
@@ -190,7 +200,20 @@ function FactContent({
             fallbackPlayerName={fallbackPlayerName}
             players={players}
           />
-          {` nominated the ${fact.nominated_colour} free ball.`}
+          {frameLogDictionary.freeBallNomination.prefix}
+          <BallNameText ball={fact.nominated_colour} />
+          {frameLogDictionary.freeBallNomination.suffix}
+        </>
+      );
+    case "break_off":
+      return (
+        <>
+          <ThemedFactPlayer
+            playerKey={fact.player_key}
+            fallbackPlayerName={fallbackPlayerName}
+            players={players}
+          />
+          {frameLogDictionary.breakOff.suffix}
         </>
       );
     case "pass_shot":
@@ -201,7 +224,7 @@ function FactContent({
             fallbackPlayerName={fallbackPlayerName}
             players={players}
           />
-          {" passed the shot back."}
+          {frameLogDictionary.passShot.suffix}
         </>
       );
     case "reset_shot":
@@ -212,7 +235,18 @@ function FactContent({
             fallbackPlayerName={fallbackPlayerName}
             players={players}
           />
-          {" reset the shot."}
+          {frameLogDictionary.resetShot.suffix}
+        </>
+      );
+    case "turn_started":
+      return (
+        <>
+          <ThemedFactPlayer
+            playerKey={fact.player_key}
+            fallbackPlayerName={fallbackPlayerName}
+            players={players}
+          />
+          {frameLogDictionary.turnStarted.suffix}
         </>
       );
   }
@@ -251,39 +285,83 @@ function labelForFact(
     case "shot_result":
       return `${playerName}${shotResultSuffix(fact)}`;
     case "free_ball_nomination":
-      return `${playerName} nominated the ${fact.nominated_colour} free ball.`;
+      return `${playerName}${frameLogDictionary.freeBallNomination.label({
+        ball: fact.nominated_colour,
+      })}`;
+    case "break_off":
+      return `${playerName}${frameLogDictionary.breakOff.suffix}`;
     case "pass_shot":
-      return `${playerName} passed the shot back.`;
+      return `${playerName}${frameLogDictionary.passShot.suffix}`;
     case "reset_shot":
-      return `${playerName} reset the shot.`;
+      return `${playerName}${frameLogDictionary.resetShot.suffix}`;
+    case "turn_started":
+      return `${playerName}${frameLogDictionary.turnStarted.suffix}`;
   }
 }
 
 function visitSummarySuffix(fact: Extract<FrameLogFact, { kind: "visit_summary" }>): string {
   if (fact.result === "frame_won") {
-    return ": won the frame";
+    return frameLogDictionary.visitSummary.frameWon;
   }
   if (fact.foul_points && fact.break_points) {
-    return `: break ${fact.break_points}, foul ${fact.foul_points}`;
+    return frameLogDictionary.visitSummary.breakAndFoul({
+      breakPoints: fact.break_points,
+      foulPoints: fact.foul_points,
+    });
   }
   if (fact.foul_points) {
-    return `: foul ${fact.foul_points}`;
+    return frameLogDictionary.visitSummary.foulOnly({
+      breakPoints: fact.break_points,
+      foulPoints: fact.foul_points,
+    });
   }
   if (fact.break_points) {
-    return `: break ${fact.break_points}`;
+    return frameLogDictionary.visitSummary.breakOnly({
+      breakPoints: fact.break_points,
+      foulPoints: fact.foul_points,
+    });
   }
-  return ": no score";
+  return frameLogDictionary.visitSummary.noScore;
 }
 
 function shotResultSuffix(fact: Extract<FrameLogFact, { kind: "shot_result" }>): string {
   if (fact.foul_points) {
-    return ` fouled for ${fact.foul_points}.`;
+    return frameLogDictionary.shotResult.foul({ points: fact.foul_points });
   }
   if (!fact.potted_balls.length) {
-    return " did not score.";
+    return frameLogDictionary.shotResult.noPot;
   }
 
-  return ` potted ${pottedBallsPhrase(fact.potted_balls, fact.free_ball_pots)}.`;
+  return frameLogDictionary.shotResult.potted({
+    pottedBalls: pottedBallsPhrase(
+      fact.potted_balls,
+      fact.free_ball_pots,
+    ),
+  });
+}
+
+function ShotResultContent({
+  fact,
+}: {
+  fact: Extract<FrameLogFact, { kind: "shot_result" }>;
+}) {
+  if (fact.foul_points) {
+    return <>{frameLogDictionary.shotResult.foul({ points: fact.foul_points })}</>;
+  }
+  if (!fact.potted_balls.length) {
+    return <>{frameLogDictionary.shotResult.noPot}</>;
+  }
+
+  return (
+    <>
+      {frameLogDictionary.shotResult.pottedPrefix}
+      <PottedBallsContent
+        pottedBalls={fact.potted_balls}
+        freeBallPots={fact.free_ball_pots}
+      />
+      {frameLogDictionary.shotResult.sentenceEnd}
+    </>
+  );
 }
 
 function pottedBallsPhrase(
@@ -300,14 +378,57 @@ function pottedBallsPhrase(
     }
 
     const [freeBallPot] = remainingFreeBallPots.splice(freeBallPotIndex, 1);
-    return `${ballPhrase(ball)} as ${ballPhrase(freeBallPot.counts_as)}`;
+    return `${ballPhrase(ball)} ${frameLogDictionary.ballPhrase.as} ${ballPhrase(freeBallPot.counts_as)}`;
   });
 
   return joinPhrases(phrases);
 }
 
 function ballPhrase(ball: string): string {
-  return ball === "red" ? "a red" : `the ${ball}`;
+  return `${frameLogDictionary.ballPhrase.article(ball)} ${ball}`;
+}
+
+function PottedBallsContent({
+  pottedBalls,
+  freeBallPots,
+}: {
+  pottedBalls: string[];
+  freeBallPots: FreeBallPot[];
+}) {
+  const remainingFreeBallPots = [...freeBallPots];
+  const phrases = pottedBalls.map((ball, index) => {
+    const freeBallPotIndex = remainingFreeBallPots.findIndex(
+      (pot) => pot.potted_ball === ball,
+    );
+
+    if (freeBallPotIndex < 0) {
+      return <BallPhraseText key={`${ball}-${index}`} ball={ball} />;
+    }
+
+    const [freeBallPot] = remainingFreeBallPots.splice(freeBallPotIndex, 1);
+    return (
+      <span key={`${ball}-${index}`}>
+        <BallPhraseText ball={ball} />
+        {` ${frameLogDictionary.ballPhrase.as} `}
+        <BallPhraseText ball={freeBallPot.counts_as} />
+      </span>
+    );
+  });
+
+  return <>{joinNodes(phrases)}</>;
+}
+
+function BallPhraseText({ ball }: { ball: string }) {
+  return (
+    <>
+      {`${frameLogDictionary.ballPhrase.article(ball)} `}
+      <BallNameText ball={ball} />
+    </>
+  );
+}
+
+function BallNameText({ ball }: { ball: string }) {
+  return <span className={getSnookerBallNameTextClass(ball)}>{ball}</span>;
 }
 
 function joinPhrases(phrases: string[]): string {
@@ -315,9 +436,28 @@ function joinPhrases(phrases: string[]): string {
     return phrases[0] ?? "nothing";
   }
   if (phrases.length === 2) {
-    return `${phrases[0]} and ${phrases[1]}`;
+    return `${phrases[0]} ${frameLogDictionary.conjunction.two} ${phrases[1]}`;
   }
-  return `${phrases.slice(0, -1).join(", ")}, and ${phrases.at(-1)}`;
+  return `${phrases.slice(0, -1).join(", ")}, ${frameLogDictionary.conjunction.final} ${phrases.at(-1)}`;
+}
+
+function joinNodes(nodes: ReactNode[]): ReactNode[] {
+  if (nodes.length <= 1) {
+    return nodes;
+  }
+  if (nodes.length === 2) {
+    return [nodes[0], ` ${frameLogDictionary.conjunction.two} `, nodes[1]];
+  }
+
+  return nodes.flatMap((node, index) => {
+    if (index === 0) {
+      return [node];
+    }
+    if (index === nodes.length - 1) {
+      return [`, ${frameLogDictionary.conjunction.final} `, node];
+    }
+    return [", ", node];
+  });
 }
 
 function useScrollToEnd<T extends HTMLElement>({

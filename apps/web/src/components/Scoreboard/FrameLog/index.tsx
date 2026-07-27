@@ -31,6 +31,10 @@ function getFrameLogEntryUpdateKey(entry?: FrameLogEntry): string {
   ].join(":");
 }
 
+function getLatestUndoableEntryId(frameLog: FrameLogEntry[]): string | undefined {
+  return [...frameLog].reverse().find((entry) => entry.history_ids.length > 0)?.id;
+}
+
 function useAutoExpandedFrameLogEntry(
   latestEntryId: string | undefined,
   latestEntryUpdateKey: string,
@@ -82,12 +86,13 @@ export default function FrameLog() {
   const frameLog = gameState?.frame_log ?? [];
   const latestEntry = frameLog.at(-1);
   const latestEntryId = latestEntry?.id;
+  const latestUndoableEntryId = getLatestUndoableEntryId(frameLog);
   const latestEntryUpdateKey = useMemo(
     () => getFrameLogEntryUpdateKey(latestEntry),
     [latestEntry],
   );
   const canUndo = Boolean(
-    latestEntryId && gameState?.current_frame.status !== "finished",
+    latestUndoableEntryId && gameState?.current_frame.status !== "finished",
   );
   const { expandedEntryId, handleExpandedChange } =
     useAutoExpandedFrameLogEntry(latestEntryId, latestEntryUpdateKey);
@@ -104,7 +109,7 @@ export default function FrameLog() {
           <LogEntry
             key={entry.id}
             entry={entry}
-            canUndo={entry.id === latestEntryId && canUndo}
+            canUndo={entry.id === latestUndoableEntryId && canUndo}
             onUndo={sendUndo}
             players={players}
             playerTheme={getPlayerAvatarTheme(entry.player_key, players)}

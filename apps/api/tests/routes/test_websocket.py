@@ -199,7 +199,13 @@ def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client, 
     ]
     assert shot_update["frame_log"][0]["history_ids"] == [shot_update["frame_log"][0]["id"]]
     assert undo_update["type"] == "game_state"
-    assert undo_update["frame_log"] == []
+    assert undo_update["frame_log"][0]["facts"] == [
+        {
+            "kind": "break_off",
+            "player_key": p1["player_key"],
+            "result": "in_progress",
+        }
+    ]
 
 
 def test_next_frame_flow_updates_state_over_websocket_for_both_players(client, connect_player):

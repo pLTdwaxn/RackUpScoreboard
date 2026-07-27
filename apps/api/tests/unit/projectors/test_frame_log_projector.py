@@ -121,6 +121,38 @@ def test_frame_log_projector_returns_empty_log_without_frame() -> None:
     assert projector.project(None, []) == []
 
 
+def test_frame_log_projector_adds_break_off_marker_for_ready_frame_without_history() -> None:
+    frame = _frame()
+    frame.turn_state.current_turn = "p1"
+
+    log = FrameLogProjector().project(frame, [_player("p1", "Player 1")])
+
+    assert _without_facts(log) == [
+        {
+            "id": "break:frame-1:p1",
+            "type": "visit",
+            "player_key": "p1",
+            "player_name": "Player 1",
+            "history_ids": [],
+            "shots": [],
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "shot_count": 0,
+            "break_points": 0,
+            "foul_points": 0,
+            "result": "in_progress",
+        }
+    ]
+    assert log[0]["facts"] == [
+        {
+            "kind": "break_off",
+            "player_key": "p1",
+            "result": "in_progress",
+        }
+    ]
+
+
 def test_frame_log_projector_groups_consecutive_shots_by_visit() -> None:
     frame = _frame()
     frame.history = [
@@ -274,8 +306,54 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
     ]
 
 
+def test_frame_log_projector_adds_new_turn_marker_when_next_player_has_not_shot() -> None:
+    frame = _frame()
+    frame.lifecycle_state.status = FrameStatus.ACTIVE
+    frame.turn_state.current_turn = "p2"
+    frame.history = [
+        _history_entry(
+            "h1",
+            "p1",
+            [],
+            outcome=_shot_outcome(result="no_score", player_key="p1"),
+        )
+    ]
+
+    log = FrameLogProjector().project(
+        frame,
+        [
+            _player("p1", "Player 1"),
+            _player("p2", "Player 2"),
+        ],
+    )
+
+    assert _without_facts(log[-1]) == {
+        "id": "turn:h1:p2",
+        "type": "visit",
+        "player_key": "p2",
+        "player_name": "Player 2",
+        "history_ids": [],
+        "shots": [],
+        "potted_balls": [],
+        "scored_balls": [],
+        "free_ball_pots": [],
+        "shot_count": 0,
+        "break_points": 0,
+        "foul_points": 0,
+        "result": "in_progress",
+    }
+    assert log[-1]["facts"] == [
+        {
+            "kind": "turn_started",
+            "player_key": "p2",
+            "result": "in_progress",
+        }
+    ]
+
+
 def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
     frame = _frame()
+    frame.lifecycle_state.status = FrameStatus.ACTIVE
     frame.turn_state.current_turn = "p1"
     frame.history = [
         _history_entry(
@@ -347,12 +425,34 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
             "foul_points": 0,
             "result": "ended",
         },
+        {
+            "id": "turn:h2:p1",
+            "type": "visit",
+            "player_key": "p1",
+            "player_name": "Player 1",
+            "history_ids": [],
+            "shots": [],
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "shot_count": 0,
+            "break_points": 0,
+            "foul_points": 0,
+            "result": "in_progress",
+        },
     ]
     assert log[1]["facts"] == [
         {
             "kind": "pass_shot",
             "player_key": "p2",
             "result": "passed",
+        }
+    ]
+    assert log[2]["facts"] == [
+        {
+            "kind": "turn_started",
+            "player_key": "p1",
+            "result": "in_progress",
         }
     ]
 

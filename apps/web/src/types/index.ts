@@ -52,6 +52,11 @@ export type FrameLogFact =
       kind: "pass_shot" | "reset_shot";
       player_key: string;
       result: string;
+    }
+  | {
+      kind: "break_off" | "turn_started";
+      player_key: string;
+      result: "in_progress";
     };
 
 export type FrameLogShot = {

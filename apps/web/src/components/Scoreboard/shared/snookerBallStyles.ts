@@ -13,10 +13,24 @@ export const SNOOKER_BALL_CLASS: Record<BallName, string> = {
   black: "bg-slate-950 hover:bg-black",
 };
 
+export const SNOOKER_BALL_NAME_TEXT_CLASS: Record<BallName, string> = {
+  red: "text-red-500",
+  yellow: "text-yellow-500",
+  green: "text-green-600",
+  brown: "text-amber-800",
+  blue: "text-blue-500",
+  pink: "text-pink-500",
+  black: "text-slate-950",
+};
+
 export function getSnookerBallClass(ball: string) {
   return SNOOKER_BALL_CLASS[ball as BallName] ?? "bg-default";
 }
 
 export function getSnookerBallTextClass(ball: string) {
   return ball === "yellow" ? "text-slate-950" : "text-white";
+}
+
+export function getSnookerBallNameTextClass(ball: string) {
+  return `${SNOOKER_BALL_NAME_TEXT_CLASS[ball as BallName] ?? "text-foreground"} font-medium`;
 }

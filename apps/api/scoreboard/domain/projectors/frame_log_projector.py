@@ -54,6 +54,26 @@ class FrameLogProjector:
             elif last_visit["result"] != "foul" and turn.current_turn == last_visit["player_key"]:
                 last_visit["result"] = "in_progress"
 
+            if (
+                lifecycle.status == FrameStatus.ACTIVE
+                and turn.current_turn
+                and turn.current_turn != last_visit["player_key"]
+            ):
+                visits.append(
+                    self._new_turn_visit(
+                        current_turn=turn.current_turn,
+                        previous_history_id=frame.history[-1]["id"],
+                        players_by_key=players_by_key,
+                    )
+                )
+        elif frame.lifecycle_state.status in {FrameStatus.READY, FrameStatus.ACTIVE} and frame.turn_state.current_turn:
+            visits.append(
+                self._new_break_off_visit(
+                    frame=frame,
+                    players_by_key=players_by_key,
+                )
+            )
+
         for visit in visits:
             visit["facts"] = self._facts_for_visit(visit)
 
@@ -77,6 +97,58 @@ class FrameLogProjector:
             "break_points": 0,
             "foul_points": 0,
             "result": "ended",
+        }
+
+    def _new_turn_visit(
+        self,
+        current_turn: str,
+        previous_history_id: str,
+        players_by_key: dict[str, Player],
+    ) -> dict:
+        player = players_by_key.get(current_turn)
+        player_name = player.name if player else "Player"
+
+        return {
+            "id": f"turn:{previous_history_id}:{current_turn}",
+            "type": "visit",
+            "player_key": current_turn,
+            "player_name": player_name,
+            "history_ids": [],
+            "shots": [],
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "shot_count": 0,
+            "break_points": 0,
+            "foul_points": 0,
+            "result": "in_progress",
+            "synthetic_fact_kind": "turn_started",
+        }
+
+    def _new_break_off_visit(
+        self,
+        frame: Frame,
+        players_by_key: dict[str, Player],
+    ) -> dict:
+        current_turn = frame.turn_state.current_turn
+        player = players_by_key.get(current_turn)
+        player_name = player.name if player else "Player"
+
+        return {
+            "id": f"break:{frame.id}:{current_turn}",
+            "type": "visit",
+            "player_key": current_turn,
+            "player_name": player_name,
+            "history_ids": [],
+            "shots": [],
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "shot_count": 0,
+            "break_points": 0,
+            "foul_points": 0,
+            "result": "in_progress",
+            "synthetic_fact_kind": "break_off",
         }
 
     def _outcome_for_history_entry(self, history_entry: dict) -> dict:
@@ -195,6 +267,16 @@ class FrameLogProjector:
         return [fact]
 
     def _facts_for_visit(self, visit: dict) -> list[dict]:
+        synthetic_fact_kind = visit.pop("synthetic_fact_kind", None)
+        if synthetic_fact_kind:
+            return [
+                {
+                    "kind": synthetic_fact_kind,
+                    "player_key": visit["player_key"],
+                    "result": visit["result"],
+                }
+            ]
+
         if self._is_action_only_visit(visit):
             return list(visit["shots"][0]["facts"])
 

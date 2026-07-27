@@ -51,7 +51,13 @@ def test_state_payload_exposes_matchroom_match_and_current_frame() -> None:
     assert payload["match"]["frames_to_win"] == 3
     assert payload["current_frame"]["reds_remaining"] == 15
     assert payload["current_frame"]["object_ball"] == "red"
-    assert payload["frame_log"] == []
+    assert payload["frame_log"][0]["facts"] == [
+        {
+            "kind": "break_off",
+            "player_key": "p1",
+            "result": "in_progress",
+        }
+    ]
     assert payload["score_keeper"] == "opp"
     assert payload["available_actions"]["reset_shot"] == {
         "available": False,

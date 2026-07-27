@@ -238,6 +238,57 @@ describe("FrameLog", () => {
       screen.getByLabelText("Ada Lovelace: break 4"),
     ).toBeInTheDocument();
   });
+
+  it("keeps undo on the latest history-backed entry when a synthetic marker is latest", () => {
+    const sendAction = vi.fn();
+    const turnMarker: FrameLogEntry = {
+      ...entry,
+      id: "turn:h1:p2",
+      player_key: "p2",
+      player_name: "Grace Hopper",
+      history_ids: [],
+      shots: [],
+      potted_balls: [],
+      scored_balls: [],
+      free_ball_pots: [],
+      shot_count: 0,
+      break_points: 0,
+      foul_points: 0,
+      result: "in_progress",
+      facts: [
+        {
+          kind: "turn_started",
+          player_key: "p2",
+          result: "in_progress",
+        },
+      ],
+    };
+    socketMock.game.mockReturnValue({
+      players,
+      gameState: {
+        frame_log: [entry, turnMarker],
+        current_frame: {
+          ...DEFAULT_FRAME,
+          status: "active",
+        },
+      },
+    });
+    socketMock.actions.mockReturnValue({ sendAction });
+
+    render(<FrameLog />);
+
+    const undoButtons = screen.getAllByRole("button", {
+      name: "Undo latest frame log action",
+    });
+    const enabledUndoButtons = undoButtons.filter(
+      (button) => !(button as HTMLButtonElement).disabled,
+    );
+
+    expect(screen.getByLabelText("Grace Hopper: new turn")).toBeInTheDocument();
+    expect(enabledUndoButtons).toHaveLength(1);
+    fireEvent.click(enabledUndoButtons[0]);
+    expect(sendAction).toHaveBeenCalledWith({ action: "undo", data: {} });
+  });
 });
 
 describe("FrameLog parts", () => {
@@ -361,6 +412,166 @@ describe("FrameLog parts", () => {
     expect(screen.getByLabelText("Ada Lovelace: break 9")).toBeInTheDocument();
     expect(screen.getByText("Ada Lovelace")).toHaveClass("player-theme-red");
     expect(screen.queryByLabelText("Legacy Ada: break 9")).not.toBeInTheDocument();
+  });
+
+  it("renders a new turn marker from facts", () => {
+    render(
+      <LogEntry
+        entry={{
+          ...entry,
+          id: "turn:h1:p2",
+          player_key: "p2",
+          player_name: "Grace Hopper",
+          history_ids: [],
+          shots: [],
+          potted_balls: [],
+          scored_balls: [],
+          free_ball_pots: [],
+          shot_count: 0,
+          break_points: 0,
+          foul_points: 0,
+          result: "in_progress",
+          facts: [
+            {
+              kind: "turn_started",
+              player_key: "p2",
+              result: "in_progress",
+            },
+          ],
+        }}
+        canUndo
+        onUndo={vi.fn()}
+        players={players}
+      />,
+    );
+
+    expect(screen.getByLabelText("Grace Hopper: new turn")).toBeInTheDocument();
+    expect(screen.getByText("Grace Hopper")).toHaveClass("player-theme-blue");
+  });
+
+  it("renders a break-off marker from facts", () => {
+    render(
+      <LogEntry
+        entry={{
+          ...entry,
+          id: "break:frame-1:p1",
+          history_ids: [],
+          shots: [],
+          potted_balls: [],
+          scored_balls: [],
+          free_ball_pots: [],
+          shot_count: 0,
+          break_points: 0,
+          foul_points: 0,
+          result: "in_progress",
+          facts: [
+            {
+              kind: "break_off",
+              player_key: "p1",
+              result: "in_progress",
+            },
+          ],
+        }}
+        canUndo={false}
+        onUndo={vi.fn()}
+        players={players}
+      />,
+    );
+
+    expect(screen.getByLabelText("Ada Lovelace to break off.")).toBeInTheDocument();
+  });
+
+  it("colours ball names in expanded shot messages", () => {
+    render(<ControlledLogEntry />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expand frame log entry details" }),
+    );
+
+    expect(screen.getByText("red")).toHaveClass("text-red-500");
+  });
+
+  it("colours physical and effective balls in free-ball shot messages", () => {
+    render(
+      <ControlledLogEntry
+        controlledEntry={{
+          ...entry,
+          shots: [
+            {
+              ...entry.shots![0],
+              potted_balls: ["green"],
+              scored_balls: ["red"],
+              free_ball_pots: [{ potted_ball: "green", counts_as: "red" }],
+              facts: [
+                {
+                  kind: "shot_result",
+                  player_key: "p1",
+                  result: "scoring",
+                  potted_balls: ["green"],
+                  scored_balls: ["red"],
+                  free_ball_pots: [
+                    { potted_ball: "green", counts_as: "red" },
+                  ],
+                  break_points: 1,
+                  foul_points: 0,
+                  winner_key: null,
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expand frame log entry details" }),
+    );
+
+    expect(screen.getByText("green")).toHaveClass("text-green-600");
+    expect(screen.getByText("red")).toHaveClass("text-red-500");
+    expect(
+      screen.getByLabelText("Ada Lovelace potted the green as a red."),
+    ).toBeInTheDocument();
+  });
+
+  it("renders no-pot shot copy without implying a break score", () => {
+    render(
+      <ControlledLogEntry
+        controlledEntry={{
+          ...entry,
+          shots: [
+            {
+              ...entry.shots![0],
+              potted_balls: [],
+              scored_balls: [],
+              break_points: 0,
+              facts: [
+                {
+                  kind: "shot_result",
+                  player_key: "p1",
+                  result: "no_score",
+                  potted_balls: [],
+                  scored_balls: [],
+                  free_ball_pots: [],
+                  break_points: 0,
+                  foul_points: 0,
+                  winner_key: null,
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expand frame log entry details" }),
+    );
+
+    expect(
+      screen.getByLabelText("Ada Lovelace played a shot. No pot."),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Ada Lovelace did not score.")).not.toBeInTheDocument();
   });
 
   it("does not expand when undo is pressed", () => {
