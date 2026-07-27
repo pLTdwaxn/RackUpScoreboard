@@ -1,12 +1,15 @@
 import { Accordion, Button, ScrollShadow } from "@heroui/react";
 import { IconArrowBackUp, IconChevronDown } from "@tabler/icons-react";
 import { useEffect, useMemo, useRef } from "react";
+import type { RefObject } from "react";
 
 import { FrameLogEntry } from "@/types";
 import PlayerAvatar from "@/components/Scoreboard/shared/PlayerAvatar";
 import {
+  getCurrentBreakGlowStyle,
   getAvatarColors,
   getPlayerInitials,
+  PlayerAvatarTheme,
 } from "@/components/Scoreboard/shared/playerIdentity";
 import BallComposition from "./BallComposition";
 
@@ -14,6 +17,7 @@ type LogEntryProps = {
   entry: FrameLogEntry;
   canUndo: boolean;
   onUndo: () => void;
+  playerTheme?: PlayerAvatarTheme;
   isExpanded?: boolean;
   onExpandedChange?: (isExpanded: boolean) => void;
 };
@@ -27,14 +31,18 @@ type ShotHistoryProps = {
   isExpanded: boolean;
 };
 
+type ScrollAxis = "horizontal" | "vertical";
+
 export default function LogEntry({
   entry,
   canUndo,
   onUndo,
+  playerTheme = "neutral",
   isExpanded = false,
   onExpandedChange = () => {},
 }: LogEntryProps) {
-  const { avatarColor, avatarColor2 } = getAvatarColors(entry.player_name);
+  const { avatarColor, avatarColor2, avatarBackground } =
+    getAvatarColors(playerTheme);
   const initials = getPlayerInitials(entry.player_name);
   const isCurrentBreak = entry.result === "in_progress";
 
@@ -46,6 +54,7 @@ export default function LogEntry({
         expandedKeys={isExpanded ? [entry.id] : []}
         onExpandedChange={(keys) => onExpandedChange(keys.has(entry.id))}
         className={`w-full p-0 ${isCurrentBreak ? "current-break-glow" : ""}`}
+        style={isCurrentBreak ? getCurrentBreakGlowStyle(playerTheme) : undefined}
       >
         <Accordion.Item id={entry.id}>
           <Accordion.Heading className="relative w-full">
@@ -60,12 +69,13 @@ export default function LogEntry({
               <PlayerAvatar
                 avatarColor={avatarColor}
                 avatarColor2={avatarColor2}
+                avatarBackground={avatarBackground}
                 initials={initials}
               />
 
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="block min-w-0 truncate text-sm text-muted">
-                  {entry.message}
+                  <BackendLogMessage message={entry.message} />
                 </span>
 
                 <BallCompositionScroller entry={entry} />
@@ -106,6 +116,51 @@ export default function LogEntry({
   );
 }
 
+function BackendLogMessage({ message }: { message: string }) {
+  // Backend log messages contain embedded player names; they need structured parts before names can be themed here.
+  return <>{message}</>;
+}
+
+function useScrollToEnd<T extends HTMLElement>({
+  axis,
+  enabled = true,
+  scrollRef,
+  updateKey,
+}: {
+  axis: ScrollAxis;
+  enabled?: boolean;
+  scrollRef: RefObject<T | null>;
+  updateKey: string;
+}) {
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      const scrollElement = scrollRef.current;
+      if (!scrollElement) {
+        return;
+      }
+
+      if (axis === "horizontal") {
+        scrollElement.scrollTo({
+          left: scrollElement.scrollWidth,
+          behavior: "smooth",
+        });
+        return;
+      }
+
+      scrollElement.scrollTo({
+        top: scrollElement.scrollHeight,
+        behavior: "smooth",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [axis, enabled, scrollRef, updateKey]);
+}
+
 function BallCompositionScroller({ entry }: BallCompositionScrollerProps) {
   const ballScrollRef = useRef<HTMLDivElement>(null);
   const ballCompositionKey = useMemo(
@@ -119,21 +174,11 @@ function BallCompositionScroller({ entry }: BallCompositionScrollerProps) {
     [entry.free_ball_pots, entry.potted_balls],
   );
 
-  useEffect(() => {
-    const animationFrame = window.requestAnimationFrame(() => {
-      const scrollElement = ballScrollRef.current;
-      if (!scrollElement) {
-        return;
-      }
-
-      scrollElement.scrollTo({
-        left: scrollElement.scrollWidth,
-        behavior: "smooth",
-      });
-    });
-
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, [ballCompositionKey]);
+  useScrollToEnd({
+    axis: "horizontal",
+    scrollRef: ballScrollRef,
+    updateKey: ballCompositionKey,
+  });
 
   return (
     <ScrollShadow
@@ -161,25 +206,12 @@ function ShotHistory({ entry, isExpanded }: ShotHistoryProps) {
     entry.shot_count,
   ].join(":");
 
-  useEffect(() => {
-    if (!isExpanded) {
-      return;
-    }
-
-    const animationFrame = window.requestAnimationFrame(() => {
-      const scrollElement = shotHistoryScrollRef.current;
-      if (!scrollElement) {
-        return;
-      }
-
-      scrollElement.scrollTo({
-        top: scrollElement.scrollHeight,
-        behavior: "smooth",
-      });
-    });
-
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, [isExpanded, shotHistoryKey]);
+  useScrollToEnd({
+    axis: "vertical",
+    enabled: isExpanded,
+    scrollRef: shotHistoryScrollRef,
+    updateKey: shotHistoryKey,
+  });
 
   if (!shots.length) {
     return (
@@ -207,7 +239,7 @@ function ShotHistory({ entry, isExpanded }: ShotHistoryProps) {
               aria-current={isLastShot ? "true" : undefined}
               className={isLastShot ? "font-medium text-foreground" : ""}
             >
-              {shot.message}
+              <BackendLogMessage message={shot.message} />
             </li>
           );
         })}

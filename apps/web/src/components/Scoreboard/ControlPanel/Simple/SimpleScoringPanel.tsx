@@ -1,9 +1,11 @@
-import { Frame, GameStateMessage } from "@/types";
+import type { Frame, GameStateMessage, Player } from "@/types";
 
 import ControlPanelLayout from "../ControlPanelLayout";
 import SimpleBallRail from "./SimpleBallRail";
 import SimpleBottomActions from "./SimpleBottomActions";
 import { BallName } from "@/domain/balls";
+import { PlayerNameText } from "@/components/Scoreboard/shared/PlayerName";
+import type { PlayerAvatarTheme } from "@/components/Scoreboard/shared/playerIdentity";
 
 type SimpleScoringPanelProps = {
   redsRemaining: number;
@@ -11,6 +13,7 @@ type SimpleScoringPanelProps = {
   objectBall: string;
   freeBall: Frame["free_ball"];
   scoreKeeper: GameStateMessage["score_keeper"];
+  scorekeepingTarget?: ScorekeepingTarget;
   canKeepScore: boolean;
   canUseFoulOptions: boolean;
   freeBallMode: boolean;
@@ -24,12 +27,24 @@ type SimpleScoringPanelProps = {
   onDeclareFreeBall?: () => void;
 };
 
+type ScorekeepingTarget = {
+  player: Player;
+  theme: PlayerAvatarTheme;
+};
+
+type ScorekeepingMessageProps = {
+  freeBallMode: boolean;
+  scoreKeeper: GameStateMessage["score_keeper"];
+  target?: ScorekeepingTarget;
+};
+
 export default function SimpleScoringPanel({
   redsRemaining,
   coloursOnTable,
   objectBall,
   freeBall,
   scoreKeeper,
+  scorekeepingTarget,
   canKeepScore,
   canUseFoulOptions,
   freeBallMode,
@@ -46,15 +61,11 @@ export default function SimpleScoringPanel({
     <ControlPanelLayout
       messageRow={
         <div className="flex items-center justify-center gap-2 text-sm leading-5 text-muted">
-          <span className="text-center">
-            {freeBallMode
-              ? "Nominate the free ball"
-              : scoreKeeper === "self"
-                ? "Scorekeeping for your turn"
-                : scoreKeeper === "any"
-                  ? "Scorekeeping is open to both players"
-                  : "Scorekeeping for your opponent"}
-          </span>
+          <ScorekeepingMessage
+            freeBallMode={freeBallMode}
+            scoreKeeper={scoreKeeper}
+            target={scorekeepingTarget}
+          />
         </div>
       }
       ballRow={
@@ -83,4 +94,41 @@ export default function SimpleScoringPanel({
       }
     />
   );
+}
+
+function ScorekeepingMessage({
+  freeBallMode,
+  scoreKeeper,
+  target,
+}: ScorekeepingMessageProps) {
+  if (freeBallMode) {
+    return <span className="text-center">Nominate the free ball</span>;
+  }
+
+  if ((scoreKeeper === "self" || scoreKeeper === "opp") && target) {
+    return (
+      <span className="text-center">
+        Scorekeeping for{" "}
+        <PlayerNameText name={target.player.name} theme={target.theme} />
+      </span>
+    );
+  }
+
+  if (scoreKeeper === "self") {
+    return <span className="text-center">Scorekeeping for your turn</span>;
+  }
+
+  if (scoreKeeper === "any") {
+    return (
+      <span className="text-center">
+        Scorekeeping is open to both players
+      </span>
+    );
+  }
+
+  if (scoreKeeper === "ref") {
+    return <span className="text-center">Scorekeeping by referee</span>;
+  }
+
+  return <span className="text-center">Scorekeeping for your opponent</span>;
 }

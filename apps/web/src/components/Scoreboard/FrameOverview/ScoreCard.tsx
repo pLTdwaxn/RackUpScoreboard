@@ -3,6 +3,10 @@ import { Card } from "@heroui/react";
 import type { Frame, Player } from "@/types";
 
 import PlayerCard from "../shared/PlayerCard";
+import {
+  getCurrentBreakGlowStyle,
+  PlayerAvatarTheme,
+} from "../shared/playerIdentity";
 
 type ScoreCardProps = {
   player: Player | undefined;
@@ -10,6 +14,7 @@ type ScoreCardProps = {
   currentTurn: boolean;
   direction?: "ltr" | "rtl";
   isFrameWinner?: boolean;
+  playerTheme?: PlayerAvatarTheme;
 };
 
 export default function ScoreCard({
@@ -18,6 +23,7 @@ export default function ScoreCard({
   currentTurn,
   direction = "ltr",
   isFrameWinner = false,
+  playerTheme = "neutral",
 }: ScoreCardProps) {
   const frameScore = player ? (frame.scores[player.session_key] ?? 0) : 0;
   const matchScore = player?.match_score ?? 0;
@@ -25,11 +31,8 @@ export default function ScoreCard({
   return (
     <Card
       variant="default"
-      className={`w-full min-w-0 p-2 ${
-        currentTurn
-          ? "ring-2 ring-(--scoreboard-screen-label) animate-pulse"
-          : ""
-      }`}
+      className={`w-full min-w-0 p-2 ${currentTurn ? "current-break-glow" : ""}`}
+      style={currentTurn ? getCurrentBreakGlowStyle(playerTheme) : undefined}
     >
       <Card.Content className="flex min-w-0 flex-col items-stretch gap-1 p-1">
         {player ? (
@@ -37,6 +40,7 @@ export default function ScoreCard({
             player={player}
             direction={direction}
             isFrameWinner={isFrameWinner}
+            theme={playerTheme}
           />
         ) : null}
         <div className="score-primary">{frameScore}</div>

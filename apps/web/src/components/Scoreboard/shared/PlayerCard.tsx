@@ -8,20 +8,24 @@ import {
   getAvatarColors,
   getPlayerInitials,
   getReverseDirection,
+  PlayerAvatarTheme,
 } from "./playerIdentity";
 
 type PlayerCardProps = {
   player: PlayerType;
   direction?: "ltr" | "rtl";
   isFrameWinner?: boolean;
+  theme?: PlayerAvatarTheme;
 };
 
 export default function PlayerCard({
   player,
   direction = "ltr",
   isFrameWinner = false,
+  theme = "neutral",
 }: PlayerCardProps) {
-  const { avatarColor, avatarColor2 } = getAvatarColors(player.name);
+  const { avatarColor, avatarColor2, avatarBackground } =
+    getAvatarColors(theme);
   const initials = getPlayerInitials(player.name);
   const reverseDirection = getReverseDirection(direction);
 
@@ -33,10 +37,15 @@ export default function PlayerCard({
             isFrameWinner={isFrameWinner}
             avatarColor={avatarColor}
             avatarColor2={avatarColor2}
+            avatarBackground={avatarBackground}
             initials={initials}
           />
         </Badge.Anchor>
-        <PlayerName player={player} reverseDirection={reverseDirection} />
+        <PlayerName
+          player={player}
+          reverseDirection={reverseDirection}
+          theme={theme}
+        />
       </Card.Content>
     </Card>
   );

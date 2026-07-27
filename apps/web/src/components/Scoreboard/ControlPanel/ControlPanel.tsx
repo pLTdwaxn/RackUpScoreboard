@@ -25,6 +25,7 @@ export default function ControlPanel() {
     objectBall,
     redsRemaining,
     scoreKeeper,
+    scorekeepingTarget,
     sendConcede,
     sendDeclareFreeBall,
     sendEndTurn,
@@ -91,6 +92,7 @@ export default function ControlPanel() {
               objectBall={objectBall}
               freeBall={freeBall}
               scoreKeeper={scoreKeeper}
+              scorekeepingTarget={scorekeepingTarget}
               canKeepScore={canKeepScore}
               canUseFoulOptions={canUseFoulOptions}
               freeBallMode={shotComposer.freeBallMode}

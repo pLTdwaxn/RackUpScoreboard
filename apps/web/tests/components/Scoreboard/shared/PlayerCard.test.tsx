@@ -19,10 +19,16 @@ describe("player display components", () => {
   afterEach(cleanup);
 
   it("renders player name and initials in a card", () => {
-    render(<PlayerCard player={player} isFrameWinner />);
+    render(<PlayerCard player={player} isFrameWinner theme="red" />);
 
-    expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();
-    expect(screen.getByText("AL")).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).toHaveStyle({
+      "--player-name-color": "#e11d48",
+    });
+    const blendLayer = screen.getByText("AL").previousElementSibling;
+    expect(blendLayer).toHaveAttribute("aria-hidden", "true");
+    expect(blendLayer?.getAttribute("style")).toContain("conic-gradient");
+    expect(blendLayer?.getAttribute("style")).not.toContain("linear-gradient");
+    expect(blendLayer?.getAttribute("style")).not.toContain("radial-gradient");
   });
 
   it("renders avatar fallback initials", () => {

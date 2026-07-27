@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import ControlPanel from "@/components/Scoreboard/ControlPanel";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
+import type { Player } from "@/types";
 
 const hookMock = vi.hoisted(() => ({
   players: vi.fn(),
@@ -34,20 +35,44 @@ const activeFrame = {
   },
 };
 
+const players: Player[] = [
+  {
+    session_key: "p1",
+    name: "Ada Lovelace",
+    type: "anonymous",
+    match_score: 0,
+    current_frame_score: 0,
+    highest_break: null,
+  },
+  {
+    session_key: "p2",
+    name: "Grace Hopper",
+    type: "anonymous",
+    match_score: 0,
+    current_frame_score: 0,
+    highest_break: null,
+  },
+];
+
 function arrangeControlPanel({
   frame = activeFrame,
   currentPlayerKey = "p1",
+  matchroomPlayers,
   scoreKeeper = "self",
   nextFrameConfirmations = [],
   sendAction = vi.fn(),
 }: {
   frame?: typeof activeFrame;
   currentPlayerKey?: string;
+  matchroomPlayers?: Player[];
   scoreKeeper?: "self" | "opp" | "ref" | "any";
   nextFrameConfirmations?: string[];
   sendAction?: ReturnType<typeof vi.fn>;
 } = {}) {
-  hookMock.players.mockReturnValue({ currentPlayerKey });
+  hookMock.players.mockReturnValue({
+    currentPlayerKey,
+    players: matchroomPlayers,
+  });
   hookMock.frame.mockReturnValue({
     hasFrame: true,
     frame,
@@ -98,6 +123,28 @@ describe("ControlPanel", () => {
         potted_balls: ["red"],
         foul: 0,
       },
+    });
+  });
+
+  it("shows the themed player at the table for self scorekeeping", () => {
+    arrangeControlPanel({
+      matchroomPlayers: players,
+      scoreKeeper: "self",
+    });
+
+    expect(screen.getByText("Ada Lovelace")).toHaveStyle({
+      "--player-name-color": "#e11d48",
+    });
+  });
+
+  it("shows the themed player not at the table for opponent scorekeeping", () => {
+    arrangeControlPanel({
+      matchroomPlayers: players,
+      scoreKeeper: "opp",
+    });
+
+    expect(screen.getByText("Grace Hopper")).toHaveStyle({
+      "--player-name-color": "#2563eb",
     });
   });
 

@@ -34,7 +34,7 @@ const entry: FrameLogEntry = {
       free_ball_pots: [],
       break_points: 1,
       foul_points: 0,
-      message: "Ada potted a red.",
+      message: "Ada Lovelace potted a red.",
     },
   ],
   potted_balls: ["red", "red", "black"],
@@ -44,7 +44,7 @@ const entry: FrameLogEntry = {
   break_points: 9,
   foul_points: 0,
   result: "ended",
-  message: "Ada potted 2 reds and black",
+  message: "Ada Lovelace potted 2 reds and black",
 };
 
 function ControlledLogEntry({
@@ -96,7 +96,7 @@ describe("FrameLog", () => {
     render(<FrameLog />);
 
     expect(
-      screen.getByText("Ada potted 2 reds and black"),
+      screen.getByText("Ada Lovelace potted 2 reds and black"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Collapse frame log entry details" }),
@@ -117,10 +117,10 @@ describe("FrameLog", () => {
         {
           ...entry.shots![0],
           history_id: "h2",
-          message: "Ada potted the brown.",
+          message: "Ada Lovelace potted the brown.",
         },
       ],
-      message: "Ada potted the brown",
+      message: "Ada Lovelace potted the brown",
     };
     socketMock.game.mockReturnValue({
       gameState: {
@@ -135,20 +135,30 @@ describe("FrameLog", () => {
 
     render(<FrameLog />);
 
-    expect(screen.queryByText("Ada potted a red.")).not.toBeInTheDocument();
-    expect(screen.getByText("Ada potted the brown.")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Ada Lovelace potted a red."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Ada Lovelace potted the brown"),
+    ).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Expand frame log entry details" }),
     );
-    expect(screen.getByText("Ada potted a red.")).toBeInTheDocument();
-    expect(screen.queryByText("Ada potted the brown.")).not.toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace potted a red.")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Ada Lovelace potted the brown."),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Expand frame log entry details" }),
     );
-    expect(screen.queryByText("Ada potted a red.")).not.toBeInTheDocument();
-    expect(screen.getByText("Ada potted the brown.")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Ada Lovelace potted a red."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Ada Lovelace potted the brown"),
+    ).toBeInTheDocument();
   });
 });
 
@@ -251,7 +261,9 @@ describe("FrameLog parts", () => {
       />,
     );
 
-    expect(screen.getByText("Ada potted 2 reds and black")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ada Lovelace potted 2 reds and black"),
+    ).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Undo latest frame log action" }),
     );
@@ -274,7 +286,9 @@ describe("FrameLog parts", () => {
     );
 
     expect(onUndo).toHaveBeenCalledOnce();
-    expect(screen.queryByText("Ada potted a red.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Ada Lovelace potted a red."),
+    ).not.toBeInTheDocument();
   });
 
   it("expands and collapses log entry details", () => {
@@ -287,7 +301,7 @@ describe("FrameLog parts", () => {
     expect(
       screen.getByRole("button", { name: "Collapse frame log entry details" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Ada potted a red.")).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace potted a red.")).toBeInTheDocument();
   });
 
   it("highlights the last expanded shot message", () => {
@@ -300,7 +314,7 @@ describe("FrameLog parts", () => {
             {
               ...entry.shots![0],
               history_id: "h2",
-              message: "Ada potted the black.",
+              message: "Ada Lovelace potted the black.",
             },
           ],
         }}
@@ -311,13 +325,12 @@ describe("FrameLog parts", () => {
       screen.getByRole("button", { name: "Expand frame log entry details" }),
     );
 
-    expect(screen.getByText("Ada potted a red.").closest("li")).not.toHaveAttribute(
-      "aria-current",
-    );
-    expect(screen.getByText("Ada potted the black.").closest("li")).toHaveAttribute(
-      "aria-current",
-      "true",
-    );
+    expect(
+      screen.getByText("Ada Lovelace potted a red.").closest("li"),
+    ).not.toHaveAttribute("aria-current");
+    expect(
+      screen.getByText("Ada Lovelace potted the black.").closest("li"),
+    ).toHaveAttribute("aria-current", "true");
   });
 
   it("falls back to shot count when expanded details are unavailable", () => {

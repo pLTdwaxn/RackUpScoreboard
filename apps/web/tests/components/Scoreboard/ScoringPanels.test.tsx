@@ -99,6 +99,43 @@ describe("Simple scoring controls", () => {
 
     expect(screen.getByText("Nominate the free ball")).toBeInTheDocument();
   });
+
+  it("themes a concrete scorekeeping target player", () => {
+    render(
+      <SimpleScoringPanel
+        redsRemaining={15}
+        coloursOnTable={coloursOnTable}
+        objectBall="red"
+        freeBall={null}
+        scoreKeeper="opp"
+        scorekeepingTarget={{
+          player: {
+            session_key: "p2",
+            name: "Grace Hopper",
+            type: "anonymous",
+            match_score: 0,
+            current_frame_score: 0,
+            highest_break: null,
+          },
+          theme: "blue",
+        }}
+        canKeepScore
+        canUseFoulOptions={false}
+        freeBallMode={false}
+        selectedBalls={[]}
+        onBallTap={vi.fn()}
+        onConcede={vi.fn()}
+        onEnterAdvancedMode={vi.fn()}
+        onDeclareFoul={vi.fn()}
+        onEndTurn={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Scorekeeping for")).toBeInTheDocument();
+    expect(screen.getByText("Grace Hopper")).toHaveStyle({
+      "--player-name-color": "#2563eb",
+    });
+  });
 });
 
 describe("Advanced scoring controls", () => {

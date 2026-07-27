@@ -7,6 +7,7 @@ import {
   useMatchroomGame,
 } from "@/hooks/useSocket";
 import { FrameLogEntry } from "@/types";
+import { getPlayerAvatarTheme } from "../shared/playerIdentity";
 import LogEntry from "./LogEntry";
 
 type ExpandedEntryOverride = {
@@ -75,7 +76,7 @@ function useScrollLatestLogEntryIntoView(
 
 export default function FrameLog() {
   const listRef = useRef<HTMLOListElement>(null);
-  const { gameState } = useMatchroomGame();
+  const { gameState, players = [] } = useMatchroomGame();
   const { sendAction } = useMatchroomActions();
   const { sendUndo } = useGameActions(sendAction);
   const frameLog = gameState?.frame_log ?? [];
@@ -105,6 +106,7 @@ export default function FrameLog() {
             entry={entry}
             canUndo={entry.id === latestEntryId && canUndo}
             onUndo={sendUndo}
+            playerTheme={getPlayerAvatarTheme(entry.player_key, players)}
             isExpanded={entry.id === expandedEntryId}
             onExpandedChange={(isExpanded) =>
               handleExpandedChange(entry.id, isExpanded)
