@@ -15,6 +15,14 @@ def state_payload(room) -> dict:
     return MatchStateProjector().state_payload(room)
 
 
+def without_facts(value):
+    if isinstance(value, list):
+        return [without_facts(item) for item in value]
+    if isinstance(value, dict):
+        return {key: without_facts(item) for key, item in value.items() if key != "facts"}
+    return value
+
+
 def _create_room_with_two_players(
     matchroom_service: MatchroomService,
     room_id: str,
@@ -284,7 +292,7 @@ def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
         "nominated_colour": None,
     }
     payload = state_payload(room)
-    assert payload["frame_log"] == [
+    assert without_facts(payload["frame_log"]) == [
         {
             "id": payload["frame_log"][0]["id"],
             "type": "visit",
@@ -311,6 +319,33 @@ def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
             "foul_points": 0,
             "result": "in_progress",
             "message": "Player 1: break 5",
+        }
+    ]
+    assert payload["frame_log"][0]["facts"] == [
+        {
+            "kind": "visit_summary",
+            "player_key": "p1",
+            "history_ids": payload["frame_log"][0]["history_ids"],
+            "shot_count": 1,
+            "potted_balls": ["blue"],
+            "scored_balls": ["blue"],
+            "free_ball_pots": [],
+            "break_points": 5,
+            "foul_points": 0,
+            "result": "in_progress",
+        }
+    ]
+    assert payload["frame_log"][0]["shots"][0]["facts"] == [
+        {
+            "kind": "shot_result",
+            "player_key": "p1",
+            "result": "scoring",
+            "potted_balls": ["blue"],
+            "scored_balls": ["blue"],
+            "free_ball_pots": [],
+            "break_points": 5,
+            "foul_points": 0,
+            "winner_key": None,
         }
     ]
 

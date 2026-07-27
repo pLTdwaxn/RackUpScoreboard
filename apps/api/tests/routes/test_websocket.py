@@ -59,6 +59,14 @@ def is_new_frame_for_player(player_key: str):
     )
 
 
+def without_facts(value):
+    if isinstance(value, list):
+        return [without_facts(item) for item in value]
+    if isinstance(value, dict):
+        return {key: without_facts(item) for key, item in value.items() if key != "facts"}
+    return value
+
+
 def test_websocket_initial_payload_includes_current_frame_state(client, connect_player):
     p1 = connect_player("Breaker")
 
@@ -135,7 +143,7 @@ def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client, 
         undo_update = json.loads(ws.receive_text())
 
     assert shot_update["type"] == "game_state"
-    assert shot_update["frame_log"] == [
+    assert without_facts(shot_update["frame_log"]) == [
         {
             "id": shot_update["frame_log"][0]["id"],
             "type": "visit",
@@ -162,6 +170,33 @@ def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client, 
             "foul_points": 0,
             "result": "in_progress",
             "message": "Player One: break 1",
+        }
+    ]
+    assert shot_update["frame_log"][0]["facts"] == [
+        {
+            "kind": "visit_summary",
+            "player_key": p1["player_key"],
+            "history_ids": shot_update["frame_log"][0]["history_ids"],
+            "shot_count": 1,
+            "potted_balls": ["red"],
+            "scored_balls": ["red"],
+            "free_ball_pots": [],
+            "break_points": 1,
+            "foul_points": 0,
+            "result": "in_progress",
+        }
+    ]
+    assert shot_update["frame_log"][0]["shots"][0]["facts"] == [
+        {
+            "kind": "shot_result",
+            "player_key": p1["player_key"],
+            "result": "scoring",
+            "potted_balls": ["red"],
+            "scored_balls": ["red"],
+            "free_ball_pots": [],
+            "break_points": 1,
+            "foul_points": 0,
+            "winner_key": None,
         }
     ]
     assert shot_update["frame_log"][0]["history_ids"] == [shot_update["frame_log"][0]["id"]]

@@ -28,7 +28,14 @@ class FrameLogProjector:
 
             visit["history_ids"].append(history_entry["id"])
             visit["shot_count"] += 1
-            visit["shots"].append(self._shot_detail_for_history_entry(history_entry, outcome, visit["player_name"]))
+            visit["shots"].append(
+                self._shot_detail_for_history_entry(
+                    history_entry,
+                    outcome,
+                    actor_key,
+                    visit["player_name"],
+                )
+            )
 
             if action == "pass_shot":
                 visit["message_override"] = f"{visit['player_name']}: passed shot back"
@@ -61,6 +68,7 @@ class FrameLogProjector:
 
         for visit in visits:
             visit["message"] = visit.pop("message_override", None) or self._message_for_visit(visit)
+            visit["facts"] = self._facts_for_visit(visit)
             visit.pop("message_override_action", None)
 
         return visits
@@ -94,15 +102,19 @@ class FrameLogProjector:
     def _outcome_for_history_entry(self, history_entry: dict) -> dict:
         outcome = history_entry.get("outcome")
         if isinstance(outcome, dict):
+            action = outcome.get("action", "shot")
             potted_balls = list(outcome.get("potted_balls", []))
             return {
-                "action": outcome.get("action", "shot"),
+                "action": action,
                 "potted_balls": potted_balls,
                 "scored_balls": list(outcome.get("scored_balls", potted_balls)),
                 "free_ball_pots": list(outcome.get("free_ball_pots", [])),
                 "break_points": int(outcome.get("break_points", 0)),
                 "foul_points": int(outcome.get("foul_points", 0)),
                 "nominated_colour": outcome.get("nominated_colour"),
+                "player_key": outcome.get("player_key"),
+                "result": outcome.get("result") or self._default_result_for_action(action),
+                "winner_key": outcome.get("winner_key"),
             }
 
         event = history_entry.get("event", {})
@@ -118,9 +130,34 @@ class FrameLogProjector:
             "break_points": 0 if foul_points else sum(BALL_POINTS.get(ball, 0) for ball in potted_balls),
             "foul_points": foul_points,
             "nominated_colour": data.get("nominated_colour"),
+            "player_key": None,
+            "result": self._default_result_for_action(action, foul_points, potted_balls),
+            "winner_key": None,
         }
 
-    def _shot_detail_for_history_entry(self, history_entry: dict, outcome: dict, player_name: str) -> dict:
+    def _default_result_for_action(
+        self,
+        action: str,
+        foul_points: int = 0,
+        potted_balls: list[str] | None = None,
+    ) -> str:
+        if action == "pass_shot":
+            return "passed"
+        if action == "reset_shot":
+            return "reset"
+        if action == "declare_free_ball":
+            return "declared"
+        if foul_points:
+            return "foul"
+        return "scoring" if potted_balls else "no_score"
+
+    def _shot_detail_for_history_entry(
+        self,
+        history_entry: dict,
+        outcome: dict,
+        actor_key: str,
+        player_name: str,
+    ) -> dict:
         return {
             "history_id": history_entry["id"],
             "action": outcome["action"],
@@ -129,8 +166,55 @@ class FrameLogProjector:
             "free_ball_pots": outcome["free_ball_pots"],
             "break_points": outcome["break_points"],
             "foul_points": outcome["foul_points"],
+            "facts": self._facts_for_shot_detail(actor_key, outcome),
             "message": self._message_for_shot_detail(player_name, outcome),
         }
+
+    def _facts_for_shot_detail(self, actor_key: str, outcome: dict) -> list[dict]:
+        action = outcome["action"]
+        if action == "pass_shot":
+            return [
+                {
+                    "kind": "pass_shot",
+                    "player_key": actor_key,
+                    "result": outcome["result"],
+                }
+            ]
+
+        if action == "reset_shot":
+            return [
+                {
+                    "kind": "reset_shot",
+                    "player_key": actor_key,
+                    "result": outcome["result"],
+                }
+            ]
+
+        if action == "declare_free_ball":
+            return [
+                {
+                    "kind": "free_ball_nomination",
+                    "player_key": actor_key,
+                    "nominated_colour": outcome["nominated_colour"],
+                    "result": outcome["result"],
+                }
+            ]
+
+        fact = {
+            "kind": "shot_result",
+            "player_key": actor_key,
+            "result": outcome["result"],
+            "potted_balls": outcome["potted_balls"],
+            "scored_balls": outcome["scored_balls"],
+            "free_ball_pots": outcome["free_ball_pots"],
+            "break_points": outcome["break_points"],
+            "foul_points": outcome["foul_points"],
+            "winner_key": outcome["winner_key"],
+        }
+        if outcome["foul_points"] and outcome["player_key"]:
+            fact["points_awarded_to_player_key"] = outcome["player_key"]
+
+        return [fact]
 
     def _message_for_shot_detail(self, player_name: str, outcome: dict) -> str:
         action = outcome["action"]
@@ -191,3 +275,19 @@ class FrameLogProjector:
         if break_points:
             return f"{player_name}: break {break_points}"
         return f"{player_name}: no score"
+
+    def _facts_for_visit(self, visit: dict) -> list[dict]:
+        return [
+            {
+                "kind": "visit_summary",
+                "player_key": visit["player_key"],
+                "history_ids": list(visit["history_ids"]),
+                "shot_count": visit["shot_count"],
+                "potted_balls": list(visit["potted_balls"]),
+                "scored_balls": list(visit["scored_balls"]),
+                "free_ball_pots": list(visit["free_ball_pots"]),
+                "break_points": visit["break_points"],
+                "foul_points": visit["foul_points"],
+                "result": visit["result"],
+            }
+        ]
