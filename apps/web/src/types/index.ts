@@ -12,6 +12,11 @@ export type GameStateMessage = {
   next_frame_confirmations?: string[];
 };
 
+export type FreeBallPot = {
+  potted_ball: string;
+  counts_as: string;
+};
+
 export type FrameLogEntry = {
   id: string;
   type: "visit";
@@ -19,6 +24,8 @@ export type FrameLogEntry = {
   player_name: string;
   history_ids: string[];
   potted_balls: string[];
+  scored_balls: string[];
+  free_ball_pots: FreeBallPot[];
   shot_count: number;
   break_points: number;
   foul_points: number;

@@ -56,6 +56,7 @@ export default function LogEntry({
                 <BallComposition
                   entryId={entry.id}
                   pottedBalls={entry.potted_balls}
+                  freeBallPots={entry.free_ball_pots}
                 />
               </div>
             </Card.Content>

@@ -27,6 +27,8 @@ const entry: FrameLogEntry = {
   player_name: "Ada Lovelace",
   history_ids: ["h1"],
   potted_balls: ["red", "red", "black"],
+  scored_balls: ["red", "red", "black"],
+  free_ball_pots: [],
   shot_count: 1,
   break_points: 9,
   foul_points: 0,
@@ -82,6 +84,66 @@ describe("FrameLog parts", () => {
     expect(screen.getByLabelText("2 black")).toBeInTheDocument();
     expect(screen.getByLabelText("pink")).toBeInTheDocument();
     expect(screen.getByLabelText("2 red")).toHaveClass("bg-red-500");
+  });
+
+  it("renders a nominated free ball as one physical ball with an effective-colour ring", () => {
+    render(
+      <BallComposition
+        entryId="entry-1"
+        pottedBalls={["blue"]}
+        freeBallPots={[{ potted_ball: "blue", counts_as: "red" }]}
+      />,
+    );
+
+    const freeBall = screen.getByLabelText("blue counts as red");
+    expect(freeBall).toHaveClass("bg-red-500");
+    expect(freeBall.firstElementChild).toHaveClass("bg-blue-500");
+    expect(screen.queryByLabelText("red")).not.toBeInTheDocument();
+  });
+
+  it("preserves composition order around free balls", () => {
+    render(
+      <BallComposition
+        entryId="entry-1"
+        pottedBalls={["blue", "red"]}
+        freeBallPots={[{ potted_ball: "blue", counts_as: "red" }]}
+      />,
+    );
+
+    const tokens = screen.getAllByLabelText(/blue counts as red|red/);
+    expect(tokens).toHaveLength(2);
+    expect(tokens[0]).toHaveAttribute("aria-label", "blue counts as red");
+    expect(tokens[1]).toHaveAttribute("aria-label", "red");
+  });
+
+  it("groups actual reds and successive colours after a substituted red", () => {
+    render(
+      <BallComposition
+        entryId="entry-1"
+        pottedBalls={[
+          "blue",
+          "red",
+          "red",
+          "black",
+          "black",
+          "pink",
+          "black",
+          "black",
+          "black",
+        ]}
+        freeBallPots={[{ potted_ball: "blue", counts_as: "red" }]}
+      />,
+    );
+
+    const tokens = screen.getAllByLabelText(
+      /blue counts as red|2 red|2 black|pink|3 black/,
+    );
+    expect(tokens).toHaveLength(5);
+    expect(tokens[0]).toHaveAttribute("aria-label", "blue counts as red");
+    expect(tokens[1]).toHaveAttribute("aria-label", "2 red");
+    expect(tokens[2]).toHaveAttribute("aria-label", "2 black");
+    expect(tokens[3]).toHaveAttribute("aria-label", "pink");
+    expect(tokens[4]).toHaveAttribute("aria-label", "3 black");
   });
 
   it("renders a log entry and calls undo", () => {
