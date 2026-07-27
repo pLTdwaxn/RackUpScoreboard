@@ -3,8 +3,9 @@ import type { ComponentProps } from "react";
 
 type PlayerAvatarProps = {
   isFrameWinner?: boolean;
-  avatarColor: string;
-  avatarColor2: string;
+  className?: string;
+  avatarColor?: string;
+  avatarColor2?: string;
   avatarAccentColor?: string;
   avatarBackground?: string;
   initials: string;
@@ -13,6 +14,7 @@ type PlayerAvatarProps = {
 
 export default function PlayerAvatar({
   isFrameWinner = false,
+  className = "",
   avatarColor,
   avatarColor2,
   avatarAccentColor,
@@ -23,17 +25,22 @@ export default function PlayerAvatar({
   const fallbackTextSize = size === "sm" ? "text-xs" : "text-lg";
   const fallbackBackground = avatarBackground
     ? avatarBackground
-    : avatarAccentColor
+    : avatarAccentColor && avatarColor && avatarColor2
     ? `linear-gradient(135deg, ${avatarColor} 0%, ${avatarColor} 48%, ${avatarAccentColor} 62%, ${avatarColor2} 100%)`
-    : `linear-gradient(135deg, ${avatarColor}, ${avatarColor2})`;
+    : avatarColor && avatarColor2
+    ? `linear-gradient(135deg, ${avatarColor}, ${avatarColor2})`
+    : "var(--player-avatar-background)";
 
   return (
-    <Avatar size={size} className={isFrameWinner ? "winner-avatar-glow" : ""}>
+    <Avatar
+      size={size}
+      className={`${isFrameWinner ? "winner-avatar-glow" : ""} ${className}`}
+    >
       <Avatar.Image />
       <Avatar.Fallback
         className={`relative isolate overflow-hidden font-sans font-medium transition-colors duration-500 ${fallbackTextSize}`}
         style={{
-          background: avatarColor,
+          background: avatarColor ?? "var(--player-primary)",
           color: "#fff",
         }}
       >

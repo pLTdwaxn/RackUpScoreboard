@@ -20,12 +20,8 @@ function getScorekeepingTargetPlayer({
   players: Player[];
   scoreKeeper: GameStateMessage["score_keeper"];
 }): Player | undefined {
-  if (scoreKeeper === "self") {
+  if (scoreKeeper === "self" || scoreKeeper === "opp") {
     return players.find((player) => player.session_key === currentTurn);
-  }
-
-  if (scoreKeeper === "opp") {
-    return players.find((player) => player.session_key !== currentTurn);
   }
 
   return undefined;

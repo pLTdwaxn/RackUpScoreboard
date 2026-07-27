@@ -132,20 +132,18 @@ describe("ControlPanel", () => {
       scoreKeeper: "self",
     });
 
-    expect(screen.getByText("Ada Lovelace")).toHaveStyle({
-      "--player-name-color": "#e11d48",
-    });
+    expect(screen.getByText("Ada Lovelace")).toHaveClass("player-theme-red");
   });
 
-  it("shows the themed player not at the table for opponent scorekeeping", () => {
+  it("shows the themed player at the table for opponent scorekeeping", () => {
     arrangeControlPanel({
+      currentPlayerKey: "p2",
       matchroomPlayers: players,
       scoreKeeper: "opp",
     });
 
-    expect(screen.getByText("Grace Hopper")).toHaveStyle({
-      "--player-name-color": "#2563eb",
-    });
+    expect(screen.getByText("Ada Lovelace")).toHaveClass("player-theme-red");
+    expect(screen.queryByText("Grace Hopper")).not.toBeInTheDocument();
   });
 
   it("shows finished frame controls", () => {

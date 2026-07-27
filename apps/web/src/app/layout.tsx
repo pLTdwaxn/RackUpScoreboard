@@ -1,4 +1,5 @@
 import "./globals.css";
+import "@/styles/player-theme.css";
 
 import AppShell from "./app-shell";
 import Providers from "./providers";

@@ -7,7 +7,7 @@ import BallComposition from "@/components/Scoreboard/FrameLog/BallComposition";
 import LogEntry from "@/components/Scoreboard/FrameLog/LogEntry";
 import UndoSlot from "@/components/Scoreboard/FrameLog/UndoSlot";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
-import { FrameLogEntry } from "@/types";
+import { FrameLogEntry, Player } from "@/types";
 
 const socketMock = vi.hoisted(() => ({
   game: vi.fn(),
@@ -34,7 +34,19 @@ const entry: FrameLogEntry = {
       free_ball_pots: [],
       break_points: 1,
       foul_points: 0,
-      message: "Ada Lovelace potted a red.",
+      facts: [
+        {
+          kind: "shot_result",
+          player_key: "p1",
+          result: "scoring",
+          potted_balls: ["red"],
+          scored_balls: ["red"],
+          free_ball_pots: [],
+          break_points: 1,
+          foul_points: 0,
+          winner_key: null,
+        },
+      ],
     },
   ],
   potted_balls: ["red", "red", "black"],
@@ -44,8 +56,40 @@ const entry: FrameLogEntry = {
   break_points: 9,
   foul_points: 0,
   result: "ended",
-  message: "Ada Lovelace potted 2 reds and black",
+  facts: [
+    {
+      kind: "visit_summary",
+      player_key: "p1",
+      history_ids: ["h1"],
+      shot_count: 1,
+      potted_balls: ["red", "red", "black"],
+      scored_balls: ["red", "red", "black"],
+      free_ball_pots: [],
+      break_points: 9,
+      foul_points: 0,
+      result: "ended",
+    },
+  ],
 };
+
+const players: Player[] = [
+  {
+    session_key: "p1",
+    name: "Ada Lovelace",
+    type: "anonymous",
+    match_score: 0,
+    current_frame_score: 0,
+    highest_break: null,
+  },
+  {
+    session_key: "p2",
+    name: "Grace Hopper",
+    type: "anonymous",
+    match_score: 0,
+    current_frame_score: 0,
+    highest_break: null,
+  },
+];
 
 function ControlledLogEntry({
   controlledEntry = entry,
@@ -59,6 +103,7 @@ function ControlledLogEntry({
       entry={controlledEntry}
       canUndo
       onUndo={vi.fn()}
+      players={players}
       isExpanded={controlledEntry.id === expandedEntryId}
       onExpandedChange={(isExpanded) =>
         setExpandedEntryId(isExpanded ? controlledEntry.id : null)
@@ -83,6 +128,7 @@ describe("FrameLog", () => {
   it("renders entries and allows undo on the latest unfinished entry", () => {
     const sendAction = vi.fn();
     socketMock.game.mockReturnValue({
+      players,
       gameState: {
         frame_log: [entry],
         current_frame: {
@@ -96,7 +142,7 @@ describe("FrameLog", () => {
     render(<FrameLog />);
 
     expect(
-      screen.getByText("Ada Lovelace potted 2 reds and black"),
+      screen.getByLabelText("Ada Lovelace: break 9"),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Collapse frame log entry details" }),
@@ -117,12 +163,44 @@ describe("FrameLog", () => {
         {
           ...entry.shots![0],
           history_id: "h2",
-          message: "Ada Lovelace potted the brown.",
+          potted_balls: ["brown"],
+          scored_balls: ["brown"],
+          break_points: 4,
+          facts: [
+            {
+              kind: "shot_result",
+              player_key: "p1",
+              result: "scoring",
+              potted_balls: ["brown"],
+              scored_balls: ["brown"],
+              free_ball_pots: [],
+              break_points: 4,
+              foul_points: 0,
+              winner_key: null,
+            },
+          ],
         },
       ],
-      message: "Ada Lovelace potted the brown",
+      potted_balls: ["brown"],
+      scored_balls: ["brown"],
+      break_points: 4,
+      facts: [
+        {
+          kind: "visit_summary",
+          player_key: "p1",
+          history_ids: ["h2"],
+          shot_count: 1,
+          potted_balls: ["brown"],
+          scored_balls: ["brown"],
+          free_ball_pots: [],
+          break_points: 4,
+          foul_points: 0,
+          result: "ended",
+        },
+      ],
     };
     socketMock.game.mockReturnValue({
+      players,
       gameState: {
         frame_log: [entry, secondEntry],
         current_frame: {
@@ -139,13 +217,13 @@ describe("FrameLog", () => {
       screen.queryByText("Ada Lovelace potted a red."),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("Ada Lovelace potted the brown"),
+      screen.getByLabelText("Ada Lovelace: break 4"),
     ).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Expand frame log entry details" }),
     );
-    expect(screen.getByText("Ada Lovelace potted a red.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Ada Lovelace potted a red.")).toBeInTheDocument();
     expect(
       screen.queryByText("Ada Lovelace potted the brown."),
     ).not.toBeInTheDocument();
@@ -157,7 +235,7 @@ describe("FrameLog", () => {
       screen.queryByText("Ada Lovelace potted a red."),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("Ada Lovelace potted the brown"),
+      screen.getByLabelText("Ada Lovelace: break 4"),
     ).toBeInTheDocument();
   });
 });
@@ -262,12 +340,27 @@ describe("FrameLog parts", () => {
     );
 
     expect(
-      screen.getByText("Ada Lovelace potted 2 reds and black"),
+      screen.getByLabelText("Ada Lovelace: break 9"),
     ).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Undo latest frame log action" }),
     );
     expect(onUndo).toHaveBeenCalledOnce();
+  });
+
+  it("renders fact messages with the current player name", () => {
+    render(
+      <LogEntry
+        entry={{ ...entry, player_name: "Legacy Ada" }}
+        canUndo
+        onUndo={vi.fn()}
+        players={players}
+      />,
+    );
+
+    expect(screen.getByLabelText("Ada Lovelace: break 9")).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).toHaveClass("player-theme-red");
+    expect(screen.queryByLabelText("Legacy Ada: break 9")).not.toBeInTheDocument();
   });
 
   it("does not expand when undo is pressed", () => {
@@ -301,7 +394,7 @@ describe("FrameLog parts", () => {
     expect(
       screen.getByRole("button", { name: "Collapse frame log entry details" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Ada Lovelace potted a red.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Ada Lovelace potted a red.")).toBeInTheDocument();
   });
 
   it("highlights the last expanded shot message", () => {
@@ -314,7 +407,22 @@ describe("FrameLog parts", () => {
             {
               ...entry.shots![0],
               history_id: "h2",
-              message: "Ada Lovelace potted the black.",
+              potted_balls: ["black"],
+              scored_balls: ["black"],
+              break_points: 7,
+              facts: [
+                {
+                  kind: "shot_result",
+                  player_key: "p1",
+                  result: "scoring",
+                  potted_balls: ["black"],
+                  scored_balls: ["black"],
+                  free_ball_pots: [],
+                  break_points: 7,
+                  foul_points: 0,
+                  winner_key: null,
+                },
+              ],
             },
           ],
         }}
@@ -326,10 +434,10 @@ describe("FrameLog parts", () => {
     );
 
     expect(
-      screen.getByText("Ada Lovelace potted a red.").closest("li"),
+      screen.getByLabelText("Ada Lovelace potted a red.").closest("li"),
     ).not.toHaveAttribute("aria-current");
     expect(
-      screen.getByText("Ada Lovelace potted the black.").closest("li"),
+      screen.getByLabelText("Ada Lovelace potted the black.").closest("li"),
     ).toHaveAttribute("aria-current", "true");
   });
 

@@ -17,6 +17,43 @@ export type FreeBallPot = {
   counts_as: string;
 };
 
+export type FrameLogFact =
+  | {
+      kind: "visit_summary";
+      player_key: string;
+      history_ids: string[];
+      shot_count: number;
+      potted_balls: string[];
+      scored_balls: string[];
+      free_ball_pots: FreeBallPot[];
+      break_points: number;
+      foul_points: number;
+      result: "in_progress" | "ended" | "foul" | "frame_won";
+    }
+  | {
+      kind: "shot_result";
+      player_key: string;
+      result: string;
+      potted_balls: string[];
+      scored_balls: string[];
+      free_ball_pots: FreeBallPot[];
+      break_points: number;
+      foul_points: number;
+      winner_key: string | null;
+      points_awarded_to_player_key?: string;
+    }
+  | {
+      kind: "free_ball_nomination";
+      player_key: string;
+      nominated_colour: string;
+      result: string;
+    }
+  | {
+      kind: "pass_shot" | "reset_shot";
+      player_key: string;
+      result: string;
+    };
+
 export type FrameLogShot = {
   history_id: string;
   action: string;
@@ -25,7 +62,7 @@ export type FrameLogShot = {
   free_ball_pots: FreeBallPot[];
   break_points: number;
   foul_points: number;
-  message: string;
+  facts: FrameLogFact[];
 };
 
 export type FrameLogEntry = {
@@ -42,7 +79,7 @@ export type FrameLogEntry = {
   break_points: number;
   foul_points: number;
   result: "in_progress" | "ended" | "foul" | "frame_won";
-  message: string;
+  facts: FrameLogFact[];
 };
 
 export type ErrorMessage = {

@@ -106,6 +106,7 @@ export default function FrameLog() {
             entry={entry}
             canUndo={entry.id === latestEntryId && canUndo}
             onUndo={sendUndo}
+            players={players}
             playerTheme={getPlayerAvatarTheme(entry.player_key, players)}
             isExpanded={entry.id === expandedEntryId}
             onExpandedChange={(isExpanded) =>

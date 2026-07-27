@@ -5,17 +5,17 @@ import { Player as PlayerType } from "@/types";
 import PlayerAvatar from "./PlayerAvatar";
 import PlayerName from "./PlayerName";
 import {
-  getAvatarColors,
   getPlayerInitials,
+  getPlayerThemeClassName,
   getReverseDirection,
-  PlayerAvatarTheme,
+  PlayerTheme,
 } from "./playerIdentity";
 
 type PlayerCardProps = {
   player: PlayerType;
   direction?: "ltr" | "rtl";
   isFrameWinner?: boolean;
-  theme?: PlayerAvatarTheme;
+  theme?: PlayerTheme;
 };
 
 export default function PlayerCard({
@@ -24,20 +24,19 @@ export default function PlayerCard({
   isFrameWinner = false,
   theme = "neutral",
 }: PlayerCardProps) {
-  const { avatarColor, avatarColor2, avatarBackground } =
-    getAvatarColors(theme);
   const initials = getPlayerInitials(player.name);
   const reverseDirection = getReverseDirection(direction);
 
   return (
-    <Card variant="transparent" className="w-full min-w-0 p-0 ">
+    <Card
+      variant="transparent"
+      className={`${getPlayerThemeClassName(theme)} w-full min-w-0 p-0 `}
+    >
       <Card.Content className={"flex w-full min-w-0 items-center p-0"}>
         <Badge.Anchor className="shrink-0">
           <PlayerAvatar
             isFrameWinner={isFrameWinner}
-            avatarColor={avatarColor}
-            avatarColor2={avatarColor2}
-            avatarBackground={avatarBackground}
+            className={getPlayerThemeClassName(theme)}
             initials={initials}
           />
         </Badge.Anchor>

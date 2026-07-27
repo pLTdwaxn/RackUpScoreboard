@@ -1,19 +1,19 @@
 import { Player as PlayerType } from "@/types";
 import {
-  getPlayerNameThemeStyle,
-  PlayerAvatarTheme,
+  getPlayerThemeClassName,
+  PlayerTheme,
 } from "./playerIdentity";
 
 type PlayerNameTextProps = {
   name: string;
-  theme?: PlayerAvatarTheme;
+  theme?: PlayerTheme;
   className?: string;
 };
 
 type PlayerNameProps = {
   player: PlayerType;
   reverseDirection: boolean;
-  theme?: PlayerAvatarTheme;
+  theme?: PlayerTheme;
 };
 
 export function PlayerNameText({
@@ -23,8 +23,7 @@ export function PlayerNameText({
 }: PlayerNameTextProps) {
   return (
     <span
-      className={`font-medium text-[var(--player-name-color)] ${className}`}
-      style={getPlayerNameThemeStyle(theme)}
+      className={`${getPlayerThemeClassName(theme)} font-medium text-[var(--player-name-color)] ${className}`}
     >
       {name}
     </span>

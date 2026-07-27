@@ -5,7 +5,7 @@ import SimpleBallRail from "./SimpleBallRail";
 import SimpleBottomActions from "./SimpleBottomActions";
 import { BallName } from "@/domain/balls";
 import { PlayerNameText } from "@/components/Scoreboard/shared/PlayerName";
-import type { PlayerAvatarTheme } from "@/components/Scoreboard/shared/playerIdentity";
+import type { PlayerTheme } from "@/components/Scoreboard/shared/playerIdentity";
 
 type SimpleScoringPanelProps = {
   redsRemaining: number;
@@ -29,7 +29,7 @@ type SimpleScoringPanelProps = {
 
 type ScorekeepingTarget = {
   player: Player;
-  theme: PlayerAvatarTheme;
+  theme: PlayerTheme;
 };
 
 type ScorekeepingMessageProps = {

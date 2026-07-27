@@ -132,9 +132,7 @@ describe("Simple scoring controls", () => {
     );
 
     expect(screen.getByText("Scorekeeping for")).toBeInTheDocument();
-    expect(screen.getByText("Grace Hopper")).toHaveStyle({
-      "--player-name-color": "#2563eb",
-    });
+    expect(screen.getByText("Grace Hopper")).toHaveClass("player-theme-blue");
   });
 });
 

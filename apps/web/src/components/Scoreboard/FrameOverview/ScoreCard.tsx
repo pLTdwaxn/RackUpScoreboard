@@ -4,8 +4,8 @@ import type { Frame, Player } from "@/types";
 
 import PlayerCard from "../shared/PlayerCard";
 import {
-  getCurrentBreakGlowStyle,
-  PlayerAvatarTheme,
+  getPlayerThemeClassName,
+  PlayerTheme,
 } from "../shared/playerIdentity";
 
 type ScoreCardProps = {
@@ -14,7 +14,7 @@ type ScoreCardProps = {
   currentTurn: boolean;
   direction?: "ltr" | "rtl";
   isFrameWinner?: boolean;
-  playerTheme?: PlayerAvatarTheme;
+  playerTheme?: PlayerTheme;
 };
 
 export default function ScoreCard({
@@ -31,8 +31,9 @@ export default function ScoreCard({
   return (
     <Card
       variant="default"
-      className={`w-full min-w-0 p-2 ${currentTurn ? "current-break-glow" : ""}`}
-      style={currentTurn ? getCurrentBreakGlowStyle(playerTheme) : undefined}
+      className={`${getPlayerThemeClassName(playerTheme)} w-full min-w-0 p-2 ${
+        currentTurn ? "current-break-glow" : ""
+      }`}
     >
       <Card.Content className="flex min-w-0 flex-col items-stretch gap-1 p-1">
         {player ? (

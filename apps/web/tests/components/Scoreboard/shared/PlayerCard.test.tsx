@@ -21,14 +21,12 @@ describe("player display components", () => {
   it("renders player name and initials in a card", () => {
     render(<PlayerCard player={player} isFrameWinner theme="red" />);
 
-    expect(screen.getByText("Ada Lovelace")).toHaveStyle({
-      "--player-name-color": "#e11d48",
-    });
+    expect(screen.getByText("Ada Lovelace")).toHaveClass("player-theme-red");
     const blendLayer = screen.getByText("AL").previousElementSibling;
     expect(blendLayer).toHaveAttribute("aria-hidden", "true");
-    expect(blendLayer?.getAttribute("style")).toContain("conic-gradient");
-    expect(blendLayer?.getAttribute("style")).not.toContain("linear-gradient");
-    expect(blendLayer?.getAttribute("style")).not.toContain("radial-gradient");
+    expect(blendLayer?.getAttribute("style")).toContain(
+      "var(--player-avatar-background)",
+    );
   });
 
   it("renders avatar fallback initials", () => {

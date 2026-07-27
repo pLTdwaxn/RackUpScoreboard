@@ -1,0 +1,54 @@
+.player-theme-red {
+  --player-primary: rgb(244, 63, 94);
+  --player-primary-rgb: 244, 63, 94;
+  --player-avatar-accent: #facc15;
+  --player-avatar-background: conic-gradient(
+    from 225deg at 50% 50%,
+    #f43f5e 0deg,
+    #fb7185 58deg,
+    #fbbf24 132deg,
+    #facc15 218deg,
+    #38bdf8 296deg,
+    #f43f5e 360deg
+  );
+  --player-name-color: var(--player-primary);
+  --current-break-bg: rgba(var(--player-primary-rgb), 0.12);
+  --current-break-glow-soft: rgba(var(--player-primary-rgb), 0.32);
+  --current-break-glow-strong: rgba(var(--player-primary-rgb), 0.64);
+}
+
+.player-theme-blue {
+  --player-primary: rgb(59, 130, 246);
+  --player-primary-rgb: 59, 130, 246;
+  --player-avatar-accent: #22c55e;
+  --player-avatar-background: conic-gradient(
+    from 225deg at 50% 50%,
+    #3b82f6 0deg,
+    #38bdf8 58deg,
+    #fbbf24 132deg,
+    #22c55e 218deg,
+    #f472b6 296deg,
+    #3b82f6 360deg
+  );
+  --player-name-color: var(--player-primary);
+  --current-break-bg: rgba(var(--player-primary-rgb), 0.12);
+  --current-break-glow-soft: rgba(var(--player-primary-rgb), 0.32);
+  --current-break-glow-strong: rgba(var(--player-primary-rgb), 0.64);
+}
+
+.player-theme-neutral {
+  --player-primary: #64748b;
+  --player-primary-rgb: 100, 116, 139;
+  --player-avatar-accent: #94a3b8;
+  --player-avatar-background: radial-gradient(
+      circle at 35% 32%,
+      #64748b 0%,
+      #64748b 42%,
+      transparent 70%
+    ),
+    radial-gradient(circle at 70% 70%, #cbd5e1 0%, #94a3b8 46%, #475569 100%);
+  --player-name-color: var(--player-primary);
+  --current-break-bg: rgba(var(--player-primary-rgb), 0.12);
+  --current-break-glow-soft: rgba(var(--player-primary-rgb), 0.3);
+  --current-break-glow-strong: rgba(var(--player-primary-rgb), 0.58);
+}
