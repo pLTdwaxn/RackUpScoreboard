@@ -379,7 +379,7 @@ def test_specific_colour_mismatch_is_foul_with_potted_colour_value(
     assert frame.table_state.object_ball == "red"
 
 
-def test_free_ball_colour_counts_as_ball_on_during_colours_phase(
+def test_free_ball_colour_counts_as_ball_on_and_keeps_object_ball_during_colours_phase(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
@@ -404,7 +404,36 @@ def test_free_ball_colour_counts_as_ball_on_during_colours_phase(
     assert frame.scoring_state.current_break == 2
     assert frame.table_state.colours_on_table["yellow"] is True
     assert frame.table_state.colours_on_table["green"] is True
-    assert frame.table_state.object_ball == "green"
+    assert frame.table_state.object_ball == "yellow"
+    assert frame.table_state.free_ball_nominated_colour is None
+    assert frame.table_state.free_ball_object_ball is None
+
+
+def test_potted_free_ball_in_colours_keeps_object_ball_when_still_on_table(
+    orchestrator: FrameOrchestrator,
+    frame: Frame,
+) -> None:
+    frame.table_state.phase = FramePhase.COLOURS
+    frame.table_state.object_ball = "brown"
+    frame.table_state.colours_on_table = {
+        "yellow": False,
+        "green": False,
+        "brown": True,
+        "blue": True,
+        "pink": True,
+        "black": True,
+    }
+
+    orchestrator.orchestrate(
+        frame,
+        ActionPayload(action="declare_free_ball", potted_balls=(), nominated_colour="pink"),
+    )
+    orchestrator.orchestrate(frame, ActionPayload(potted_balls=("pink",)))
+
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 16, PLAYER_TWO: 5}
+    assert frame.table_state.colours_on_table["brown"] is True
+    assert frame.table_state.colours_on_table["pink"] is True
+    assert frame.table_state.object_ball == "brown"
     assert frame.table_state.free_ball_nominated_colour is None
     assert frame.table_state.free_ball_object_ball is None
 

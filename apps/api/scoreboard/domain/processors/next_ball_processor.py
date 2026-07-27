@@ -63,6 +63,9 @@ class NextBallProcessor:
         if table.phase == FramePhase.REDS:
             return RED_BALL if future_reds > 0 else "yellow"
 
+        if table.phase == FramePhase.COLOURS and score.free_ball_pots and table.colours_on_table.get(colour, False):
+            return colour
+
         return remaining_colour_after(frame, colour)
 
     def _advance_after_turn_change(self, frame: Frame, future_reds: int) -> str | None:
