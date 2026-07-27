@@ -291,6 +291,18 @@ def test_legal_blue_frame_log_uses_orchestrated_break_points() -> None:
             "player_key": "p1",
             "player_name": "Player 1",
             "history_ids": payload["frame_log"][0]["history_ids"],
+            "shots": [
+                {
+                    "history_id": payload["frame_log"][0]["history_ids"][0],
+                    "action": "shot",
+                    "potted_balls": ["blue"],
+                    "scored_balls": ["blue"],
+                    "free_ball_pots": [],
+                    "break_points": 5,
+                    "foul_points": 0,
+                    "message": "Player 1 potted the blue.",
+                }
+            ],
             "potted_balls": ["blue"],
             "scored_balls": ["blue"],
             "free_ball_pots": [],

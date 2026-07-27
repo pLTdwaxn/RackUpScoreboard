@@ -28,17 +28,23 @@ class FrameLogProjector:
 
             visit["history_ids"].append(history_entry["id"])
             visit["shot_count"] += 1
+            visit["shots"].append(self._shot_detail_for_history_entry(history_entry, outcome, visit["player_name"]))
 
             if action == "pass_shot":
                 visit["message_override"] = f"{visit['player_name']}: passed shot back"
+                visit["message_override_action"] = action
             elif action == "reset_shot":
                 visit["message_override"] = f"{visit['player_name']}: reset shot"
+                visit["message_override_action"] = action
             elif action == "declare_free_ball":
                 visit["message_override"] = f"{visit['player_name']}: nominated {outcome['nominated_colour']} free ball"
+                visit["message_override_action"] = action
             elif outcome["foul_points"]:
+                self._clear_declare_free_ball_message_override(visit)
                 visit["foul_points"] += outcome["foul_points"]
                 visit["result"] = "foul"
             else:
+                self._clear_declare_free_ball_message_override(visit)
                 visit["potted_balls"].extend(outcome["potted_balls"])
                 visit["scored_balls"].extend(outcome["scored_balls"])
                 visit["free_ball_pots"].extend(outcome["free_ball_pots"])
@@ -55,8 +61,14 @@ class FrameLogProjector:
 
         for visit in visits:
             visit["message"] = visit.pop("message_override", None) or self._message_for_visit(visit)
+            visit.pop("message_override_action", None)
 
         return visits
+
+    def _clear_declare_free_ball_message_override(self, visit: dict) -> None:
+        if visit.get("message_override_action") == "declare_free_ball":
+            visit.pop("message_override", None)
+            visit.pop("message_override_action", None)
 
     def _new_visit(self, history_entry: dict, actor_key: str, players_by_key: dict[str, Player]) -> dict:
         player = players_by_key.get(actor_key)
@@ -68,6 +80,7 @@ class FrameLogProjector:
             "player_key": actor_key,
             "player_name": player_name,
             "history_ids": [],
+            "shots": [],
             "potted_balls": [],
             "scored_balls": [],
             "free_ball_pots": [],
@@ -106,6 +119,63 @@ class FrameLogProjector:
             "foul_points": foul_points,
             "nominated_colour": data.get("nominated_colour"),
         }
+
+    def _shot_detail_for_history_entry(self, history_entry: dict, outcome: dict, player_name: str) -> dict:
+        return {
+            "history_id": history_entry["id"],
+            "action": outcome["action"],
+            "potted_balls": outcome["potted_balls"],
+            "scored_balls": outcome["scored_balls"],
+            "free_ball_pots": outcome["free_ball_pots"],
+            "break_points": outcome["break_points"],
+            "foul_points": outcome["foul_points"],
+            "message": self._message_for_shot_detail(player_name, outcome),
+        }
+
+    def _message_for_shot_detail(self, player_name: str, outcome: dict) -> str:
+        action = outcome["action"]
+        if action == "pass_shot":
+            return f"{player_name} passed the shot back."
+        if action == "reset_shot":
+            return f"{player_name} reset the shot."
+        if action == "declare_free_ball":
+            return f"{player_name} nominated the {outcome['nominated_colour']} free ball."
+        if outcome["foul_points"]:
+            return f"{player_name} fouled for {outcome['foul_points']}."
+        if not outcome["potted_balls"]:
+            return f"{player_name} did not score."
+
+        return f"{player_name} potted {self._potted_balls_phrase(outcome)}."
+
+    def _potted_balls_phrase(self, outcome: dict) -> str:
+        free_ball_pots = list(outcome["free_ball_pots"])
+        phrases: list[str] = []
+
+        for ball in outcome["potted_balls"]:
+            free_ball_pot_index = next(
+                (index for index, pot in enumerate(free_ball_pots) if pot.get("potted_ball") == ball),
+                None,
+            )
+            if free_ball_pot_index is None:
+                phrases.append(self._ball_phrase(ball))
+                continue
+
+            free_ball_pot = free_ball_pots.pop(free_ball_pot_index)
+            phrases.append(f"{self._ball_phrase(ball)} as {self._ball_phrase(free_ball_pot['counts_as'])}")
+
+        return self._join_phrases(phrases)
+
+    def _ball_phrase(self, ball: str) -> str:
+        if ball == "red":
+            return "a red"
+        return f"the {ball}"
+
+    def _join_phrases(self, phrases: list[str]) -> str:
+        if len(phrases) <= 1:
+            return phrases[0] if phrases else "nothing"
+        if len(phrases) == 2:
+            return f"{phrases[0]} and {phrases[1]}"
+        return f"{', '.join(phrases[:-1])}, and {phrases[-1]}"
 
     def _message_for_visit(self, visit: dict) -> str:
         player_name = visit["player_name"]

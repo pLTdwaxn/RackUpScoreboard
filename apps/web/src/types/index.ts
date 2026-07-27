@@ -17,12 +17,24 @@ export type FreeBallPot = {
   counts_as: string;
 };
 
+export type FrameLogShot = {
+  history_id: string;
+  action: string;
+  potted_balls: string[];
+  scored_balls: string[];
+  free_ball_pots: FreeBallPot[];
+  break_points: number;
+  foul_points: number;
+  message: string;
+};
+
 export type FrameLogEntry = {
   id: string;
   type: "visit";
   player_key: string;
   player_name: string;
   history_ids: string[];
+  shots?: FrameLogShot[];
   potted_balls: string[];
   scored_balls: string[];
   free_ball_pots: FreeBallPot[];

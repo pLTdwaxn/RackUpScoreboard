@@ -11,6 +11,7 @@ type BallCompositionProps = {
   entryId: string;
   pottedBalls: string[];
   freeBallPots?: FreeBallPot[];
+  tokenSize?: "sm" | "md";
 };
 
 function groupPottedBalls(pottedBalls: string[]): BallGroup[] {
@@ -34,19 +35,37 @@ function groupPottedBalls(pottedBalls: string[]): BallGroup[] {
   return composition;
 }
 
+function removeFirstMatchingBall(pottedBalls: string[], ballToRemove: string): string[] {
+  let hasRemoved = false;
+
+  return pottedBalls.filter((ball) => {
+    if (!hasRemoved && ball === ballToRemove) {
+      hasRemoved = true;
+      return false;
+    }
+
+    return true;
+  });
+}
+
 function groupPottedBallsWithFreeBalls(
   pottedBalls: string[],
   freeBallPots: FreeBallPot[],
 ): BallGroup[] {
   const substitutedRed = freeBallPots.find((pot) => pot.counts_as === "red");
   if (substitutedRed) {
+    const remainingBalls = removeFirstMatchingBall(
+      pottedBalls,
+      substitutedRed.potted_ball,
+    );
+
     return [
       {
         ball: substitutedRed.potted_ball,
         count: 1,
         effectiveBall: substitutedRed.counts_as,
       },
-      ...groupPottedBalls(pottedBalls.filter((ball) => ball !== substitutedRed.potted_ball)),
+      ...groupPottedBalls(remainingBalls),
     ];
   }
 
@@ -87,6 +106,7 @@ export default function BallComposition({
   entryId,
   pottedBalls,
   freeBallPots = [],
+  tokenSize = "sm",
 }: BallCompositionProps) {
   const composition =
     freeBallPots.length > 0
@@ -98,12 +118,17 @@ export default function BallComposition({
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-1 overflow-hidden px-1">
+    <div
+      className={`flex items-center ${
+        tokenSize === "md" ? "gap-2" : "gap-1"
+      } px-1`}
+    >
       {composition.map(({ ball, count }, index) => (
         <SnookerBallToken
           key={`${entryId}-${index}-${ball}`}
           ball={ball}
           effectiveBall={composition[index].effectiveBall}
+          size={tokenSize}
           label={
             composition[index].effectiveBall
               ? `${ball} counts as ${composition[index].effectiveBall}`

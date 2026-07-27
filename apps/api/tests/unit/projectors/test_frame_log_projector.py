@@ -139,6 +139,28 @@ def test_frame_log_projector_groups_consecutive_shots_by_visit() -> None:
             "player_key": "p1",
             "player_name": "Player 1",
             "history_ids": ["h1", "h2"],
+            "shots": [
+                {
+                    "history_id": "h1",
+                    "action": "shot",
+                    "potted_balls": ["red"],
+                    "scored_balls": ["red"],
+                    "free_ball_pots": [],
+                    "break_points": 1,
+                    "foul_points": 0,
+                    "message": "Player 1 potted a red.",
+                },
+                {
+                    "history_id": "h2",
+                    "action": "shot",
+                    "potted_balls": ["black"],
+                    "scored_balls": ["black"],
+                    "free_ball_pots": [],
+                    "break_points": 7,
+                    "foul_points": 0,
+                    "message": "Player 1 potted the black.",
+                },
+            ],
             "potted_balls": ["red", "black"],
             "scored_balls": ["red", "black"],
             "free_ball_pots": [],
@@ -191,6 +213,28 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
             "player_key": "p1",
             "player_name": "Player 1",
             "history_ids": ["h1", "h2"],
+            "shots": [
+                {
+                    "history_id": "h1",
+                    "action": "shot",
+                    "potted_balls": ["red"],
+                    "scored_balls": ["red"],
+                    "free_ball_pots": [],
+                    "break_points": 1,
+                    "foul_points": 0,
+                    "message": "Player 1 potted a red.",
+                },
+                {
+                    "history_id": "h2",
+                    "action": "shot",
+                    "potted_balls": [],
+                    "scored_balls": [],
+                    "free_ball_pots": [],
+                    "break_points": 0,
+                    "foul_points": 6,
+                    "message": "Player 1 fouled for 6.",
+                },
+            ],
             "potted_balls": ["red"],
             "scored_balls": ["red"],
             "free_ball_pots": [],
@@ -206,6 +250,18 @@ def test_frame_log_projector_splits_visits_by_player_and_marks_foul() -> None:
             "player_key": "p2",
             "player_name": "Player 2",
             "history_ids": ["h3"],
+            "shots": [
+                {
+                    "history_id": "h3",
+                    "action": "shot",
+                    "potted_balls": [],
+                    "scored_balls": [],
+                    "free_ball_pots": [],
+                    "break_points": 0,
+                    "foul_points": 0,
+                    "message": "Player 2 did not score.",
+                }
+            ],
             "potted_balls": [],
             "scored_balls": [],
             "free_ball_pots": [],
@@ -247,6 +303,18 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
             "player_key": "p1",
             "player_name": "Player 1",
             "history_ids": ["h1"],
+            "shots": [
+                {
+                    "history_id": "h1",
+                    "action": "shot",
+                    "potted_balls": [],
+                    "scored_balls": [],
+                    "free_ball_pots": [],
+                    "break_points": 0,
+                    "foul_points": 4,
+                    "message": "Player 1 fouled for 4.",
+                }
+            ],
             "potted_balls": [],
             "scored_balls": [],
             "free_ball_pots": [],
@@ -262,6 +330,18 @@ def test_frame_log_projector_renders_pass_shot_as_visit() -> None:
             "player_key": "p2",
             "player_name": "Player 2",
             "history_ids": ["h2"],
+            "shots": [
+                {
+                    "history_id": "h2",
+                    "action": "pass_shot",
+                    "potted_balls": [],
+                    "scored_balls": [],
+                    "free_ball_pots": [],
+                    "break_points": 0,
+                    "foul_points": 0,
+                    "message": "Player 2 passed the shot back.",
+                }
+            ],
             "potted_balls": [],
             "scored_balls": [],
             "free_ball_pots": [],
@@ -345,6 +425,44 @@ def test_frame_log_projector_renders_declared_free_ball_as_visit() -> None:
     assert log[0]["message"] == "Player 2: nominated blue free ball"
 
 
+def test_frame_log_projector_summarises_break_after_declared_free_ball_is_potted() -> None:
+    frame = _frame()
+    frame.history = [
+        _declare_free_ball_entry("h1", "p1", "green"),
+        _history_entry(
+            "h2",
+            "p1",
+            ["green"],
+            outcome=_shot_outcome(
+                result="scoring",
+                player_key="p1",
+                potted_balls=["green"],
+                scored_balls=["red"],
+                free_ball_pots=[{"potted_ball": "green", "counts_as": "red"}],
+                break_points=1,
+            ),
+        ),
+        _history_entry(
+            "h3",
+            "p1",
+            ["brown"],
+            outcome=_shot_outcome(result="scoring", player_key="p1", potted_balls=["brown"], break_points=4),
+        ),
+    ]
+
+    log = FrameLogProjector().project(frame, [_player("p1", "Player 1")])
+
+    assert log[0]["history_ids"] == ["h1", "h2", "h3"]
+    assert log[0]["potted_balls"] == ["green", "brown"]
+    assert log[0]["break_points"] == 5
+    assert log[0]["message"] == "Player 1: break 5"
+    assert [shot["message"] for shot in log[0]["shots"]] == [
+        "Player 1 nominated the green free ball.",
+        "Player 1 potted the green as a red.",
+        "Player 1 potted the brown.",
+    ]
+
+
 def test_frame_log_projector_projects_free_ball_scoring_metadata() -> None:
     frame = _frame()
     frame.history = [
@@ -369,3 +487,15 @@ def test_frame_log_projector_projects_free_ball_scoring_metadata() -> None:
     assert log[0]["scored_balls"] == ["red", "red"]
     assert log[0]["free_ball_pots"] == [{"potted_ball": "blue", "counts_as": "red"}]
     assert log[0]["break_points"] == 2
+    assert log[0]["shots"] == [
+        {
+            "history_id": "h1",
+            "action": "shot",
+            "potted_balls": ["blue", "red"],
+            "scored_balls": ["red", "red"],
+            "free_ball_pots": [{"potted_ball": "blue", "counts_as": "red"}],
+            "break_points": 2,
+            "foul_points": 0,
+            "message": "Player 1 potted the blue as a red and a red.",
+        }
+    ]

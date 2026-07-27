@@ -142,6 +142,18 @@ def test_websocket_game_state_projects_frame_log_and_updates_after_undo(client, 
             "player_key": p1["player_key"],
             "player_name": "Player One",
             "history_ids": shot_update["frame_log"][0]["history_ids"],
+            "shots": [
+                {
+                    "history_id": shot_update["frame_log"][0]["history_ids"][0],
+                    "action": "shot",
+                    "potted_balls": ["red"],
+                    "scored_balls": ["red"],
+                    "free_ball_pots": [],
+                    "break_points": 1,
+                    "foul_points": 0,
+                    "message": "Player One potted a red.",
+                }
+            ],
             "potted_balls": ["red"],
             "scored_balls": ["red"],
             "free_ball_pots": [],
