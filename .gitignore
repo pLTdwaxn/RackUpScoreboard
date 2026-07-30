@@ -49,3 +49,4 @@ pnpm-debug.log*
 
 # === Local Development ===
 local_scripts/
+.prompts/

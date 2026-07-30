@@ -5,14 +5,17 @@ import {
   IconBan,
   IconChartCircles,
   IconFlagFilled,
+  IconNumber123,
   IconPlayerSkipForward,
 } from "@tabler/icons-react";
 
 export type SimpleBottomActionsProps = {
   canKeepScore: boolean;
   canUseFoulOptions: boolean;
+  isSummaryBreakMode: boolean;
   onConcede: () => void;
   onEnterAdvancedMode: () => void;
+  onToggleSummaryBreakMode: () => void;
   onDeclareFoul: () => void;
   onEndTurn: () => void;
   onPassShot?: () => void;
@@ -22,8 +25,10 @@ export type SimpleBottomActionsProps = {
 export default function SimpleBottomActions({
   canKeepScore,
   canUseFoulOptions,
+  isSummaryBreakMode,
   onConcede,
   onEnterAdvancedMode,
+  onToggleSummaryBreakMode,
   onDeclareFoul,
   onEndTurn,
   onPassShot,
@@ -33,7 +38,13 @@ export default function SimpleBottomActions({
     <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-4">
       <div className="justify-self-start">
         <ButtonGroup size="sm">
-          <Button isIconOnly variant="danger" size="sm" onPress={onConcede}>
+          <Button
+            aria-label="Concede frame"
+            isIconOnly
+            variant="danger"
+            size="sm"
+            onPress={onConcede}
+          >
             <IconFlagFilled stroke={2} />
           </Button>
         </ButtonGroup>
@@ -41,10 +52,16 @@ export default function SimpleBottomActions({
 
       <div className="justify-self-center">
         <ButtonGroup variant="secondary" size="sm">
-          <Button isIconOnly isDisabled={!canKeepScore} onPress={onEndTurn}>
+          <Button
+            aria-label="Switch turn"
+            isIconOnly
+            isDisabled={!canKeepScore}
+            onPress={onEndTurn}
+          >
             <IconArrowsRightLeft stroke={2} />
           </Button>
           <Button
+            aria-label="Pass shot"
             isIconOnly
             size="sm"
             isDisabled={!canUseFoulOptions}
@@ -54,6 +71,7 @@ export default function SimpleBottomActions({
             <IconPlayerSkipForward stroke={2} />
           </Button>
           <Button
+            aria-label="Declare free ball"
             isIconOnly
             size="sm"
             isDisabled={!canUseFoulOptions}
@@ -63,6 +81,7 @@ export default function SimpleBottomActions({
             <IconChartCircles stroke={2} />
           </Button>
           <Button
+            aria-label="Declare foul"
             isIconOnly
             variant="danger-soft"
             isDisabled={!canKeepScore}
@@ -77,12 +96,24 @@ export default function SimpleBottomActions({
       <div className="justify-self-end">
         <ButtonGroup variant="secondary" size="sm">
           <Button
+            aria-label="Log break by number"
+            isDisabled={!canKeepScore}
+            variant={isSummaryBreakMode ? "primary" : "secondary"}
+            isIconOnly
+            onPress={onToggleSummaryBreakMode}
+            size="sm"
+          >
+            <IconNumber123 stroke={2} />
+          </Button>
+          <Button
+            aria-label="Advanced shot composer"
             isDisabled={!canKeepScore}
             variant="secondary"
             isIconOnly
             onPress={onEnterAdvancedMode}
             size="sm"
           >
+            <ButtonGroup.Separator />
             <IconAdjustmentsAlt stroke={2} />
           </Button>
         </ButtonGroup>

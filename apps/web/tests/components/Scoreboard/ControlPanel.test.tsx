@@ -126,6 +126,96 @@ describe("ControlPanel", () => {
     });
   });
 
+  it("toggles summary break number fields from simple controls", () => {
+    const sendAction = vi.fn();
+    arrangeControlPanel({ matchroomPlayers: players, sendAction });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Log break by number" }),
+    );
+
+    expect(
+      screen.getByText("Manually logging the break for"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ada Lovelace")).toHaveClass("player-theme-red");
+    expect(screen.getByRole("textbox", { name: "Score" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Foul" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Submit logged break" }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "red" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Score" }), {
+      target: { value: "35" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Foul" }), {
+      target: { value: "4" },
+    });
+
+    expect(screen.getByRole("textbox", { name: "Score" })).toHaveValue("35");
+    expect(screen.getByRole("textbox", { name: "Foul" })).toHaveValue("4");
+    expect(sendAction).not.toHaveBeenCalled();
+  });
+
+  it("restores the ball rail when summary break mode is toggled off", () => {
+    arrangeControlPanel();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Log break by number" }),
+    );
+    expect(
+      screen.queryByRole("button", { name: "red" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Log break by number" }),
+    );
+
+    expect(screen.getByRole("button", { name: "red" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "Score" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("leaves summary break mode when the advanced composer opens", () => {
+    arrangeControlPanel();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Log break by number" }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Advanced shot composer" }),
+    );
+
+    expect(screen.getByText("Tap the balls potted")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "Score" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("constrains summary break score and foul inputs", () => {
+    arrangeControlPanel();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Log break by number" }),
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Score" }), {
+      target: { value: "155" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Foul" }), {
+      target: { value: "7" },
+    });
+
+    expect(
+      screen.getByRole("button", { name: /Increase score/ }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /Increase foul/ }),
+    ).toBeDisabled();
+  });
+
   it("shows the themed player at the table for self scorekeeping", () => {
     arrangeControlPanel({
       matchroomPlayers: players,

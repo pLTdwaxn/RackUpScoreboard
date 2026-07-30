@@ -20,7 +20,9 @@ export default function ControlPanelLayout({
           {messageRow}
         </div>
       ) : null}
-      <div className="flex w-full items-center justify-center">{ballRow}</div>
+      <div className="flex min-h-16 w-full items-center justify-center">
+        {ballRow}
+      </div>
       {redsRow ? (
         <div className="flex w-full items-center justify-center">{redsRow}</div>
       ) : null}

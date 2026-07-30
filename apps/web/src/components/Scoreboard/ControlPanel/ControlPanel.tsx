@@ -35,6 +35,7 @@ export default function ControlPanel() {
   } = useControlPanelState();
 
   const [isConcedeDialogOpen, setIsConcedeDialogOpen] = useState(false);
+  const [isSummaryBreakMode, setIsSummaryBreakMode] = useState(false);
   const shotComposer = useShotComposer({
     canKeepScore,
     canUseFoulOptions,
@@ -99,7 +100,14 @@ export default function ControlPanel() {
               selectedBalls={shotComposer.multiPotBalls}
               onBallTap={shotComposer.handleBallTap}
               onConcede={() => setIsConcedeDialogOpen(true)}
-              onEnterAdvancedMode={shotComposer.startAdvancedMode}
+              onEnterAdvancedMode={() => {
+                setIsSummaryBreakMode(false);
+                shotComposer.startAdvancedMode();
+              }}
+              isSummaryBreakMode={isSummaryBreakMode}
+              onToggleSummaryBreakMode={() =>
+                setIsSummaryBreakMode((isActive) => !isActive)
+              }
               onDeclareFoul={shotComposer.toggleFoulMode}
               onEndTurn={sendEndTurn}
               onPassShot={sendPassShot}
