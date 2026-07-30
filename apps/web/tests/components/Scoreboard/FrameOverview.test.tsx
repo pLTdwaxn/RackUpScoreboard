@@ -97,6 +97,21 @@ describe("FrameOverview parts", () => {
     expect(screen.getByText("2")).toBeInTheDocument();
   });
 
+  it("renders unknown table-derived stats as question marks", () => {
+    render(
+      <FrameStats
+        frame={{
+          ...frame,
+          points_remaining: null,
+          snookers_required: null,
+          has_unresolved_table_state: true,
+        }}
+      />,
+    );
+
+    expect(screen.getAllByText("?")).toHaveLength(2);
+  });
+
   it("renders score and player details", () => {
     render(
       <ScoreCard

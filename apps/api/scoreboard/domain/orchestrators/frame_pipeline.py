@@ -9,6 +9,7 @@ from scoreboard.domain.processors import (
     pass_shot_processor,
     phase_processor,
     score_processor,
+    summary_break_processor,
     turn_processor,
     win_condition_processor,
 )
@@ -57,3 +58,5 @@ DECLARE_FREE_BALL_PIPELINE_PROCESSORS: tuple[FrameProcessor, ...] = (
     declare_free_ball_processor,
     frame_rule_state_processor,
 )
+
+LOG_BREAK_PIPELINE_PROCESSORS: tuple[FrameProcessor, ...] = (summary_break_processor,)

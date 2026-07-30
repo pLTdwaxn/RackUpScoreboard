@@ -22,10 +22,11 @@ from .effects.contracts import FrameEffect
 
 @dataclass
 class ActionPayload:
-    potted_balls: tuple[str, ...]
+    potted_balls: tuple[str, ...] = ()
     foul: int = 0
     action: str = "shot"
     nominated_colour: str | None = None
+    break_points: int = 0
 
 
 @dataclass
@@ -40,9 +41,11 @@ class ActionOutcome:
     foul_points: int = 0
     winner_key: str | None = None
     nominated_colour: str | None = None
+    composition_status: str | None = None
+    composition_suggestions: list[dict] | None = None
 
     def to_dict(self) -> dict:
-        return {
+        payload = {
             "action": self.action,
             "result": self.result,
             "player_key": self.player_key,
@@ -54,6 +57,11 @@ class ActionOutcome:
             "winner_key": self.winner_key,
             "nominated_colour": self.nominated_colour,
         }
+        if self.composition_status is not None:
+            payload["composition_status"] = self.composition_status
+        if self.composition_suggestions is not None:
+            payload["composition_suggestions"] = self.composition_suggestions
+        return payload
 
 
 @dataclass

@@ -9,6 +9,7 @@ from .contracts import (
 from .effects.contracts import FrameEffect
 from .frame_pipeline import (
     DECLARE_FREE_BALL_PIPELINE_PROCESSORS,
+    LOG_BREAK_PIPELINE_PROCESSORS,
     PASS_SHOT_PIPELINE_PROCESSORS,
     SHOT_PIPELINE_PROCESSORS,
     FramePipeline,
@@ -22,11 +23,13 @@ class FrameOrchestrator:
         processors: tuple[FrameProcessor, ...] = SHOT_PIPELINE_PROCESSORS,
         pass_shot_processors: tuple[FrameProcessor, ...] = PASS_SHOT_PIPELINE_PROCESSORS,
         declare_free_ball_processors: tuple[FrameProcessor, ...] = DECLARE_FREE_BALL_PIPELINE_PROCESSORS,
+        log_break_processors: tuple[FrameProcessor, ...] = LOG_BREAK_PIPELINE_PROCESSORS,
         outcome_factory: ActionOutcomeFactory = action_outcome_factory,
     ):
         self.shot_pipeline = FramePipeline(processors)
         self.pass_shot_pipeline = FramePipeline(pass_shot_processors)
         self.declare_free_ball_pipeline = FramePipeline(declare_free_ball_processors)
+        self.log_break_pipeline = FramePipeline(log_break_processors)
         self.outcome_factory = outcome_factory
 
     @property
@@ -42,6 +45,8 @@ class FrameOrchestrator:
             return self.pass_shot(frame, payload)
         if payload.action == "declare_free_ball":
             return self.declare_free_ball(frame, payload)
+        if payload.action == "log_break":
+            return self.log_break(frame, payload)
 
         return self.orchestrate_shot(frame, payload)
 
@@ -53,6 +58,9 @@ class FrameOrchestrator:
 
     def declare_free_ball(self, frame: Frame, payload: ActionPayload) -> ActionOutcome:
         return self._orchestrate(frame, payload, self.declare_free_ball_pipeline)
+
+    def log_break(self, frame: Frame, payload: ActionPayload) -> ActionOutcome:
+        return self._orchestrate(frame, payload, self.log_break_pipeline)
 
     def _orchestrate(
         self,

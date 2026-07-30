@@ -107,6 +107,43 @@ def _shot_outcome(
     return outcome
 
 
+def _summary_break_entry(
+    id: str,
+    actor: str,
+    points: int,
+    foul: int = 0,
+) -> dict:
+    return {
+        "id": id,
+        "actor": actor,
+        "event": {
+            "action": "log_break",
+            "data": {"points": points, "foul": foul},
+        },
+        "outcome": {
+            "action": "log_break",
+            "result": "summary_break",
+            "player_key": actor,
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "break_points": points,
+            "foul_points": foul,
+            "winner_key": None,
+            "nominated_colour": None,
+            "composition_status": "missing",
+            "composition_suggestions": [
+                {
+                    "id": "suggestion_1",
+                    "label": "5 reds, 1 yellow, 4 blacks",
+                    "balls": ["red", "black", "red", "black", "red", "black", "red", "black", "red", "yellow"],
+                }
+            ],
+        },
+        "state_before": {},
+    }
+
+
 def _without_facts(value):
     if isinstance(value, list):
         return [_without_facts(item) for item in value]
@@ -531,6 +568,114 @@ def test_frame_log_projector_renders_declared_free_ball_as_visit() -> None:
             "player_key": "p2",
             "nominated_colour": "blue",
             "result": "declared",
+        }
+    ]
+
+
+def test_frame_log_projector_projects_summary_break_visit() -> None:
+    frame = _frame()
+    frame.lifecycle_state.status = FrameStatus.ACTIVE
+    frame.turn_state.current_turn = "p2"
+    frame.history = [_summary_break_entry("h1", "p1", points=35, foul=4)]
+
+    log = FrameLogProjector().project(
+        frame,
+        [
+            _player("p1", "Player 1"),
+            _player("p2", "Player 2"),
+        ],
+    )
+
+    assert _without_facts(log) == [
+        {
+            "id": "h1",
+            "type": "visit",
+            "player_key": "p1",
+            "player_name": "Player 1",
+            "history_ids": ["h1"],
+            "shots": [
+                {
+                    "history_id": "h1",
+                    "action": "log_break",
+                    "potted_balls": [],
+                    "scored_balls": [],
+                    "free_ball_pots": [],
+                    "break_points": 35,
+                    "foul_points": 4,
+                    "composition_status": "missing",
+                    "composition_suggestions": [
+                        {
+                            "id": "suggestion_1",
+                            "label": "5 reds, 1 yellow, 4 blacks",
+                            "balls": [
+                                "red",
+                                "black",
+                                "red",
+                                "black",
+                                "red",
+                                "black",
+                                "red",
+                                "black",
+                                "red",
+                                "yellow",
+                            ],
+                        }
+                    ],
+                }
+            ],
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "shot_count": 1,
+            "break_points": 35,
+            "foul_points": 4,
+            "result": "foul",
+        },
+        {
+            "id": "turn:h1:p2",
+            "type": "visit",
+            "player_key": "p2",
+            "player_name": "Player 2",
+            "history_ids": [],
+            "shots": [],
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "shot_count": 0,
+            "break_points": 0,
+            "foul_points": 0,
+            "result": "in_progress",
+        },
+    ]
+    assert log[0]["facts"] == [
+        {
+            "kind": "visit_summary",
+            "player_key": "p1",
+            "history_ids": ["h1"],
+            "shot_count": 1,
+            "potted_balls": [],
+            "scored_balls": [],
+            "free_ball_pots": [],
+            "break_points": 35,
+            "foul_points": 4,
+            "result": "foul",
+        }
+    ]
+    assert log[0]["shots"][0]["facts"] == [
+        {
+            "kind": "summary_break",
+            "player_key": "p1",
+            "result": "summary_break",
+            "break_points": 35,
+            "foul_points": 4,
+            "composition_status": "missing",
+            "composition_suggestions": [
+                {
+                    "id": "suggestion_1",
+                    "label": "5 reds, 1 yellow, 4 blacks",
+                    "balls": ["red", "black", "red", "black", "red", "black", "red", "black", "red", "yellow"],
+                }
+            ],
         }
     ]
 

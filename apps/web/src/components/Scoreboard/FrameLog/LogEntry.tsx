@@ -192,6 +192,17 @@ function FactContent({
           <ShotResultContent fact={fact} />
         </>
       );
+    case "summary_break":
+      return (
+        <>
+          <ThemedFactPlayer
+            playerKey={fact.player_key}
+            fallbackPlayerName={fallbackPlayerName}
+            players={players}
+          />
+          {summaryBreakSuffix(fact)}
+        </>
+      );
     case "free_ball_nomination":
       return (
         <>
@@ -284,6 +295,8 @@ function labelForFact(
       return `${playerName}${visitSummarySuffix(fact)}`;
     case "shot_result":
       return `${playerName}${shotResultSuffix(fact)}`;
+    case "summary_break":
+      return `${playerName}${summaryBreakSuffix(fact)}`;
     case "free_ball_nomination":
       return `${playerName}${frameLogDictionary.freeBallNomination.label({
         ball: fact.nominated_colour,
@@ -297,6 +310,16 @@ function labelForFact(
     case "turn_started":
       return `${playerName}${frameLogDictionary.turnStarted.suffix}`;
   }
+}
+
+function summaryBreakSuffix(fact: Extract<FrameLogFact, { kind: "summary_break" }>): string {
+  if (fact.foul_points && fact.break_points) {
+    return ` logged break ${fact.break_points}, foul ${fact.foul_points}.`;
+  }
+  if (fact.foul_points) {
+    return ` logged foul ${fact.foul_points}.`;
+  }
+  return ` logged break ${fact.break_points}.`;
 }
 
 function visitSummarySuffix(fact: Extract<FrameLogFact, { kind: "visit_summary" }>): string {

@@ -16,5 +16,6 @@ from .results import ScoreResult as ScoreResult
 from .results import TurnResult as TurnResult
 from .results import WinConditionResult as WinConditionResult
 from .score_processor import score_processor as score_processor
+from .summary_break_processor import summary_break_processor as summary_break_processor
 from .turn_processor import turn_processor as turn_processor
 from .win_condition_processor import win_condition_processor as win_condition_processor

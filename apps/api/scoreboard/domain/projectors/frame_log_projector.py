@@ -22,7 +22,11 @@ class FrameLogProjector:
             action = outcome["action"]
 
             visit = visits[-1] if visits and visits[-1]["player_key"] == actor_key else None
-            if visit is None or visit["result"] == "foul" or action in {"pass_shot", "reset_shot", "declare_free_ball"}:
+            if (
+                visit is None
+                or visit["result"] == "foul"
+                or action in {"pass_shot", "reset_shot", "declare_free_ball", "log_break"}
+            ):
                 visit = self._new_visit(history_entry, actor_key, players_by_key)
                 visits.append(visit)
 
@@ -36,7 +40,11 @@ class FrameLogProjector:
                 )
             )
 
-            if outcome["foul_points"]:
+            if action == "log_break":
+                visit["break_points"] += outcome["break_points"]
+                visit["foul_points"] += outcome["foul_points"]
+                visit["result"] = "foul" if outcome["foul_points"] else "ended"
+            elif outcome["foul_points"]:
                 visit["foul_points"] += outcome["foul_points"]
                 visit["result"] = "foul"
             elif action not in {"pass_shot", "reset_shot", "declare_free_ball"}:
@@ -167,6 +175,8 @@ class FrameLogProjector:
                 "player_key": outcome.get("player_key"),
                 "result": outcome.get("result") or self._default_result_for_action(action),
                 "winner_key": outcome.get("winner_key"),
+                "composition_status": outcome.get("composition_status", "missing" if action == "log_break" else None),
+                "composition_suggestions": list(outcome.get("composition_suggestions", [])),
             }
 
         event = history_entry.get("event", {})
@@ -185,6 +195,8 @@ class FrameLogProjector:
             "player_key": None,
             "result": self._default_result_for_action(action, foul_points, potted_balls),
             "winner_key": None,
+            "composition_status": "missing" if action == "log_break" else None,
+            "composition_suggestions": [],
         }
 
     def _default_result_for_action(
@@ -199,6 +211,8 @@ class FrameLogProjector:
             return "reset"
         if action == "declare_free_ball":
             return "declared"
+        if action == "log_break":
+            return "summary_break"
         if foul_points:
             return "foul"
         return "scoring" if potted_balls else "no_score"
@@ -209,7 +223,7 @@ class FrameLogProjector:
         outcome: dict,
         actor_key: str,
     ) -> dict:
-        return {
+        detail = {
             "history_id": history_entry["id"],
             "action": outcome["action"],
             "potted_balls": outcome["potted_balls"],
@@ -219,6 +233,10 @@ class FrameLogProjector:
             "foul_points": outcome["foul_points"],
             "facts": self._facts_for_shot_detail(actor_key, outcome),
         }
+        if outcome["composition_status"] is not None:
+            detail["composition_status"] = outcome["composition_status"]
+            detail["composition_suggestions"] = outcome["composition_suggestions"]
+        return detail
 
     def _facts_for_shot_detail(self, actor_key: str, outcome: dict) -> list[dict]:
         action = outcome["action"]
@@ -247,6 +265,19 @@ class FrameLogProjector:
                     "player_key": actor_key,
                     "nominated_colour": outcome["nominated_colour"],
                     "result": outcome["result"],
+                }
+            ]
+
+        if action == "log_break":
+            return [
+                {
+                    "kind": "summary_break",
+                    "player_key": actor_key,
+                    "result": outcome["result"],
+                    "break_points": outcome["break_points"],
+                    "foul_points": outcome["foul_points"],
+                    "composition_status": outcome["composition_status"],
+                    "composition_suggestions": outcome["composition_suggestions"],
                 }
             ]
 

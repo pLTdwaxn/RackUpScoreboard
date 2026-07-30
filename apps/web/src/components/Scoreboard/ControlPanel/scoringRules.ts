@@ -4,7 +4,7 @@ import { BALL_BY_NAME, BallName } from "@/domain/balls";
 export function isLegalShot(
   pottedBalls: BallName[],
   objectBall: Frame["object_ball"],
-  redsRemaining: Frame["reds_remaining"],
+  redsRemaining: number,
   freeBall: Frame["free_ball"],
 ) {
   if (pottedBalls.length === 0) {

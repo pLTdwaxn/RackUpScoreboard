@@ -43,6 +43,15 @@ export type FrameLogFact =
       points_awarded_to_player_key?: string;
     }
   | {
+      kind: "summary_break";
+      player_key: string;
+      result: string;
+      break_points: number;
+      foul_points: number;
+      composition_status: "missing" | "resolved" | "skipped";
+      composition_suggestions?: SummaryBreakCompositionSuggestion[];
+    }
+  | {
       kind: "free_ball_nomination";
       player_key: string;
       nominated_colour: string;
@@ -67,7 +76,15 @@ export type FrameLogShot = {
   free_ball_pots: FreeBallPot[];
   break_points: number;
   foul_points: number;
+  composition_status?: "missing" | "resolved" | "skipped";
+  composition_suggestions?: SummaryBreakCompositionSuggestion[];
   facts: FrameLogFact[];
+};
+
+export type SummaryBreakCompositionSuggestion = {
+  id: string;
+  label: string;
+  balls: string[];
 };
 
 export type FrameLogEntry = {
@@ -130,14 +147,19 @@ export type Frame = {
   scores: Record<string, number>;
   current_turn: string;
   current_break: number;
-  points_remaining: number;
+  points_remaining: number | null;
   previously_fouled?: boolean;
-  reds_remaining: number;
+  reds_remaining: number | null;
   colours_on_table: Record<string, boolean>;
   object_ball: string;
   free_ball: FreeBallState | null;
   points_gap: number;
-  snookers_required: number;
+  snookers_required: number | null;
+  detail_level?: "shot_by_shot" | "partially_detailed";
+  has_summary_entries?: boolean;
+  has_unresolved_compositions?: boolean;
+  has_unresolved_table_state?: boolean;
+  unresolved_summary_entry_ids?: string[];
   highest_break: number | null;
   winner_key: string | null;
 };
@@ -202,10 +224,20 @@ export type RoomClientNextFrameAction = {
   data: Record<string, never>;
 };
 
+export type RoomClientLogBreakAction = {
+  action_id?: string;
+  action: "log_break";
+  data: {
+    points: number;
+    foul: number;
+  };
+};
+
 export type RoomClientAction =
   | RoomClientShotAction
   | RoomClientUndoAction
   | RoomClientPassShotAction
   | RoomClientDeclareFreeBallAction
   | RoomClientConcedeAction
-  | RoomClientNextFrameAction;
+  | RoomClientNextFrameAction
+  | RoomClientLogBreakAction;

@@ -12,6 +12,7 @@ from scoreboard.domain.actions.validator import validate_event
         {"action": "pass_shot", "data": {}},
         {"action": "reset_shot", "data": {}},
         {"action": "declare_free_ball", "data": {"nominated_colour": "blue"}},
+        {"action": "log_break", "data": {"points": 35, "foul": 4}},
         {"action": "concede", "data": {}},
         {"action": "next_frame", "data": {}},
     ],
@@ -73,6 +74,22 @@ def test_validate_event_rejects_undo_with_extra_fields(event):
                 "data": {"nominated_colour": "blue", "foul": 4},
             },
             "Unsupported free ball payload fields: foul",
+        ),
+        (
+            {"action": "log_break", "data": {"points": 35}},
+            "Missing log break payload fields: foul",
+        ),
+        (
+            {"action": "log_break", "data": {"points": 156, "foul": 0}},
+            "Log break payload requires integer 'points' between 0 and 155.",
+        ),
+        (
+            {"action": "log_break", "data": {"points": 35, "foul": 8}},
+            "Log break payload requires integer 'foul' between 0 and 7.",
+        ),
+        (
+            {"action": "log_break", "data": {"points": 0, "foul": 0}},
+            "Log break payload requires non-zero points or foul.",
         ),
     ],
 )

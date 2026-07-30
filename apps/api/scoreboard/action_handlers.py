@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scoreboard.domain.actions.messages import ShotMessage
+from scoreboard.domain.actions.messages import ShotMessage, SummaryBreakMessage
 from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.models.frame_state import FrameStatus
 from scoreboard.domain.models.match import Match
@@ -77,6 +77,57 @@ class ShotActionHandler:
             context,
             scoring_player_key,
             context.data,
+            outcome.to_dict(),
+            state_before,
+        )
+
+        if not was_finished and frame_lifecycle.status == FrameStatus.FINISHED and frame_lifecycle.winner_key:
+            context.pending_next_frame_confirmations.clear()
+            context.match_result_service.record_finished_frame_result(
+                context.match,
+                frame_lifecycle.winner_key,
+            )
+
+        return True, None
+
+
+class LogBreakActionHandler:
+    def __init__(self, frame_history_service: FrameHistoryService | None = None) -> None:
+        self._frame_history_service = frame_history_service or FrameHistoryService()
+
+    def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        allowed, error = ensure_actor_can_keep_score(context)
+        if not allowed:
+            return False, error
+
+        state_before = self._frame_history_service.snapshot(context)
+
+        transitioned, transition_error = context.transition_service.transition(
+            context.frame,
+            "log_break",
+        )
+        if not transitioned:
+            return False, transition_error
+
+        summary_break = SummaryBreakMessage.from_dict(context.data)
+        frame_turn = context.frame.turn_state
+        frame_lifecycle = context.frame.lifecycle_state
+        scoring_player_key = frame_turn.current_turn or context.actor_key
+        was_finished = frame_lifecycle.status == FrameStatus.FINISHED
+
+        outcome = context.frame_orchestrator.orchestrate(
+            context.frame,
+            ActionPayload(
+                action="log_break",
+                break_points=summary_break.points,
+                foul=summary_break.foul,
+            ),
+        )
+
+        self._frame_history_service.push(
+            context,
+            scoring_player_key,
+            {"action": "log_break", "data": dict(context.data)},
             outcome.to_dict(),
             state_before,
         )

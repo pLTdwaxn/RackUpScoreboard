@@ -25,7 +25,7 @@ export function isBallLegal({
 }: {
   ball: BallName;
   objectBall: Frame["object_ball"];
-  redsRemaining: Frame["reds_remaining"];
+  redsRemaining: number;
   coloursOnTable: Frame["colours_on_table"];
   freeBall: Frame["free_ball"];
 }) {

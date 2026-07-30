@@ -60,6 +60,47 @@ def test_declared_foul_scores_penalty_and_hands_turn_to_opponent(
     assert frame.turn_state.previously_fouled is True
 
 
+def test_log_break_scores_summary_visit_and_hands_turn_to_opponent(
+    orchestrator: FrameOrchestrator,
+    frame: Frame,
+) -> None:
+    outcome = orchestrator.orchestrate(
+        frame,
+        ActionPayload(action="log_break", break_points=35, foul=4),
+    )
+
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 47, PLAYER_TWO: 9}
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.turn_state.previously_fouled is True
+    assert frame.scoring_state.highest_break == 35
+    assert frame.scoring_state.current_break == 0
+    assert frame.table_state.reds_remaining == 15
+    outcome_payload = outcome.to_dict()
+    assert outcome_payload == {
+        "action": "log_break",
+        "result": "summary_break",
+        "player_key": PLAYER_ONE,
+        "potted_balls": [],
+        "scored_balls": [],
+        "free_ball_pots": [],
+        "break_points": 35,
+        "foul_points": 4,
+        "winner_key": None,
+        "nominated_colour": None,
+        "composition_status": "missing",
+        "composition_suggestions": outcome_payload["composition_suggestions"],
+    }
+    assert outcome_payload["composition_suggestions"]
+    assert all(
+        sum(
+            {"red": 1, "yellow": 2, "green": 3, "brown": 4, "blue": 5, "pink": 6, "black": 7}[ball]
+            for ball in suggestion["balls"]
+        )
+        == 35
+        for suggestion in outcome_payload["composition_suggestions"]
+    )
+
+
 def test_declared_foul_updates_highest_break_and_resets_current_break(
     orchestrator: FrameOrchestrator,
     frame: Frame,

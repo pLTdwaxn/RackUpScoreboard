@@ -1,4 +1,5 @@
 from scoreboard.domain.orchestrators.contracts import ActionOutcome, FrameCalculationContext
+from scoreboard.domain.summary_break_compositions import suggest_summary_break_compositions
 
 
 class ActionOutcomeFactory:
@@ -16,6 +17,17 @@ class ActionOutcomeFactory:
                 action="declare_free_ball",
                 result="declared",
                 nominated_colour=payload.nominated_colour,
+            )
+
+        if payload.action == "log_break":
+            return ActionOutcome(
+                action="log_break",
+                result="summary_break",
+                player_key=score.player if score else None,
+                break_points=payload.break_points,
+                foul_points=foul.points_awarded if foul else 0,
+                composition_status="missing",
+                composition_suggestions=suggest_summary_break_compositions(payload.break_points),
             )
 
         if foul and foul.is_foul:

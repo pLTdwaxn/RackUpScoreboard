@@ -12,7 +12,7 @@ import {
 type UseShotComposerParams = {
   canKeepScore: boolean;
   canUseFoulOptions: boolean;
-  redsRemaining: Frame["reds_remaining"];
+  redsRemaining: number;
   coloursOnTable: Frame["colours_on_table"];
   objectBall: Frame["object_ball"];
   freeBall: Frame["free_ball"];
