@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -96,10 +102,12 @@ function ControlledLogEntry({
   controlledEntry = entry,
   onResolveBreakComposition = vi.fn(),
   compositionFilterCounts,
+  isResolutionFocusMode = false,
 }: {
   controlledEntry?: FrameLogEntry;
   onResolveBreakComposition?: (entryId: string, suggestionId: string) => void;
   compositionFilterCounts?: CompositionFilterCounts;
+  isResolutionFocusMode?: boolean;
 }) {
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
@@ -112,6 +120,7 @@ function ControlledLogEntry({
       compositionFilterCounts={compositionFilterCounts}
       players={players}
       isExpanded={controlledEntry.id === expandedEntryId}
+      isResolutionFocusMode={isResolutionFocusMode}
       onExpandedChange={(isExpanded) =>
         setExpandedEntryId(isExpanded ? controlledEntry.id : null)
       }
@@ -482,6 +491,7 @@ describe("FrameLog", () => {
       <ControlledLogEntry
         controlledEntry={unresolvedEntry}
         onResolveBreakComposition={onResolveBreakComposition}
+        isResolutionFocusMode
       />,
     );
 
@@ -501,6 +511,15 @@ describe("FrameLog", () => {
         name: "Summary break composition suggestions",
       }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Resolve the break composition")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /reds remaining and snookers required cannot be calculated yet/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Undo latest frame log action" }),
+    ).toBeDisabled();
     expect(
       screen.getByRole("option", {
         name: /5 reds, 1 yellow, 4 blacks/,
@@ -540,6 +559,99 @@ describe("FrameLog", () => {
     );
 
     expect(onResolveBreakComposition).toHaveBeenCalledWith("h-summary", "suggestion_1");
+  });
+
+  it("collapses the expanded entry when auto-expansion is suppressed", async () => {
+    const unresolvedEntry: FrameLogEntry = {
+      ...entry,
+      id: "summary-1",
+      history_ids: ["h-summary"],
+      shots: [
+        {
+          history_id: "h-summary",
+          action: "log_break",
+          potted_balls: [],
+          scored_balls: [],
+          free_ball_pots: [],
+          break_points: 8,
+          foul_points: 0,
+          composition_status: "missing",
+          composition_suggestions: [
+            {
+              id: "suggestion_1",
+              label: "1 red, 1 black",
+              balls: ["red", "black"],
+            },
+          ],
+          facts: [
+            {
+              kind: "summary_break",
+              player_key: "p1",
+              result: "summary_break",
+              break_points: 8,
+              foul_points: 0,
+              composition_status: "missing",
+              composition_suggestions: [
+                {
+                  id: "suggestion_1",
+                  label: "1 red, 1 black",
+                  balls: ["red", "black"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      potted_balls: [],
+      scored_balls: [],
+      free_ball_pots: [],
+      break_points: 8,
+      foul_points: 0,
+      facts: [
+        {
+          kind: "visit_summary",
+          player_key: "p1",
+          history_ids: ["h-summary"],
+          shot_count: 1,
+          potted_balls: [],
+          scored_balls: [],
+          free_ball_pots: [],
+          break_points: 8,
+          foul_points: 0,
+          result: "ended",
+        },
+      ],
+    };
+
+    socketMock.game.mockReturnValue({
+      players,
+      gameState: {
+        frame_log: [unresolvedEntry],
+        current_frame: {
+          ...DEFAULT_FRAME,
+          status: "active",
+        },
+      },
+    });
+    socketMock.actions.mockReturnValue({ sendAction: vi.fn() });
+
+    const { rerender } = render(<FrameLog />);
+
+    expect(
+      screen.getByRole("listbox", {
+        name: "Summary break composition suggestions",
+      }),
+    ).toBeInTheDocument();
+
+    rerender(<FrameLog suppressedAutoExpandedEntryId="summary-1" />);
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("listbox", {
+          name: "Summary break composition suggestions",
+        }),
+      ).not.toBeInTheDocument();
+    });
   });
 });
 

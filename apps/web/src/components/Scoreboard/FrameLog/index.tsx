@@ -23,6 +23,8 @@ type ExpandedEntryOverride = {
 type FrameLogProps = {
   activeCompositionFilterEntryId?: string | null;
   compositionFilterCounts?: CompositionFilterCounts;
+  isCompositionResolutionMode?: boolean;
+  suppressedAutoExpandedEntryId?: string | null;
   onActiveCompositionFilterEntryChange?: (
     entry: ActiveCompositionFilterEntry | null,
   ) => void;
@@ -51,6 +53,7 @@ function getLatestUndoableEntryId(frameLog: FrameLogEntry[]): string | undefined
 function useAutoExpandedFrameLogEntry(
   latestEntryId: string | undefined,
   latestEntryUpdateKey: string,
+  suppressedAutoExpandedEntryId: string | null,
 ) {
   const [expandedEntryOverride, setExpandedEntryOverride] =
     useState<ExpandedEntryOverride>({ id: null, updateKey: "" });
@@ -58,6 +61,8 @@ function useAutoExpandedFrameLogEntry(
   const expandedEntryId =
     expandedEntryOverride.updateKey === latestEntryUpdateKey
       ? expandedEntryOverride.id
+      : latestEntryId === suppressedAutoExpandedEntryId
+        ? null
       : (latestEntryId ?? null);
 
   const handleExpandedChange = (entryId: string, isExpanded: boolean) => {
@@ -94,6 +99,8 @@ function useScrollLatestLogEntryIntoView(
 export default function FrameLog({
   activeCompositionFilterEntryId = null,
   compositionFilterCounts = {},
+  isCompositionResolutionMode = false,
+  suppressedAutoExpandedEntryId = null,
   onActiveCompositionFilterEntryChange = () => {},
 }: FrameLogProps) {
   const listRef = useRef<HTMLOListElement>(null);
@@ -112,7 +119,11 @@ export default function FrameLog({
     latestUndoableEntryId && gameState?.current_frame.status !== "finished",
   );
   const { expandedEntryId, handleExpandedChange } =
-    useAutoExpandedFrameLogEntry(latestEntryId, latestEntryUpdateKey);
+    useAutoExpandedFrameLogEntry(
+      latestEntryId,
+      latestEntryUpdateKey,
+      suppressedAutoExpandedEntryId,
+    );
   const expandedCompositionFilterEntry = useMemo(() => {
     const expandedEntry = frameLog.find((entry) => entry.id === expandedEntryId);
     return expandedEntry ? activeCompositionFilterEntry(expandedEntry) : null;
@@ -123,13 +134,23 @@ export default function FrameLog({
     onActiveCompositionFilterEntryChange(expandedCompositionFilterEntry);
   }, [expandedCompositionFilterEntry, onActiveCompositionFilterEntryChange]);
 
+  const visibleFrameLog =
+    isCompositionResolutionMode && activeCompositionFilterEntryId
+      ? frameLog.filter((entry) => entry.id === activeCompositionFilterEntryId)
+      : frameLog;
+
   return (
     <ScrollShadow
       hideScrollBar
       className="h-full min-h-0 overflow-y-auto p-1 text-muted"
     >
-      <ol ref={listRef} className="flex flex-col text-sm">
-        {frameLog.map((entry) => (
+      <ol
+        ref={listRef}
+        className={`flex min-h-full flex-col text-sm ${
+          isCompositionResolutionMode ? "justify-center" : ""
+        }`}
+      >
+        {visibleFrameLog.map((entry) => (
           <LogEntry
             key={entry.id}
             entry={entry}
@@ -144,6 +165,10 @@ export default function FrameLog({
             players={players}
             playerTheme={getPlayerAvatarTheme(entry.player_key, players)}
             isExpanded={entry.id === expandedEntryId}
+            isResolutionFocusMode={
+              isCompositionResolutionMode &&
+              entry.id === activeCompositionFilterEntryId
+            }
             onExpandedChange={(isExpanded) =>
               handleExpandedChange(entry.id, isExpanded)
             }

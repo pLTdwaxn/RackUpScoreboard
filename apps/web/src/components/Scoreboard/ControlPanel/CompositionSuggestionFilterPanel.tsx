@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Surface } from "@heroui/react";
-import { IconFilterOff } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
 
 import { BallName } from "@/domain/balls";
 import ControlPanelLayout from "./ControlPanelLayout";
@@ -16,16 +16,15 @@ type CompositionSuggestionFilterPanelProps = {
   counts: CompositionFilterCounts;
   suggestions: SummaryBreakCompositionSuggestion[];
   onBallTap: (ball: BallName) => void;
-  onReset: () => void;
+  onCancel: () => void;
 };
 
 export default function CompositionSuggestionFilterPanel({
   counts,
   suggestions,
   onBallTap,
-  onReset,
+  onCancel,
 }: CompositionSuggestionFilterPanelProps) {
-  const hasFilters = Object.values(counts).some((count) => count);
   const description = compositionFilterDescription(counts);
 
   return (
@@ -53,19 +52,16 @@ export default function CompositionSuggestionFilterPanel({
           </div>
         }
         actionsRow={
-          <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-4">
-            <div />
+          <div className="flex w-full justify-end">
             <Button
-              aria-label="Reset composition filters"
-              isIconOnly
-              isDisabled={!hasFilters}
+              aria-label="Cancel composition resolution"
               size="sm"
+              isIconOnly
               variant="secondary"
-              onPress={onReset}
+              onPress={onCancel}
             >
-              <IconFilterOff stroke={2} />
+              <IconX stroke={2} />
             </Button>
-            <div />
           </div>
         }
       />

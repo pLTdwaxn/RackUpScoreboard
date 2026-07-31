@@ -21,6 +21,9 @@ export default function Scoreboard() {
     useState<ActiveCompositionFilterEntry | null>(null);
   const [compositionFilterCounts, setCompositionFilterCounts] =
     useState<CompositionFilterCounts>({});
+  const [suppressedCompositionEntryId, setSuppressedCompositionEntryId] =
+    useState<string | null>(null);
+  const isCompositionResolutionMode = Boolean(activeCompositionFilterEntry);
   const isReconnecting = connectionStatus === "reconnecting";
   const reconnectDelaySeconds =
     reconnectDelayMs === null ? null : Math.ceil(reconnectDelayMs / 1000);
@@ -36,6 +39,10 @@ export default function Scoreboard() {
   const handleActiveCompositionFilterEntryChange = useCallback((
     nextEntry: ActiveCompositionFilterEntry | null,
   ) => {
+    if (nextEntry) {
+      setSuppressedCompositionEntryId(null);
+    }
+
     setActiveCompositionFilterEntry((currentEntry) => {
       if (
         currentEntry?.entryId === nextEntry?.entryId &&
@@ -64,6 +71,12 @@ export default function Scoreboard() {
     );
   }, [activeCompositionFilterEntry]);
 
+  const handleCompositionFilterCancel = useCallback(() => {
+    setSuppressedCompositionEntryId(activeCompositionFilterEntry?.entryId ?? null);
+    setActiveCompositionFilterEntry(null);
+    setCompositionFilterCounts({});
+  }, [activeCompositionFilterEntry]);
+
   return (
     <div className="flex w-full min-h-0 flex-1 flex-col gap-2">
       {isReconnecting ? (
@@ -80,11 +93,22 @@ export default function Scoreboard() {
           </span>
         </div>
       ) : null}
-      <FrameOverview />
+      <div
+        className={`overflow-hidden transition-[max-height,opacity,transform] duration-200 ${
+          isCompositionResolutionMode
+            ? "max-h-0 -translate-y-2 opacity-0"
+            : "max-h-96 translate-y-0 opacity-100"
+        }`}
+        aria-hidden={isCompositionResolutionMode || undefined}
+      >
+        <FrameOverview />
+      </div>
       <div className="flex-1 min-h-0 overflow-visible">
         <FrameLog
           activeCompositionFilterEntryId={activeCompositionFilterEntry?.entryId}
           compositionFilterCounts={compositionFilterCounts}
+          isCompositionResolutionMode={isCompositionResolutionMode}
+          suppressedAutoExpandedEntryId={suppressedCompositionEntryId}
           onActiveCompositionFilterEntryChange={
             handleActiveCompositionFilterEntryChange
           }
@@ -95,7 +119,7 @@ export default function Scoreboard() {
           counts={compositionFilterCounts}
           suggestions={activeCompositionFilterEntry.suggestions}
           onBallTap={handleCompositionFilterBallTap}
-          onReset={() => setCompositionFilterCounts({})}
+          onCancel={handleCompositionFilterCancel}
         />
       ) : (
         <ControlPanel />

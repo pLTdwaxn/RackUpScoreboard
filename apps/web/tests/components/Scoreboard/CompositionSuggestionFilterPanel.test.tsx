@@ -31,7 +31,7 @@ describe("CompositionSuggestionFilterPanel", () => {
         counts={{}}
         suggestions={suggestions}
         onBallTap={vi.fn()}
-        onReset={vi.fn()}
+        onCancel={vi.fn()}
       />,
     );
 
@@ -40,16 +40,16 @@ describe("CompositionSuggestionFilterPanel", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders a control-panel-sized filter rail and exposes reset", () => {
+  it("renders a control-panel-sized filter rail and exposes cancel", () => {
     const onBallTap = vi.fn();
-    const onReset = vi.fn();
+    const onCancel = vi.fn();
 
     render(
       <CompositionSuggestionFilterPanel
         counts={{ red: 1, black: 1 }}
         suggestions={suggestions}
         onBallTap={onBallTap}
-        onReset={onReset}
+        onCancel={onCancel}
       />,
     );
 
@@ -57,10 +57,12 @@ describe("CompositionSuggestionFilterPanel", () => {
       screen.getByText("Showing breaks with at least 1 red and 1 black"),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "black suggestion filter 1" }));
-    fireEvent.click(screen.getByRole("button", { name: "Reset composition filters" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Cancel composition resolution" }),
+    );
 
     expect(screen.getByRole("button", { name: "red suggestion filter 1" })).toBeInTheDocument();
     expect(onBallTap).toHaveBeenCalledWith("black");
-    expect(onReset).toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalled();
   });
 });
