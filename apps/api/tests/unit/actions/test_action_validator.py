@@ -13,6 +13,10 @@ from scoreboard.domain.actions.validator import validate_event
         {"action": "reset_shot", "data": {}},
         {"action": "declare_free_ball", "data": {"nominated_colour": "blue"}},
         {"action": "log_break", "data": {"points": 35, "foul": 4}},
+        {
+            "action": "resolve_break_composition",
+            "data": {"entry_id": "history-1", "suggestion_id": "suggestion_1"},
+        },
         {"action": "concede", "data": {}},
         {"action": "next_frame", "data": {}},
     ],
@@ -90,6 +94,24 @@ def test_validate_event_rejects_undo_with_extra_fields(event):
         (
             {"action": "log_break", "data": {"points": 0, "foul": 0}},
             "Log break payload requires non-zero points or foul.",
+        ),
+        (
+            {"action": "resolve_break_composition", "data": {"entry_id": "history-1"}},
+            "Missing resolve break composition payload fields: suggestion_id",
+        ),
+        (
+            {
+                "action": "resolve_break_composition",
+                "data": {"entry_id": "", "suggestion_id": "suggestion_1"},
+            },
+            "Resolve break composition payload requires non-empty 'entry_id'.",
+        ),
+        (
+            {
+                "action": "resolve_break_composition",
+                "data": {"entry_id": "history-1", "suggestion_id": ""},
+            },
+            "Resolve break composition payload requires non-empty 'suggestion_id'.",
         ),
     ],
 )

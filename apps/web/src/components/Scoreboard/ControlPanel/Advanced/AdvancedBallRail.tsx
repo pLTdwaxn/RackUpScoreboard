@@ -15,7 +15,7 @@ import {
 } from "../shared/ballRail";
 
 type AdvancedBallRailProps = {
-  redsRemaining: number;
+  redsRemaining: Frame["reds_remaining"];
   coloursOnTable: Frame["colours_on_table"];
   objectBall: string;
   freeBall: Frame["free_ball"];
@@ -89,7 +89,7 @@ export default function AdvancedBallRail({
             : (selectedBallCounts[ball] ?? 0) > 0;
         const unavailable =
           ball === "red"
-            ? redsRemaining <= 0 && redSelections === 0
+            ? redsRemaining !== null && redsRemaining <= 0 && redSelections === 0
             : !coloursOnTable[ball];
         const isDisabled = !canKeepScore || unavailable;
 

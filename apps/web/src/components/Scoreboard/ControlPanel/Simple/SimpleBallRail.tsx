@@ -12,7 +12,7 @@ import {
 } from "../shared/ballRail";
 
 type SimpleBallRailProps = {
-  redsRemaining: number;
+  redsRemaining: Frame["reds_remaining"];
   coloursOnTable: Frame["colours_on_table"];
   objectBall: Frame["object_ball"];
   freeBall: Frame["free_ball"];
@@ -46,7 +46,9 @@ export default function SimpleBallRail({
         });
         const picked = (selectedBallCounts[ball] ?? 0) > 0;
         const unavailable =
-          ball === "red" ? redsRemaining <= 0 : !coloursOnTable[ball];
+          ball === "red"
+            ? redsRemaining !== null && redsRemaining <= 0
+            : !coloursOnTable[ball];
         const isDisabled =
           !canKeepScore ||
           (freeBallMode ? ball === "red" || unavailable : unavailable);
@@ -74,7 +76,7 @@ export default function SimpleBallRail({
               className={`${BALL_SURFACE_CLASS} ${BALL_CLASS[ball]}`}
             >
               <span className="relative z-10">
-                {ball === "red" && redsRemaining}
+                {ball === "red" && (redsRemaining ?? "?")}
               </span>
             </Button>
             <Badge

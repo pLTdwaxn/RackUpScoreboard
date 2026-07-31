@@ -27,7 +27,7 @@ export function useControlPanel(
     }
   })();
 
-  const redsRemaining = frame.reds_remaining ?? 0;
+  const redsRemaining = frame.reds_remaining;
   const coloursOnTable = frame.colours_on_table;
   const objectBall = frame.object_ball;
   const freeBall = frame.free_ball;

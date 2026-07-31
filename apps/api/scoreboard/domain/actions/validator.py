@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from scoreboard.domain.actions.messages import ShotMessage, SummaryBreakMessage
+from scoreboard.domain.actions.messages import ResolveBreakCompositionMessage, ShotMessage, SummaryBreakMessage
 from scoreboard.domain.balls import BALL_POINTS, COLOUR_BALLS
 
 VALID_ACTIONS = {
@@ -12,10 +12,12 @@ VALID_ACTIONS = {
     "concede",
     "next_frame",
     "log_break",
+    "resolve_break_composition",
 }
 VALID_SHOT_FIELDS = {"potted_balls", "foul"}
 VALID_FREE_BALL_FIELDS = {"nominated_colour"}
 VALID_LOG_BREAK_FIELDS = {"points", "foul"}
+VALID_RESOLVE_BREAK_COMPOSITION_FIELDS = {"entry_id", "suggestion_id"}
 
 
 def validate_event(event: dict) -> None:
@@ -59,6 +61,10 @@ def validate_event(event: dict) -> None:
 
     if action == "log_break":
         validate_log_break_data(data)
+        return
+
+    if action == "resolve_break_composition":
+        validate_resolve_break_composition_data(data)
         return
 
     validate_shot_data(data)
@@ -119,3 +125,19 @@ def validate_log_break_data(data: dict) -> None:
 
     if summary_break.points == 0 and summary_break.foul == 0:
         raise ValueError("Log break payload requires non-zero points or foul.")
+
+
+def validate_resolve_break_composition_data(data: dict) -> None:
+    extra_fields = set(data.keys()) - VALID_RESOLVE_BREAK_COMPOSITION_FIELDS
+    if extra_fields:
+        raise ValueError(f"Unsupported resolve break composition payload fields: {', '.join(sorted(extra_fields))}")
+
+    if not VALID_RESOLVE_BREAK_COMPOSITION_FIELDS.issubset(data.keys()):
+        missing = sorted(VALID_RESOLVE_BREAK_COMPOSITION_FIELDS - set(data.keys()))
+        raise ValueError(f"Missing resolve break composition payload fields: {', '.join(missing)}")
+
+    message = ResolveBreakCompositionMessage.from_dict(data)
+    if not message.entry_id:
+        raise ValueError("Resolve break composition payload requires non-empty 'entry_id'.")
+    if not message.suggestion_id:
+        raise ValueError("Resolve break composition payload requires non-empty 'suggestion_id'.")

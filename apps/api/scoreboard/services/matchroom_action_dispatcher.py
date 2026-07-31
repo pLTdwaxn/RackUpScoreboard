@@ -10,6 +10,7 @@ from scoreboard.action_handlers import (
     NextFrameActionHandler,
     PassShotActionHandler,
     ResetShotActionHandler,
+    ResolveBreakCompositionActionHandler,
     ShotActionHandler,
     UndoActionHandler,
 )
@@ -36,6 +37,7 @@ class FrameStatusStateMachine(StateMachine):
     reset_shot = active.to(active)
     declare_free_ball = active.to(active)
     log_break = ready.to(active) | active.to(active)
+    resolve_break_composition = active.to(active)
 
 
 class MatchroomActionDispatcher:
@@ -53,6 +55,7 @@ class MatchroomActionDispatcher:
             "reset_shot": ResetShotActionHandler(),
             "declare_free_ball": DeclareFreeBallActionHandler(),
             "log_break": LogBreakActionHandler(),
+            "resolve_break_composition": ResolveBreakCompositionActionHandler(),
             "undo": UndoActionHandler(),
             "concede": ConcedeActionHandler(),
             "next_frame": NextFrameActionHandler(),

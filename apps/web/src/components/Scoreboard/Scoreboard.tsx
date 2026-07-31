@@ -1,15 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "@heroui/react";
 
 import { useMatchroomSession } from "@/hooks/useSocket";
+import { BallName } from "@/domain/balls";
 
 import { ControlPanel, FrameOverview, FrameLog } from ".";
+import CompositionSuggestionFilterPanel from "./ControlPanel/CompositionSuggestionFilterPanel";
+import {
+  ActiveCompositionFilterEntry,
+  CompositionFilterCounts,
+  nextCompositionFilterCounts,
+} from "./summaryBreakCompositionFilters";
 
 export default function Scoreboard() {
   const { connectionStatus, reconnectAttempt, reconnectDelayMs, socketError } =
     useMatchroomSession();
+  const [activeCompositionFilterEntry, setActiveCompositionFilterEntry] =
+    useState<ActiveCompositionFilterEntry | null>(null);
+  const [compositionFilterCounts, setCompositionFilterCounts] =
+    useState<CompositionFilterCounts>({});
   const isReconnecting = connectionStatus === "reconnecting";
   const reconnectDelaySeconds =
     reconnectDelayMs === null ? null : Math.ceil(reconnectDelayMs / 1000);
@@ -21,6 +32,37 @@ export default function Scoreboard() {
 
     toast.danger(socketError, { timeout: 1000 });
   }, [socketError]);
+
+  const handleActiveCompositionFilterEntryChange = useCallback((
+    nextEntry: ActiveCompositionFilterEntry | null,
+  ) => {
+    setActiveCompositionFilterEntry((currentEntry) => {
+      if (
+        currentEntry?.entryId === nextEntry?.entryId &&
+        currentEntry?.historyId === nextEntry?.historyId
+      ) {
+        return currentEntry;
+      }
+      if (currentEntry?.entryId !== nextEntry?.entryId) {
+        setCompositionFilterCounts({});
+      }
+      return nextEntry;
+    });
+  }, []);
+
+  const handleCompositionFilterBallTap = useCallback((ball: BallName) => {
+    if (!activeCompositionFilterEntry) {
+      return;
+    }
+
+    setCompositionFilterCounts((counts) =>
+      nextCompositionFilterCounts({
+        ball,
+        counts,
+        suggestions: activeCompositionFilterEntry.suggestions,
+      }),
+    );
+  }, [activeCompositionFilterEntry]);
 
   return (
     <div className="flex w-full min-h-0 flex-1 flex-col gap-2">
@@ -40,9 +82,24 @@ export default function Scoreboard() {
       ) : null}
       <FrameOverview />
       <div className="flex-1 min-h-0 overflow-visible">
-        <FrameLog />
+        <FrameLog
+          activeCompositionFilterEntryId={activeCompositionFilterEntry?.entryId}
+          compositionFilterCounts={compositionFilterCounts}
+          onActiveCompositionFilterEntryChange={
+            handleActiveCompositionFilterEntryChange
+          }
+        />
       </div>
-      <ControlPanel />
+      {activeCompositionFilterEntry ? (
+        <CompositionSuggestionFilterPanel
+          counts={compositionFilterCounts}
+          suggestions={activeCompositionFilterEntry.suggestions}
+          onBallTap={handleCompositionFilterBallTap}
+          onReset={() => setCompositionFilterCounts({})}
+        />
+      ) : (
+        <ControlPanel />
+      )}
     </div>
   );
 }

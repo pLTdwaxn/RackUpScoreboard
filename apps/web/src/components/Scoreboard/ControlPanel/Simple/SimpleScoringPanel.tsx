@@ -9,7 +9,7 @@ import { PlayerNameText } from "@/components/Scoreboard/shared/PlayerName";
 import type { PlayerTheme } from "@/components/Scoreboard/shared/playerIdentity";
 
 type SimpleScoringPanelProps = {
-  redsRemaining: number;
+  redsRemaining: Frame["reds_remaining"];
   coloursOnTable: Frame["colours_on_table"];
   objectBall: string;
   freeBall: Frame["free_ball"];
@@ -21,6 +21,7 @@ type SimpleScoringPanelProps = {
   isSummaryBreakMode: boolean;
   selectedBalls: BallName[];
   onBallTap: (ball: BallName) => void;
+  onLogBreak: (score: number, foul: number) => void;
   onConcede: () => void;
   onEnterAdvancedMode: () => void;
   onToggleSummaryBreakMode: () => void;
@@ -55,6 +56,7 @@ export default function SimpleScoringPanel({
   isSummaryBreakMode,
   selectedBalls,
   onBallTap,
+  onLogBreak,
   onConcede,
   onEnterAdvancedMode,
   onToggleSummaryBreakMode,
@@ -77,7 +79,10 @@ export default function SimpleScoringPanel({
       }
       ballRow={
         isSummaryBreakMode ? (
-          <SummaryBreakFields canKeepScore={canKeepScore} />
+          <SummaryBreakFields
+            canKeepScore={canKeepScore}
+            onSubmit={onLogBreak}
+          />
         ) : (
           <SimpleBallRail
             redsRemaining={redsRemaining}

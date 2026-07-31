@@ -8,11 +8,24 @@ import {
 } from "@/hooks/useSocket";
 import { FrameLogEntry } from "@/types";
 import { getPlayerAvatarTheme } from "../shared/playerIdentity";
+import {
+  activeCompositionFilterEntry,
+  ActiveCompositionFilterEntry,
+  CompositionFilterCounts,
+} from "../summaryBreakCompositionFilters";
 import LogEntry from "./LogEntry";
 
 type ExpandedEntryOverride = {
   id: string | null;
   updateKey: string;
+};
+
+type FrameLogProps = {
+  activeCompositionFilterEntryId?: string | null;
+  compositionFilterCounts?: CompositionFilterCounts;
+  onActiveCompositionFilterEntryChange?: (
+    entry: ActiveCompositionFilterEntry | null,
+  ) => void;
 };
 
 function getFrameLogEntryUpdateKey(entry?: FrameLogEntry): string {
@@ -78,12 +91,16 @@ function useScrollLatestLogEntryIntoView(
   }, [latestEntryUpdateKey, listRef]);
 }
 
-export default function FrameLog() {
+export default function FrameLog({
+  activeCompositionFilterEntryId = null,
+  compositionFilterCounts = {},
+  onActiveCompositionFilterEntryChange = () => {},
+}: FrameLogProps) {
   const listRef = useRef<HTMLOListElement>(null);
   const { gameState, players = [] } = useMatchroomGame();
   const { sendAction } = useMatchroomActions();
-  const { sendUndo } = useGameActions(sendAction);
-  const frameLog = gameState?.frame_log ?? [];
+  const { sendResolveBreakComposition, sendUndo } = useGameActions(sendAction);
+  const frameLog = useMemo(() => gameState?.frame_log ?? [], [gameState]);
   const latestEntry = frameLog.at(-1);
   const latestEntryId = latestEntry?.id;
   const latestUndoableEntryId = getLatestUndoableEntryId(frameLog);
@@ -96,8 +113,15 @@ export default function FrameLog() {
   );
   const { expandedEntryId, handleExpandedChange } =
     useAutoExpandedFrameLogEntry(latestEntryId, latestEntryUpdateKey);
+  const expandedCompositionFilterEntry = useMemo(() => {
+    const expandedEntry = frameLog.find((entry) => entry.id === expandedEntryId);
+    return expandedEntry ? activeCompositionFilterEntry(expandedEntry) : null;
+  }, [expandedEntryId, frameLog]);
 
   useScrollLatestLogEntryIntoView(listRef, latestEntryUpdateKey);
+  useEffect(() => {
+    onActiveCompositionFilterEntryChange(expandedCompositionFilterEntry);
+  }, [expandedCompositionFilterEntry, onActiveCompositionFilterEntryChange]);
 
   return (
     <ScrollShadow
@@ -111,6 +135,12 @@ export default function FrameLog() {
             entry={entry}
             canUndo={entry.id === latestUndoableEntryId && canUndo}
             onUndo={sendUndo}
+            onResolveBreakComposition={sendResolveBreakComposition}
+            compositionFilterCounts={
+              entry.id === activeCompositionFilterEntryId
+                ? compositionFilterCounts
+                : undefined
+            }
             players={players}
             playerTheme={getPlayerAvatarTheme(entry.player_key, players)}
             isExpanded={entry.id === expandedEntryId}

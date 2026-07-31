@@ -12,7 +12,7 @@ import {
 type UseShotComposerParams = {
   canKeepScore: boolean;
   canUseFoulOptions: boolean;
-  redsRemaining: number;
+  redsRemaining: Frame["reds_remaining"];
   coloursOnTable: Frame["colours_on_table"];
   objectBall: Frame["object_ball"];
   freeBall: Frame["free_ball"];
@@ -142,8 +142,10 @@ export function useShotComposer({
     setIsAdvancedMode(false);
   };
 
+  const redSelectionLimit = redsRemaining ?? 15;
+
   const setRedCount = (nextCount: number) => {
-    const clamped = Math.max(0, Math.min(nextCount, redsRemaining));
+    const clamped = Math.max(0, Math.min(nextCount, redSelectionLimit));
     setMultiPotBalls((prev) => {
       const nonRedBalls = prev.filter((ball) => ball !== "red");
       return [
@@ -159,7 +161,7 @@ export function useShotComposer({
 
   const toggleMultiBall = (ball: BallName) => {
     if (ball === "red") {
-      if (redSelections >= redsRemaining) {
+      if (redSelections >= redSelectionLimit) {
         setRedCount(0);
         return;
       }

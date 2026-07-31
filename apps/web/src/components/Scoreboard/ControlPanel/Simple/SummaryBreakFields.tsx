@@ -4,13 +4,16 @@ import { useState } from "react";
 
 type SummaryBreakFieldsProps = {
   canKeepScore: boolean;
+  onSubmit: (score: number, foul: number) => void;
 };
 
 export default function SummaryBreakFields({
   canKeepScore,
+  onSubmit,
 }: SummaryBreakFieldsProps) {
   const [score, setScore] = useState(0);
   const [foul, setFoul] = useState(0);
+  const canSubmit = canKeepScore && (score > 0 || foul > 0);
 
   return (
     <div className="grid w-full grid-cols-[1fr_1fr_auto] items-end gap-2">
@@ -71,7 +74,8 @@ export default function SummaryBreakFields({
       <Button
         aria-label="Submit logged break"
         isIconOnly
-        isDisabled
+        isDisabled={!canSubmit}
+        onPress={() => onSubmit(score, foul)}
         size="sm"
         type="button"
         variant="primary"

@@ -25,7 +25,7 @@ export function isBallLegal({
 }: {
   ball: BallName;
   objectBall: Frame["object_ball"];
-  redsRemaining: number;
+  redsRemaining: number | null;
   coloursOnTable: Frame["colours_on_table"];
   freeBall: Frame["free_ball"];
 }) {
@@ -34,7 +34,7 @@ export function isBallLegal({
   }
 
   if (ball === "red") {
-    return objectBall === "red" && redsRemaining > 0;
+    return objectBall === "red" && (redsRemaining === null || redsRemaining > 0);
   }
 
   if (!coloursOnTable[ball]) {

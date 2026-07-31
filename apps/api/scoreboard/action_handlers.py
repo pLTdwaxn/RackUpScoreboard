@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from scoreboard.domain.actions.messages import ShotMessage, SummaryBreakMessage
+from scoreboard.domain.actions.messages import (
+    ResolveBreakCompositionMessage,
+    ShotMessage,
+    SummaryBreakMessage,
+)
 from scoreboard.domain.models.frame import Frame
 from scoreboard.domain.models.frame_state import FrameStatus
 from scoreboard.domain.models.match import Match
@@ -22,6 +26,7 @@ from scoreboard.services.action_services import (
 from scoreboard.services.frame_history_service import FrameHistoryService
 from scoreboard.services.frame_reset_shot_service import FrameResetShotService
 from scoreboard.services.frame_undo_service import FrameUndoService
+from scoreboard.services.summary_break_composition_resolver import SummaryBreakCompositionResolver
 
 
 @dataclass
@@ -138,6 +143,44 @@ class LogBreakActionHandler:
                 context.match,
                 frame_lifecycle.winner_key,
             )
+
+        return True, None
+
+
+class ResolveBreakCompositionActionHandler:
+    def __init__(
+        self,
+        frame_history_service: FrameHistoryService | None = None,
+        composition_resolver: SummaryBreakCompositionResolver | None = None,
+    ) -> None:
+        self._frame_history_service = frame_history_service or FrameHistoryService()
+        self._composition_resolver = composition_resolver or SummaryBreakCompositionResolver()
+
+    def handle(self, context: ActionContext) -> tuple[bool, str | None]:
+        state_before = self._frame_history_service.snapshot(context)
+        message = ResolveBreakCompositionMessage.from_dict(context.data)
+
+        resolved, error, previous_outcome = self._composition_resolver.resolve(
+            context.frame,
+            message.entry_id,
+            message.suggestion_id,
+        )
+        if not resolved:
+            return False, error
+
+        self._frame_history_service.push(
+            context,
+            context.actor_key,
+            {"action": "resolve_break_composition", "data": dict(context.data)},
+            {
+                "action": "resolve_break_composition",
+                "result": "resolved",
+                "entry_id": message.entry_id,
+                "suggestion_id": message.suggestion_id,
+                "previous_outcome": previous_outcome,
+            },
+            state_before,
+        )
 
         return True, None
 

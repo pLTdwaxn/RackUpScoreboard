@@ -13,6 +13,29 @@ export function createShotAction(
   };
 }
 
+export function createLogBreakAction(points: number, foul = 0): RoomClientAction {
+  return {
+    action: "log_break",
+    data: {
+      points,
+      foul,
+    },
+  };
+}
+
+export function createResolveBreakCompositionAction(
+  entryId: string,
+  suggestionId: string,
+): RoomClientAction {
+  return {
+    action: "resolve_break_composition",
+    data: {
+      entry_id: entryId,
+      suggestion_id: suggestionId,
+    },
+  };
+}
+
 export function createPassShotAction(): RoomClientAction {
   return {
     action: "pass_shot",

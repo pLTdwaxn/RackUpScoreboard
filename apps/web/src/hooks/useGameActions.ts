@@ -2,8 +2,10 @@ import { RoomClientAction } from "@/types";
 import {
   createConcedeAction,
   createDeclareFreeBallAction,
+  createLogBreakAction,
   createNextFrameAction,
   createPassShotAction,
+  createResolveBreakCompositionAction,
   createShotAction,
   createUndoAction,
 } from "@/lib/roomActions";
@@ -17,6 +19,14 @@ export function useGameActions(
 
   const sendEndTurn = () => {
     sendAction(createShotAction([], 0));
+  };
+
+  const sendLogBreak = (points: number, foul = 0) => {
+    sendAction(createLogBreakAction(points, foul));
+  };
+
+  const sendResolveBreakComposition = (entryId: string, suggestionId: string) => {
+    sendAction(createResolveBreakCompositionAction(entryId, suggestionId));
   };
 
   const sendUndo = () => {
@@ -42,6 +52,8 @@ export function useGameActions(
   return {
     sendShot,
     sendEndTurn,
+    sendLogBreak,
+    sendResolveBreakComposition,
     sendUndo,
     sendConcede,
     sendPassShot,

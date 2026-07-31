@@ -78,6 +78,7 @@ export type FrameLogShot = {
   foul_points: number;
   composition_status?: "missing" | "resolved" | "skipped";
   composition_suggestions?: SummaryBreakCompositionSuggestion[];
+  resolved_composition?: string[];
   facts: FrameLogFact[];
 };
 
@@ -233,6 +234,15 @@ export type RoomClientLogBreakAction = {
   };
 };
 
+export type RoomClientResolveBreakCompositionAction = {
+  action_id?: string;
+  action: "resolve_break_composition";
+  data: {
+    entry_id: string;
+    suggestion_id: string;
+  };
+};
+
 export type RoomClientAction =
   | RoomClientShotAction
   | RoomClientUndoAction
@@ -240,4 +250,5 @@ export type RoomClientAction =
   | RoomClientDeclareFreeBallAction
   | RoomClientConcedeAction
   | RoomClientNextFrameAction
-  | RoomClientLogBreakAction;
+  | RoomClientLogBreakAction
+  | RoomClientResolveBreakCompositionAction;

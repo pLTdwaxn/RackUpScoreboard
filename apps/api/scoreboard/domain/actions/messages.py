@@ -27,3 +27,16 @@ class SummaryBreakMessage:
             points=int(payload.get("points", 0)),
             foul=int(payload.get("foul", 0)),
         )
+
+
+@dataclass(frozen=True)
+class ResolveBreakCompositionMessage:
+    entry_id: str
+    suggestion_id: str
+
+    @classmethod
+    def from_dict(cls, payload: dict) -> "ResolveBreakCompositionMessage":
+        return cls(
+            entry_id=str(payload.get("entry_id", "")),
+            suggestion_id=str(payload.get("suggestion_id", "")),
+        )

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 from scoreboard.domain.frame_calculation.rule_state import calculate_frame_rule_state
+from scoreboard.services.summary_break_composition_resolver import SummaryBreakCompositionResolver
 
 if TYPE_CHECKING:
     from scoreboard.domain.models.frame import Frame
@@ -15,6 +16,9 @@ class FrameUndoState(Protocol):
 
 
 class FrameUndoService:
+    def __init__(self, composition_resolver: SummaryBreakCompositionResolver | None = None) -> None:
+        self._composition_resolver = composition_resolver or SummaryBreakCompositionResolver()
+
     def restore(self, state: FrameUndoState, snapshot: dict) -> None:
         frame = state.frame
         frame.scoring_state.scores = dict(snapshot["scores"])
@@ -41,5 +45,16 @@ class FrameUndoService:
             return False
 
         last_entry = state.frame.history.pop()
+        self._restore_history_metadata_for_undo(state.frame, last_entry)
         self.restore(state, last_entry["state_before"])
         return True
+
+    def _restore_history_metadata_for_undo(self, frame: Frame, history_entry: dict) -> None:
+        outcome = history_entry.get("outcome")
+        if not isinstance(outcome, dict) or outcome.get("action") != "resolve_break_composition":
+            return
+
+        entry_id = outcome.get("entry_id")
+        previous_outcome = outcome.get("previous_outcome")
+        if isinstance(entry_id, str) and isinstance(previous_outcome, dict):
+            self._composition_resolver.restore_previous_outcome(frame, entry_id, previous_outcome)

@@ -4,7 +4,7 @@ import { BALL_BY_NAME, BallName } from "@/domain/balls";
 export function isLegalShot(
   pottedBalls: BallName[],
   objectBall: Frame["object_ball"],
-  redsRemaining: number,
+  redsRemaining: number | null,
   freeBall: Frame["free_ball"],
 ) {
   if (pottedBalls.length === 0) {
@@ -21,7 +21,8 @@ export function isLegalShot(
   );
 
   if (objectBall === "red") {
-    const redLimit = redsRemaining + (freeBall ? 1 : 0);
+    const redLimit =
+      redsRemaining === null ? Infinity : redsRemaining + (freeBall ? 1 : 0);
     return (
       equivalentBalls.every((ball) => ball === "red") &&
       equivalentBalls.length <= redLimit

@@ -126,6 +126,31 @@ describe("ControlPanel", () => {
     });
   });
 
+  it("renders unknown reds as a question mark and allows red shots", () => {
+    const sendAction = vi.fn();
+    arrangeControlPanel({
+      sendAction,
+      frame: {
+        ...activeFrame,
+        reds_remaining: null,
+      },
+    });
+
+    const redButton = screen.getByRole("button", { name: "red" });
+
+    expect(redButton).toHaveTextContent("?");
+
+    fireEvent.click(redButton);
+
+    expect(sendAction).toHaveBeenCalledWith({
+      action: "shot",
+      data: {
+        potted_balls: ["red"],
+        foul: 0,
+      },
+    });
+  });
+
   it("toggles summary break number fields from simple controls", () => {
     const sendAction = vi.fn();
     arrangeControlPanel({ matchroomPlayers: players, sendAction });
@@ -147,16 +172,24 @@ describe("ControlPanel", () => {
       screen.queryByRole("button", { name: "red" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Score" }), {
-      target: { value: "35" },
-    });
-    fireEvent.change(screen.getByRole("textbox", { name: "Foul" }), {
-      target: { value: "4" },
-    });
+    fireEvent.click(screen.getByRole("button", { name: /Increase score/ }));
 
-    expect(screen.getByRole("textbox", { name: "Score" })).toHaveValue("35");
-    expect(screen.getByRole("textbox", { name: "Foul" })).toHaveValue("4");
-    expect(sendAction).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox", { name: "Score" })).toHaveValue("1");
+    expect(screen.getByRole("textbox", { name: "Foul" })).toHaveValue("0");
+    expect(
+      screen.getByRole("button", { name: "Submit logged break" }),
+    ).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit logged break" }));
+
+    expect(sendAction).toHaveBeenCalledWith({
+      action: "log_break",
+      data: {
+        points: 1,
+        foul: 0,
+      },
+    });
+    expect(screen.getByRole("button", { name: "red" })).toBeInTheDocument();
   });
 
   it("restores the ball rail when summary break mode is toggled off", () => {

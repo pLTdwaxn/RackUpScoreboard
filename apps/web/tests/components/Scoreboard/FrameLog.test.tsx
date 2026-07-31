@@ -7,6 +7,7 @@ import BallComposition from "@/components/Scoreboard/FrameLog/BallComposition";
 import LogEntry from "@/components/Scoreboard/FrameLog/LogEntry";
 import UndoSlot from "@/components/Scoreboard/FrameLog/UndoSlot";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
+import { CompositionFilterCounts } from "@/components/Scoreboard/summaryBreakCompositionFilters";
 import { FrameLogEntry, Player } from "@/types";
 
 const socketMock = vi.hoisted(() => ({
@@ -93,8 +94,12 @@ const players: Player[] = [
 
 function ControlledLogEntry({
   controlledEntry = entry,
+  onResolveBreakComposition = vi.fn(),
+  compositionFilterCounts,
 }: {
   controlledEntry?: FrameLogEntry;
+  onResolveBreakComposition?: (entryId: string, suggestionId: string) => void;
+  compositionFilterCounts?: CompositionFilterCounts;
 }) {
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 
@@ -103,6 +108,8 @@ function ControlledLogEntry({
       entry={controlledEntry}
       canUndo
       onUndo={vi.fn()}
+      onResolveBreakComposition={onResolveBreakComposition}
+      compositionFilterCounts={compositionFilterCounts}
       players={players}
       isExpanded={controlledEntry.id === expandedEntryId}
       onExpandedChange={(isExpanded) =>
@@ -288,6 +295,251 @@ describe("FrameLog", () => {
     expect(enabledUndoButtons).toHaveLength(1);
     fireEvent.click(enabledUndoButtons[0]);
     expect(sendAction).toHaveBeenCalledWith({ action: "undo", data: {} });
+  });
+
+  it("highlights unresolved summary break entries and renders composition suggestions", () => {
+    const onResolveBreakComposition = vi.fn();
+    const unresolvedEntry: FrameLogEntry = {
+      ...entry,
+      id: "summary-1",
+      history_ids: ["h-summary"],
+      shots: [
+        {
+          history_id: "h-summary",
+          action: "log_break",
+          potted_balls: [],
+          scored_balls: [],
+          free_ball_pots: [],
+          break_points: 35,
+          foul_points: 4,
+          composition_status: "missing",
+          composition_suggestions: [
+            {
+              id: "suggestion_1",
+              label: "5 reds, 1 yellow, 4 blacks",
+              balls: [
+                "red",
+                "black",
+                "red",
+                "black",
+                "red",
+                "black",
+                "red",
+                "black",
+                "red",
+                "yellow",
+              ],
+            },
+            {
+              id: "suggestion_2",
+              label: "5 reds, 5 pinks",
+              balls: [
+                "red",
+                "pink",
+                "red",
+                "pink",
+                "red",
+                "pink",
+                "red",
+                "pink",
+                "red",
+                "pink",
+              ],
+            },
+            {
+              id: "suggestion_3",
+              label: "5 reds, 1 yellow, 1 pink, 3 blacks",
+              balls: [
+                "red",
+                "black",
+                "red",
+                "black",
+                "red",
+                "black",
+                "red",
+                "pink",
+                "red",
+                "yellow",
+              ],
+            },
+            {
+              id: "suggestion_4",
+              label: "5 reds, 2 yellows, 3 blacks",
+              balls: [
+                "red",
+                "black",
+                "red",
+                "black",
+                "red",
+                "black",
+                "red",
+                "yellow",
+                "red",
+                "yellow",
+              ],
+            },
+          ],
+          facts: [
+            {
+              kind: "summary_break",
+              player_key: "p1",
+              result: "summary_break",
+              break_points: 35,
+              foul_points: 4,
+              composition_status: "missing",
+              composition_suggestions: [
+                {
+                  id: "suggestion_1",
+                  label: "5 reds, 1 yellow, 4 blacks",
+                  balls: [
+                    "red",
+                    "black",
+                    "red",
+                    "black",
+                    "red",
+                    "black",
+                    "red",
+                    "black",
+                    "red",
+                    "yellow",
+                  ],
+                },
+                {
+                  id: "suggestion_2",
+                  label: "5 reds, 5 pinks",
+                  balls: [
+                    "red",
+                    "pink",
+                    "red",
+                    "pink",
+                    "red",
+                    "pink",
+                    "red",
+                    "pink",
+                    "red",
+                    "pink",
+                  ],
+                },
+                {
+                  id: "suggestion_3",
+                  label: "5 reds, 1 yellow, 1 pink, 3 blacks",
+                  balls: [
+                    "red",
+                    "black",
+                    "red",
+                    "black",
+                    "red",
+                    "black",
+                    "red",
+                    "pink",
+                    "red",
+                    "yellow",
+                  ],
+                },
+                {
+                  id: "suggestion_4",
+                  label: "5 reds, 2 yellows, 3 blacks",
+                  balls: [
+                    "red",
+                    "black",
+                    "red",
+                    "black",
+                    "red",
+                    "black",
+                    "red",
+                    "yellow",
+                    "red",
+                    "yellow",
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      potted_balls: [],
+      scored_balls: [],
+      free_ball_pots: [],
+      break_points: 35,
+      foul_points: 4,
+      facts: [
+        {
+          kind: "visit_summary",
+          player_key: "p1",
+          history_ids: ["h-summary"],
+          shot_count: 1,
+          potted_balls: [],
+          scored_balls: [],
+          free_ball_pots: [],
+          break_points: 35,
+          foul_points: 4,
+          result: "foul",
+        },
+      ],
+    };
+
+    render(
+      <ControlledLogEntry
+        controlledEntry={unresolvedEntry}
+        onResolveBreakComposition={onResolveBreakComposition}
+      />,
+    );
+
+    expect(
+      screen.getByLabelText("Ada Lovelace: break 35, foul 4").closest("li"),
+    ).toHaveAttribute(
+      "data-unresolved-summary-break",
+      "true",
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Expand frame log entry details" }),
+    );
+
+    expect(
+      screen.getByRole("listbox", {
+        name: "Summary break composition suggestions",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", {
+        name: /5 reds, 1 yellow, 4 blacks/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", {
+        name: /5 reds, 5 pinks/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", {
+        name: /5 reds, 1 yellow, 1 pink, 3 blacks/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", {
+        name: /5 reds, 2 yellows, 3 blacks/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("5 reds, 1 yellow, 4 blacks"),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("5 red")).toHaveLength(4);
+    expect(screen.getAllByLabelText("yellow")).toHaveLength(2);
+    expect(screen.getByLabelText("2 yellow")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: "yellow suggestion filter",
+      }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("option", {
+        name: /5 reds, 1 yellow, 4 blacks/,
+      }),
+    );
+
+    expect(onResolveBreakComposition).toHaveBeenCalledWith("h-summary", "suggestion_1");
   });
 });
 

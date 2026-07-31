@@ -1,3 +1,4 @@
+from scoreboard.domain.projectors.payloads import frame_payload
 from scoreboard.domain.services.matchroom_service import MatchroomService
 from scoreboard.repositories.matchroom_repository import MatchroomRepository
 from scoreboard.services.matchroom_action_dispatcher import (
@@ -73,3 +74,63 @@ def test_dispatcher_logs_summary_break_through_history() -> None:
     }
     assert frame.history[0]["outcome"]["composition_status"] == "missing"
     assert frame.history[0]["outcome"]["composition_suggestions"]
+
+
+def test_dispatcher_resolves_summary_break_composition_through_history() -> None:
+    matchroom_service = MatchroomService(repository=MatchroomRepository())
+    dispatcher = MatchroomActionDispatcher()
+
+    room = matchroom_service.connect_player_to_matchroom(
+        {"id": "room_resolve_break"},
+        {"id": "", "session_key": "p1", "display_name": "P1"},
+        {"id": "", "match_importance": "practice match", "frames_to_win": 3},
+    )
+    matchroom_service.connect_player_to_matchroom(
+        {"id": room.id},
+        {"id": "", "session_key": "p2", "display_name": "P2"},
+        {"id": "", "match_importance": "practice match", "frames_to_win": 3},
+    )
+
+    assert room.match is not None
+    assert room.current_frame_id is not None
+    frame = room.match.frames[room.current_frame_id]
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {"action": "log_break", "data": {"points": 35, "foul": 4}},
+    )
+
+    assert handled is True
+    assert error is None
+    entry_id = frame.history[0]["id"]
+    suggestion_id = frame.history[0]["outcome"]["composition_suggestions"][0]["id"]
+
+    handled, error = dispatcher.dispatch(
+        room,
+        "p2",
+        {
+            "action": "resolve_break_composition",
+            "data": {"entry_id": entry_id, "suggestion_id": suggestion_id},
+        },
+    )
+
+    assert handled is True
+    assert error is None
+    assert frame.history[0]["outcome"]["composition_status"] == "resolved"
+    assert frame.history[0]["outcome"]["resolved_composition"] == [
+        "red",
+        "black",
+        "red",
+        "black",
+        "red",
+        "black",
+        "red",
+        "black",
+        "red",
+        "yellow",
+    ]
+    assert frame.table_state.reds_remaining == 10
+    assert frame_payload(frame)["reds_remaining"] == 10
+    assert frame_payload(frame)["has_unresolved_table_state"] is False
+    assert frame.history[-1]["outcome"]["action"] == "resolve_break_composition"

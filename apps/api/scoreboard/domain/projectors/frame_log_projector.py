@@ -20,6 +20,8 @@ class FrameLogProjector:
             actor_key = history_entry["actor"]
             outcome = self._outcome_for_history_entry(history_entry)
             action = outcome["action"]
+            if action == "resolve_break_composition":
+                continue
 
             visit = visits[-1] if visits and visits[-1]["player_key"] == actor_key else None
             if (
@@ -41,6 +43,8 @@ class FrameLogProjector:
             )
 
             if action == "log_break":
+                visit["potted_balls"].extend(outcome["potted_balls"])
+                visit["scored_balls"].extend(outcome["scored_balls"])
                 visit["break_points"] += outcome["break_points"]
                 visit["foul_points"] += outcome["foul_points"]
                 visit["result"] = "foul" if outcome["foul_points"] else "ended"

@@ -12,6 +12,10 @@ describe("scoringRules", () => {
     expect(isLegalShot(["red", "red"], "red", 1, null)).toBe(false);
   });
 
+  it("allows red pots when the remaining red count is unknown", () => {
+    expect(isLegalShot(["red", "red"], "red", null, null)).toBe(true);
+  });
+
   it("requires the nominated colour when a free ball is active", () => {
     expect(
       isLegalShot(["blue"], "red", 1, {

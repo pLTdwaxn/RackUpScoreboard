@@ -29,6 +29,7 @@ export default function ControlPanel() {
     sendConcede,
     sendDeclareFreeBall,
     sendEndTurn,
+    sendLogBreak,
     sendNextFrame,
     sendPassShot,
     sendShot,
@@ -99,6 +100,10 @@ export default function ControlPanel() {
               freeBallMode={shotComposer.freeBallMode}
               selectedBalls={shotComposer.multiPotBalls}
               onBallTap={shotComposer.handleBallTap}
+              onLogBreak={(score, foul) => {
+                sendLogBreak(score, foul);
+                setIsSummaryBreakMode(false);
+              }}
               onConcede={() => setIsConcedeDialogOpen(true)}
               onEnterAdvancedMode={() => {
                 setIsSummaryBreakMode(false);

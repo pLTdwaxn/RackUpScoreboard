@@ -10,7 +10,7 @@ import { BallName } from "@/domain/balls";
 type AdvancedScoringPanelProps = {
   summary: string;
   statusChip: { label: string; color: "danger" | "success" } | null;
-  redsRemaining: number;
+  redsRemaining: Frame["reds_remaining"];
   coloursOnTable: Frame["colours_on_table"];
   objectBall: string;
   freeBall: Frame["free_ball"];
