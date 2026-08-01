@@ -146,14 +146,14 @@ def test_red_potted_when_colour_is_on_is_foul_and_removes_red(
     assert frame.table_state.object_ball == "red"
 
 
-def test_declared_foul_on_legal_pot_uses_declared_penalty_without_removing_red(
+def test_declared_foul_on_legal_red_pot_uses_declared_penalty_and_removes_red(
     orchestrator: FrameOrchestrator,
     frame: Frame,
 ) -> None:
     orchestrator.orchestrate(frame, ActionPayload(potted_balls=("red",), foul=7))
 
     assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 12}
-    assert frame.table_state.reds_remaining == 15
+    assert frame.table_state.reds_remaining == 14
     assert frame.turn_state.current_turn == PLAYER_TWO
     assert frame.table_state.object_ball == "red"
 

@@ -34,7 +34,7 @@ class ScoreProcessor:
         effects: list["FrameEffect"] = []
 
         if foul.is_foul:
-            reds_removed = foul.fouled_with.count(RED_BALL)
+            reds_removed = shot.potted_balls.count(RED_BALL)
             if reds_removed:
                 effects.append(RemoveRedsEffect(reds_removed))
             effects.append(AwardPenaltyEffect(foul.points_awarded))

@@ -53,6 +53,21 @@ def test_score_processor_awards_foul_penalty_to_opponent_and_removes_fouled_reds
     assert [type(effect) for effect in effects] == [RemoveRedsEffect, AwardPenaltyEffect]
 
 
+def test_score_processor_removes_red_potted_during_declared_foul():
+    context = FrameCalculationContext(
+        frame=make_frame(),
+        payload=ActionPayload(action="shot", potted_balls=("red",), foul=7),
+        foul_result=FoulResult(is_foul=True, points_awarded=7, fouled_with=()),
+    )
+
+    effects = ScoreProcessor().process(context)
+
+    assert context.score_result.player == "p2"
+    assert context.score_result.points == 7
+    assert context.score_result.reds_removed == 1
+    assert [type(effect) for effect in effects] == [RemoveRedsEffect, AwardPenaltyEffect]
+
+
 def test_score_processor_reports_free_ball_colour_as_object_ball():
     frame = make_frame()
     frame.table_state.free_ball_nominated_colour = "blue"
