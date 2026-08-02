@@ -1,5 +1,8 @@
 # scoreboard/routes/websocket.py
 import json
+from dataclasses import dataclass
+from json import JSONDecodeError
+from typing import Any
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
@@ -14,6 +17,32 @@ from scoreboard.services.matchroom_action_dispatcher import (
 
 router = APIRouter()
 match_state_projector = MatchStateProjector()
+
+
+@dataclass(frozen=True)
+class ClientEventEnvelope:
+    event: dict
+    action_id: str | None = None
+
+
+def parse_client_event(data: str) -> ClientEventEnvelope:
+    try:
+        event = json.loads(data)
+    except JSONDecodeError as exc:
+        raise ValueError("Message must be valid JSON.") from exc
+
+    return validate_client_event_envelope(event)
+
+
+def validate_client_event_envelope(event: Any) -> ClientEventEnvelope:
+    if not isinstance(event, dict):
+        raise ValueError("Message must be a JSON object.")
+
+    action_id = event.get("action_id")
+    if action_id is not None and not isinstance(action_id, str):
+        raise ValueError("Action id must be a string.")
+
+    return ClientEventEnvelope(event=event, action_id=action_id)
 
 
 async def send_game_state(matchroom_id: str, matchroom: Matchroom):
@@ -39,21 +68,16 @@ async def handle_client_event(
     websocket: WebSocket,
     matchroom_id: str,
     session_key: str,
-    event: dict,
+    envelope: ClientEventEnvelope,
 ):
-    action_id = event.get("action_id") if isinstance(event, dict) else None
-    if action_id is not None and not isinstance(action_id, str):
-        await send_error(websocket, "Action id must be a string.")
-        return
-
     matchroom = matchroom_service.get_matchroom_by_id(matchroom_id)
     if matchroom is None:
-        await send_error(websocket, "Matchroom not found.", action_id)
+        await send_error(websocket, "Matchroom not found.", envelope.action_id)
         return
 
-    handled, error = matchroom_action_dispatcher.dispatch(matchroom, session_key, event)
+    handled, error = matchroom_action_dispatcher.dispatch(matchroom, session_key, envelope.event)
     if not handled:
-        await send_error(websocket, error or "Unable to process message.", action_id)
+        await send_error(websocket, error or "Unable to process message.", envelope.action_id)
         return
 
     matchroom_service.save_matchroom(matchroom)
@@ -96,8 +120,13 @@ async def websocket_endpoint(
 
         while True:
             data = await websocket.receive_text()
-            event = json.loads(data)
-            await handle_client_event(websocket, matchroom_id, session_key, event)
+            try:
+                envelope = parse_client_event(data)
+            except ValueError as error:
+                await send_error(websocket, str(error))
+                continue
+
+            await handle_client_event(websocket, matchroom_id, session_key, envelope)
 
     except WebSocketDisconnect:
         await handle_disconnect(matchroom_id, session_key)

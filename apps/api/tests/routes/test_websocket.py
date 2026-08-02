@@ -303,6 +303,46 @@ def test_action_error_echoes_action_id(client, connect_player):
     assert "Unsupported action" in err["error"]
 
 
+def test_invalid_json_is_rejected_over_websocket(client, connect_player):
+    p1 = connect_player("Breaker")
+    params = f"matchroom_id={p1['matchroom_id']}&session_key={p1['player_key']}"
+
+    with client.websocket_connect(f"/ws/room/?{params}") as ws:
+        _ = json.loads(ws.receive_text())
+        ws.send_text("{")
+        err = json.loads(ws.receive_text())
+
+    assert err["type"] == "error"
+    assert err["error"] == "Message must be valid JSON."
+
+
+def test_non_object_message_is_rejected_over_websocket(client, connect_player):
+    p1 = connect_player("Breaker")
+    params = f"matchroom_id={p1['matchroom_id']}&session_key={p1['player_key']}"
+
+    with client.websocket_connect(f"/ws/room/?{params}") as ws:
+        _ = json.loads(ws.receive_text())
+        ws.send_text(json.dumps(["shot"]))
+        err = json.loads(ws.receive_text())
+
+    assert err["type"] == "error"
+    assert err["error"] == "Message must be a JSON object."
+
+
+def test_non_string_action_id_is_rejected_over_websocket(client, connect_player):
+    p1 = connect_player("Breaker")
+    params = f"matchroom_id={p1['matchroom_id']}&session_key={p1['player_key']}"
+
+    with client.websocket_connect(f"/ws/room/?{params}") as ws:
+        _ = json.loads(ws.receive_text())
+        ws.send_text(json.dumps({"action_id": 1, "action": "undo"}))
+        err = json.loads(ws.receive_text())
+
+    assert err["type"] == "error"
+    assert err["error"] == "Action id must be a string."
+    assert "action_id" not in err
+
+
 def test_disconnect_notifies_remaining_player(client, connect_player):
     p1 = connect_player("Player One")
     p2 = connect_player("Player Two", matchroom_id=p1["matchroom_id"])
