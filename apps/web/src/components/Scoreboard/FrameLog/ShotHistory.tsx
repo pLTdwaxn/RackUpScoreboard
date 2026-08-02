@@ -1,6 +1,7 @@
 import { ScrollShadow } from "@heroui/react";
 import { useRef } from "react";
 
+import { useAppDictionary } from "@/i18n/client";
 import type { FrameLogEntry, Player } from "@/types";
 import FrameLogFactMessage from "./FrameLogFactMessage";
 import useScrollToEnd from "./useScrollToEnd";
@@ -16,6 +17,7 @@ export default function ShotHistory({
   isExpanded,
   players,
 }: ShotHistoryProps) {
+  const copy = useAppDictionary().frameLog;
   const shotHistoryScrollRef = useRef<HTMLDivElement>(null);
   const shots = entry.shots ?? [];
   const shotHistoryKey = [
@@ -31,11 +33,7 @@ export default function ShotHistory({
   });
 
   if (!shots.length) {
-    return (
-      <div>
-        {entry.shot_count} {entry.shot_count === 1 ? "shot" : "shots"}
-      </div>
-    );
+    return <div>{copy.shotCount(entry.shot_count)}</div>;
   }
 
   return (

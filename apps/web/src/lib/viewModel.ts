@@ -5,6 +5,7 @@ import {
   Matchroom,
   Player,
 } from "@/types";
+import { getAppDictionary } from "@/i18n";
 
 export const DEFAULT_MATCH: Match = {
   id: "",
@@ -62,7 +63,10 @@ export function buildScoreboardViewModel({
   gameState: GameStateMessage | null;
 }): ScoreboardViewModel {
   const matchroom = gameState?.matchroom ?? DEFAULT_MATCHROOM;
-  const match = gameState?.match ?? DEFAULT_MATCH;
+  const match = gameState?.match ?? {
+    ...DEFAULT_MATCH,
+    match_importance: getAppDictionary().matchroomOverview.defaultPracticeMatch,
+  };
   const frame = gameState?.current_frame ?? DEFAULT_FRAME;
   const matchScores = gameState?.match_scores ?? {};
   const players = gameState?.players ?? [];

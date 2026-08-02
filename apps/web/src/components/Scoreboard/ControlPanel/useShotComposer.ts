@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { Frame } from "@/types";
 import { BALL_BY_NAME, BallName } from "@/domain/balls";
+import { useAppDictionary } from "@/i18n/client";
 
 import {
   inferFoulPoints,
@@ -24,10 +25,6 @@ function pluralise(count: number, singular: string, plural = `${singular}s`) {
   return count === 1 ? singular : plural;
 }
 
-function formatPottedReds(count: number) {
-  return `${count} ${pluralise(count, "red")} potted`;
-}
-
 export function useShotComposer({
   canKeepScore,
   canUseFoulOptions,
@@ -38,6 +35,7 @@ export function useShotComposer({
   sendShot,
   sendDeclareFreeBall,
 }: UseShotComposerParams) {
+  const copy = useAppDictionary().controlPanel.advanced;
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [multiPotBalls, setMultiPotBalls] = useState<BallName[]>([]);
   const [foulBall, setFoulBall] = useState<BallName | null>(null);
@@ -73,60 +71,63 @@ export function useShotComposer({
   const comboStatusChip = (() => {
     if (foulMode) {
       return foulBall
-        ? { label: `FOUL ${foulPoints}`, color: "danger" as const }
+        ? { label: copy.foulWithPoints(foulPoints), color: "danger" as const }
         : null;
     }
 
     if (foulBall) {
-      return { label: `FOUL ${foulPoints}`, color: "danger" as const };
+      return { label: copy.foulWithPoints(foulPoints), color: "danger" as const };
     }
 
     if (comboIsFoul) {
       return {
         label: inferredFreeBallFoulPoints
-          ? `FOUL ${inferredFreeBallFoulPoints}`
-          : "FOUL",
+          ? copy.foulWithPoints(inferredFreeBallFoulPoints)
+          : copy.foul,
         color: "danger" as const,
       };
     }
 
     return multiPotBalls.length > 0
-      ? { label: "LEGAL", color: "success" as const }
+      ? { label: copy.legal, color: "success" as const }
       : null;
   })();
 
-  const redPotSummary = formatPottedReds(redSelections);
+  const redPotSummary = copy.pottedReds(
+    redSelections,
+    pluralise(redSelections, "red"),
+  );
 
   const advancedSummary = (() => {
     if (foulMode) {
       if (foulBall === "red" && redSelections === 0) {
-        return "Foul on a red (no pot)";
+        return copy.foulOnRedNoPot;
       }
 
       if (foulBall === "red" && redSelections > 0) {
-        return `Foul with ${redPotSummary}`;
+        return copy.foulWithPottedReds(redPotSummary);
       }
 
       if (foulBall && redSelections > 0) {
-        return `Foul on ${foulBall} with ${redPotSummary}`;
+        return copy.foulOnBallWithPottedReds(foulBall, redPotSummary);
       }
 
       if (foulBall) {
-        return `Foul on ${foulBall}`;
+        return copy.foulOnBall(foulBall);
       }
 
-      return "Tap the ball fouled on";
+      return copy.tapFouledBall;
     }
 
     if (foulBall) {
-      return `Foul on ${foulBall}`;
+      return copy.foulOnBall(foulBall);
     }
 
     if (multiPotBalls.length > 0) {
-      return `Pot ${comboSummary}`;
+      return copy.pot(comboSummary);
     }
 
-    return "Tap the balls potted";
+    return copy.tapPottedBalls;
   })();
 
   const enterAdvancedMode = (beforeEnter?: () => void) => {

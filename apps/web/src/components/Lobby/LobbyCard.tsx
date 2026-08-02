@@ -1,4 +1,5 @@
 import { Card, Tabs } from "@heroui/react";
+import { useAppDictionary } from "@/i18n/client";
 import { JoinMatchForm, NewMatchForm } from ".";
 
 type LobbyCardProps = {
@@ -6,18 +7,20 @@ type LobbyCardProps = {
 };
 
 const LobbyCard = ({ initialMatchroomId }: LobbyCardProps) => {
+  const copy = useAppDictionary().lobby;
+
   return (
     <Tabs className="w-full h-full">
       <Card className="h-full">
         <Card.Header className="items-center">
           <Tabs.ListContainer>
-            <Tabs.List aria-label="Join or create a matchroom">
+            <Tabs.List aria-label={copy.joinOrCreateTabs}>
               <Tabs.Tab id="join-matchroom">
-                Join
+                {copy.join}
                 <Tabs.Indicator />
               </Tabs.Tab>
               <Tabs.Tab id="create-matchroom">
-                Create
+                {copy.create}
                 <Tabs.Indicator />
               </Tabs.Tab>
             </Tabs.List>

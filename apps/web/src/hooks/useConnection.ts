@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { MatchroomConnection } from "@/types";
+import { getAppDictionary } from "@/i18n";
 import { getClientApiBase } from "@/lib/env";
 
 const ROOM_SESSION_KEY_STORAGE_KEY = "scoreboard.room_session_key";
@@ -42,6 +43,7 @@ type ConnectParams = {
 };
 
 export function useConnection() {
+  const copy = getAppDictionary("en").errors;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +54,7 @@ export function useConnection() {
   }: ConnectParams) => {
     const trimmedName = displayName.trim();
     if (!trimmedName) {
-      throw new Error("Enter your name to continue.");
+      throw new Error(copy.enterName);
     }
 
     setIsSubmitting(true);
@@ -61,9 +63,7 @@ export function useConnection() {
     try {
       const apiBase = getClientApiBase();
       if (!apiBase) {
-        throw new Error(
-          "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
-        );
+        throw new Error(copy.backendUrlNotConfigured);
       }
 
       const response = await fetch(`${apiBase}/connect`, {
@@ -92,7 +92,7 @@ export function useConnection() {
         throw new Error(
           "detail" in payload && payload.detail
             ? payload.detail
-            : "Could not connect to the scoreboard service.",
+            : copy.connectionFailed,
         );
       }
 
@@ -112,7 +112,7 @@ export function useConnection() {
       const message =
         connectError instanceof Error
           ? connectError.message
-          : "Could not connect to the scoreboard service.";
+          : copy.connectionFailed;
       setError(message);
       throw new Error(message);
     } finally {

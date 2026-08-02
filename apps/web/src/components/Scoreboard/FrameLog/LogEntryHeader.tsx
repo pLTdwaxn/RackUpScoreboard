@@ -2,6 +2,7 @@ import { Accordion } from "@heroui/react";
 import { IconChevronDown } from "@tabler/icons-react";
 
 import PlayerAvatar from "@/components/Scoreboard/shared/PlayerAvatar";
+import { useAppDictionary } from "@/i18n/client";
 import {
   getPlayerInitials,
   getPlayerThemeClassName,
@@ -29,6 +30,7 @@ export default function LogEntryHeader({
   canUndo,
   onUndo,
 }: LogEntryHeaderProps) {
+  const copy = useAppDictionary().frameLog;
   const initials = getPlayerInitials(entry.player_name);
 
   return (
@@ -36,8 +38,8 @@ export default function LogEntryHeader({
       <Accordion.Trigger
         aria-label={
           isExpanded
-            ? "Collapse frame log entry details"
-            : "Expand frame log entry details"
+            ? copy.collapseEntryDetails
+            : copy.expandEntryDetails
         }
         className="relative flex w-full min-w-0 items-center gap-3 rounded-3xl p-2 pr-24 text-left text-foreground"
       >

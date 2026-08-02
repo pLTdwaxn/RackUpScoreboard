@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { Button, Popover } from "@heroui/react";
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react";
+import type { AppDictionary } from "@/i18n";
+import { useAppDictionary } from "@/i18n/client";
 import { Match } from "@/types";
 
 type MatchroomOverviewProps = {
@@ -41,6 +43,7 @@ function MatchroomOverviewPopover({
   clubId,
   match,
 }: MatchroomOverviewPopoverProps) {
+  const copy = useAppDictionary().matchroomOverview;
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -52,11 +55,13 @@ function MatchroomOverviewPopover({
       >
         {match ? (
           <>
-            <span>{matchOverviewLabel(match)}</span>
+            <span>{matchOverviewLabel(match, copy)}</span>
           </>
         ) : (
           <span>
-            {roomReady ? `Matchroom ${matchroomId}` : "Waiting for Opponent..."}
+            {roomReady
+              ? copy.matchroom(matchroomId)
+              : copy.waitingForOpponent}
           </span>
         )}
 
@@ -65,15 +70,21 @@ function MatchroomOverviewPopover({
 
       <Popover.Content placement="bottom" className="w-80">
         <Popover.Dialog className="flex flex-col gap-3 text-left">
-          <MatchDetail label="Match" value={match?.name || "Match not set"} />
-          <MatchDetail label="Club" value={clubId ? clubId : "Club not set"} />
           <MatchDetail
-            label="Importance"
-            value={match?.match_importance || "Importance not set"}
+            label={copy.match}
+            value={match?.name || copy.matchNotSet}
           />
           <MatchDetail
-            label="Winning Condition"
-            value={match ? matchOverviewLabel(match) : "Condition not set"}
+            label={copy.club}
+            value={clubId ? clubId : copy.clubNotSet}
+          />
+          <MatchDetail
+            label={copy.importance}
+            value={match?.match_importance || copy.importanceNotSet}
+          />
+          <MatchDetail
+            label={copy.winningCondition}
+            value={match ? matchOverviewLabel(match, copy) : copy.conditionNotSet}
           />
         </Popover.Dialog>
       </Popover.Content>
@@ -94,10 +105,13 @@ function MatchDetail({ label, value }: { label: string; value: string }) {
   );
 }
 
-function matchOverviewLabel(match: Match): string {
+function matchOverviewLabel(
+  match: Match,
+  copy: AppDictionary["matchroomOverview"],
+): string {
   if (!match.frames_to_win) {
     return match.match_importance;
   }
 
-  return `Best of ${match.frames_to_win * 2 - 1}`;
+  return copy.bestOf(match.frames_to_win * 2 - 1);
 }

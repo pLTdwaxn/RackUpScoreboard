@@ -1,4 +1,5 @@
 import { Button } from "@heroui/react";
+import { useAppDictionary } from "@/i18n/client";
 
 type FinishedFramePanelProps = {
   winnerKey: string | null;
@@ -13,21 +14,22 @@ const FinishedFramePanel = ({
   hasConfirmedNextFrame,
   onNextFrame,
 }: FinishedFramePanelProps) => {
+  const copy = useAppDictionary().controlPanel.finishedFrame;
   const resultMessage =
     winnerKey === currentPlayerKey
-      ? "Congratulations! You won the frame."
-      : "You lost the frame.";
+      ? copy.won
+      : copy.lost;
 
   return (
     <div className="flex w-full flex-col items-center justify-center gap-3 py-2">
       <p className="text-lg">{resultMessage}</p>
       {hasConfirmedNextFrame ? (
         <p className="font-mono text-sm tracking-wide uppercase text-muted">
-          Waiting for your opponent
+          {copy.waitingForOpponent}
         </p>
       ) : (
         <Button variant="primary" onPress={onNextFrame}>
-          Start Next Frame
+          {copy.startNextFrame}
         </Button>
       )}
     </div>

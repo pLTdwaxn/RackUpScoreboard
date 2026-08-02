@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { Button, Form, Input, Label, TextField } from "@heroui/react";
 
 import { useConnection } from "@/hooks/useConnection";
+import { useAppDictionary } from "@/i18n/client";
 
 type JoinMatchFormProps = {
   initialMatchroomId?: string;
 };
 
 const JoinMatchForm = ({ initialMatchroomId = "" }: JoinMatchFormProps) => {
+  const copy = useAppDictionary().lobby;
   const router = useRouter();
   const { connect, isSubmitting, error, setError } = useConnection();
   const [displayName, setDisplayName] = useState("");
@@ -21,7 +23,7 @@ const JoinMatchForm = ({ initialMatchroomId = "" }: JoinMatchFormProps) => {
     event.preventDefault();
 
     if (!matchroomId.trim()) {
-      setError("Enter a matchroom ID to join.");
+      setError(copy.enterMatchroomId);
       return;
     }
 
@@ -40,9 +42,9 @@ const JoinMatchForm = ({ initialMatchroomId = "" }: JoinMatchFormProps) => {
   return (
     <Form className="w-full space-y-4" onSubmit={handleSubmit}>
       <TextField className="space-y-2" isRequired>
-        <Label>Name</Label>
+        <Label>{copy.name}</Label>
         <Input
-          placeholder="Enter your name"
+          placeholder={copy.namePlaceholder}
           value={displayName}
           onChange={(event) => {
             setDisplayName(event.target.value);
@@ -53,9 +55,9 @@ const JoinMatchForm = ({ initialMatchroomId = "" }: JoinMatchFormProps) => {
         />
       </TextField>
       <TextField className="space-y-2" isRequired>
-        <Label>Matchroom ID</Label>
+        <Label>{copy.matchroomId}</Label>
         <Input
-          placeholder="Enter matchroom ID"
+          placeholder={copy.matchroomIdPlaceholder}
           value={matchroomId}
           onChange={(event) => {
             setMatchroomId(event.target.value);
@@ -67,7 +69,7 @@ const JoinMatchForm = ({ initialMatchroomId = "" }: JoinMatchFormProps) => {
       </TextField>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <Button className="rounded-2xl" type="submit" isDisabled={isSubmitting}>
-        {isSubmitting ? "Joining..." : "Join"}
+        {isSubmitting ? copy.joining : copy.join}
       </Button>
     </Form>
   );

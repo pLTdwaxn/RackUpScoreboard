@@ -15,10 +15,12 @@ import {
 } from "@heroui/react";
 
 import { useConnection } from "@/hooks/useConnection";
+import { useAppDictionary } from "@/i18n/client";
 
 type ScoreKeeperMode = "opp" | "self" | "any";
 
 const NewMatchForm = () => {
+  const copy = useAppDictionary().lobby;
   const router = useRouter();
   const { connect, isSubmitting, error, setError } = useConnection();
   const [displayName, setDisplayName] = useState("");
@@ -38,9 +40,9 @@ const NewMatchForm = () => {
   return (
     <Form className="w-full space-y-4" onSubmit={handleSubmit}>
       <TextField className="space-y-2" isRequired>
-        <Label>Name</Label>
+        <Label>{copy.name}</Label>
         <Input
-          placeholder="Enter your name"
+          placeholder={copy.namePlaceholder}
           value={displayName}
           onChange={(event) => {
             setDisplayName(event.target.value);
@@ -51,13 +53,13 @@ const NewMatchForm = () => {
         />
       </TextField>
       <RadioGroup defaultValue="best-of-frames" variant="secondary">
-        <Label>Win Condition</Label>
+        <Label>{copy.winCondition}</Label>
         <Radio value="best-of-frames">
           <Radio.Content>
             <Radio.Control>
               <Radio.Indicator />
             </Radio.Control>
-            Best of Frames
+            {copy.bestOfFrames}
           </Radio.Content>
         </Radio>
         <Radio value="open-ended">
@@ -65,7 +67,7 @@ const NewMatchForm = () => {
             <Radio.Control>
               <Radio.Indicator />
             </Radio.Control>
-            Open Ended
+            {copy.openEnded}
           </Radio.Content>
         </Radio>
       </RadioGroup>
@@ -74,16 +76,16 @@ const NewMatchForm = () => {
         onChange={(value) => setScoreKeeper(value as ScoreKeeperMode)}
         variant="secondary"
       >
-        <Label>Scorekeeping By</Label>
+        <Label>{copy.scorekeepingBy}</Label>
         <Radio value="opp">
           <Radio.Content>
             <Radio.Control>
               <Radio.Indicator />
             </Radio.Control>
-            Opponent
+            {copy.scorekeepingOpponent}
           </Radio.Content>
           <Description>
-            The player not at the table is scorekeeping.
+            {copy.scorekeepingOpponentDescription}
           </Description>
         </Radio>
         <Radio value="self">
@@ -91,32 +93,32 @@ const NewMatchForm = () => {
             <Radio.Control>
               <Radio.Indicator />
             </Radio.Control>
-            Self
+            {copy.scorekeepingSelf}
           </Radio.Content>
-          <Description>The player at the table is scorekeeping.</Description>
+          <Description>{copy.scorekeepingSelfDescription}</Description>
         </Radio>
         <Radio value="referee" isDisabled>
           <Radio.Content>
             <Radio.Control>
               <Radio.Indicator />
             </Radio.Control>
-            Referee (TBA)
+            {copy.scorekeepingReferee}
           </Radio.Content>
-          <Description>A referee is scorekeeping for both players.</Description>
+          <Description>{copy.scorekeepingRefereeDescription}</Description>
         </Radio>
         <Radio value="any">
           <Radio.Content>
             <Radio.Control>
               <Radio.Indicator />
             </Radio.Control>
-            Free for All
+            {copy.scorekeepingAny}
           </Radio.Content>
-          <Description>Any player can scorekeep.</Description>
+          <Description>{copy.scorekeepingAnyDescription}</Description>
         </Radio>
       </RadioGroup>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <Button className="rounded-2xl" type="submit" isDisabled={isSubmitting}>
-        {isSubmitting ? "Creating..." : "Create"}
+        {isSubmitting ? copy.creating : copy.create}
       </Button>
     </Form>
   );

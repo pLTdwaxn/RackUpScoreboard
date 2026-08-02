@@ -1,6 +1,7 @@
 import { Button, Label, NumberField } from "@heroui/react";
 import { IconCheck, IconMinus, IconPlus } from "@tabler/icons-react";
 import { useState } from "react";
+import { useAppDictionary } from "@/i18n/client";
 
 type SummaryBreakFieldsProps = {
   canKeepScore: boolean;
@@ -11,6 +12,7 @@ export default function SummaryBreakFields({
   canKeepScore,
   onSubmit,
 }: SummaryBreakFieldsProps) {
+  const copy = useAppDictionary().controlPanel.summaryBreak;
   const [score, setScore] = useState(0);
   const [foul, setFoul] = useState(0);
   const canSubmit = canKeepScore && (score > 0 || foul > 0);
@@ -26,17 +28,17 @@ export default function SummaryBreakFields({
         variant="secondary"
         className="space-y-1 text-left"
       >
-        <Label>Score</Label>
+        <Label>{copy.score}</Label>
         <NumberField.Group>
           <NumberField.DecrementButton
-            aria-label="Decrease score"
+            aria-label={copy.decreaseScore}
             className="px-2"
           >
             <IconMinus size={16} stroke={2} />
           </NumberField.DecrementButton>
-          <NumberField.Input aria-label="Score" inputMode="numeric" />
+          <NumberField.Input aria-label={copy.score} inputMode="numeric" />
           <NumberField.IncrementButton
-            aria-label="Increase score"
+            aria-label={copy.increaseScore}
             className="px-2"
           >
             <IconPlus size={16} stroke={2} />
@@ -53,17 +55,17 @@ export default function SummaryBreakFields({
         variant="secondary"
         className="space-y-1 text-left"
       >
-        <Label>Foul</Label>
+        <Label>{copy.foul}</Label>
         <NumberField.Group>
           <NumberField.DecrementButton
-            aria-label="Decrease foul"
+            aria-label={copy.decreaseFoul}
             className="px-2"
           >
             <IconMinus size={16} stroke={2} />
           </NumberField.DecrementButton>
-          <NumberField.Input aria-label="Foul" inputMode="numeric" />
+          <NumberField.Input aria-label={copy.foul} inputMode="numeric" />
           <NumberField.IncrementButton
-            aria-label="Increase foul"
+            aria-label={copy.increaseFoul}
             className="px-2"
           >
             <IconPlus size={16} stroke={2} />
@@ -72,7 +74,7 @@ export default function SummaryBreakFields({
       </NumberField>
 
       <Button
-        aria-label="Submit logged break"
+        aria-label={copy.submit}
         isIconOnly
         isDisabled={!canSubmit}
         onPress={() => onSubmit(score, foul)}

@@ -1,0 +1,221 @@
+{
+  "appShell": {
+    "lobby": "Lobby"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "unknown": "unknown"
+  },
+  "errors": {
+    "backendUrlNotConfigured": "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
+    "invalidRoomUpdate": "Received invalid room update.",
+    "roomUpdateParseFailed": "Failed to parse room update.",
+    "matchroomNotFound": "Matchroom not found.",
+    "roomConnectionNotReady": "Room connection not ready.",
+    "connectionFailed": "Could not connect to the scoreboard service.",
+    "enterName": "Enter your name to continue."
+  },
+  "health": {
+    "title": "Backend Health",
+    "missingApiBase": "(missing NEXT_PUBLIC_API_BASE)",
+    "backendUrlNotConfigured": "Backend URL is not configured for this environment. Set NEXT_PUBLIC_API_BASE in deployment settings.",
+    "requestFailed": "Request failed with status {status}",
+    "backendUnreachable": "Could not reach backend. Is FastAPI running on port {port}?",
+    "connection": "Connection",
+    "online": "Online",
+    "offline": "Offline",
+    "service": "Service:",
+    "status": "Status:"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode",
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "lobby": {
+    "joinOrCreateTabs": "Join or create a matchroom",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "matchroomId": "Matchroom ID",
+    "matchroomIdPlaceholder": "Enter matchroom ID",
+    "enterMatchroomId": "Enter a matchroom ID to join.",
+    "joining": "Joining...",
+    "join": "Join",
+    "creating": "Creating...",
+    "create": "Create",
+    "winCondition": "Win Condition",
+    "bestOfFrames": "Best of Frames",
+    "openEnded": "Open Ended",
+    "scorekeepingBy": "Scorekeeping By",
+    "scorekeepingOpponent": "Opponent",
+    "scorekeepingOpponentDescription": "The player not at the table is scorekeeping.",
+    "scorekeepingSelf": "Self",
+    "scorekeepingSelfDescription": "The player at the table is scorekeeping.",
+    "scorekeepingReferee": "Referee (TBA)",
+    "scorekeepingRefereeDescription": "A referee is scorekeeping for both players.",
+    "scorekeepingAny": "Free for All",
+    "scorekeepingAnyDescription": "Any player can scorekeep."
+  },
+  "sideDrawer": {
+    "settings": "Settings",
+    "theme": "Theme",
+    "language": "Language",
+    "languageSelection": "Language selection",
+    "scorekeeping": "Scorekeeping",
+    "players": "Players",
+    "matchRules": "Match rules",
+    "leaveRoom": "Leave Room"
+  },
+  "matchroomOverview": {
+    "defaultPracticeMatch": "Practice Match",
+    "waitingForOpponent": "Waiting for Opponent...",
+    "matchroom": "Matchroom {matchroomId}",
+    "match": "Match",
+    "matchNotSet": "Match not set",
+    "club": "Club",
+    "clubNotSet": "Club not set",
+    "importance": "Importance",
+    "importanceNotSet": "Importance not set",
+    "winningCondition": "Winning Condition",
+    "conditionNotSet": "Condition not set",
+    "bestOf": "Best of {frames}"
+  },
+  "matchroomInvite": {
+    "qrCodeError": "Could not generate QR code.",
+    "openInvite": "Open matchroom invite",
+    "heading": "Invite Player",
+    "description": "Share this QR code or room code with your opponent.",
+    "qrCodeAlt": "QR code for matchroom {matchroomId}"
+  },
+  "scoreboard": {
+    "connectionLost": "Connection lost. Reconnecting...",
+    "reconnectTry": "Try {attempt}",
+    "reconnectIn": " in {seconds}s"
+  },
+  "frameOverview": {
+    "waitingPlayer": "Waiting",
+    "remaining": "Remaining",
+    "gap": "Gap",
+    "snookersNeeded": "Snks Needed"
+  },
+  "controlPanel": {
+    "compositionFilter": {
+      "cancel": "Cancel composition resolution",
+      "empty": "Tap balls to narrow the break composition",
+      "showingAtLeast": "Showing breaks with at least {description}",
+      "conjunction": {
+        "two": "and",
+        "final": "and"
+      },
+      "ariaLabel": "{ball} suggestion filter{countSuffix}"
+    },
+    "finishedFrame": {
+      "won": "Congratulations! You won the frame.",
+      "lost": "You lost the frame.",
+      "waitingForOpponent": "Waiting for your opponent",
+      "startNextFrame": "Start Next Frame"
+    },
+    "concedeFrame": {
+      "heading": "Conceding Frame",
+      "body": "Are you sure you want to concede the frame?",
+      "concede": "Concede"
+    },
+    "advanced": {
+      "foulDeclaringOn": "Foul Declaring On",
+      "foulDeclaringOff": "Foul Declaring Off",
+      "foul": "FOUL",
+      "foulWithPoints": "FOUL {points}",
+      "legal": "LEGAL",
+      "foulOnRedNoPot": "Foul on a red (no pot)",
+      "foulWithPottedReds": "Foul with {redSummary}",
+      "foulOnBallWithPottedReds": "Foul on {ball} with {redSummary}",
+      "foulOnBall": "Foul on {ball}",
+      "tapFouledBall": "Tap the ball fouled on",
+      "pot": "Pot {summary}",
+      "tapPottedBalls": "Tap the balls potted",
+      "pottedReds": "{count} {label} potted"
+    },
+    "summaryBreak": {
+      "score": "Score",
+      "foul": "Foul",
+      "decreaseScore": "Decrease score",
+      "increaseScore": "Increase score",
+      "decreaseFoul": "Decrease foul",
+      "increaseFoul": "Increase foul",
+      "submit": "Submit logged break"
+    },
+    "simpleActions": {
+      "concedeFrame": "Concede frame",
+      "switchTurn": "Switch turn",
+      "passShot": "Pass shot",
+      "declareFreeBall": "Declare free ball",
+      "declareFoul": "Declare foul",
+      "logBreakByNumber": "Log break by number",
+      "advancedShotComposer": "Advanced shot composer"
+    },
+    "scorekeeping": {
+      "nominateFreeBall": "Nominate the free ball",
+      "manuallyLoggingFor": "Manually logging the break for",
+      "manuallyLoggingForThisPlayer": "Manually logging the break for this player",
+      "scorekeepingFor": "Scorekeeping for",
+      "scorekeepingForYourTurn": "Scorekeeping for your turn",
+      "scorekeepingOpen": "Scorekeeping is open to both players",
+      "scorekeepingByReferee": "Scorekeeping by referee",
+      "scorekeepingForOpponent": "Scorekeeping for your opponent"
+    }
+  },
+  "frameLog": {
+    "undoLatestAction": "Undo latest frame log action",
+    "compositionSuggestions": "Summary break composition suggestions",
+    "collapseEntryDetails": "Collapse frame log entry details",
+    "expandEntryDetails": "Expand frame log entry details",
+    "shotCount": "{count} {shotLabel}",
+    "ballPhrase": {
+      "redArticle": "a",
+      "defaultArticle": "the",
+      "as": "as",
+      "nothing": "nothing"
+    },
+    "conjunction": {
+      "two": "and",
+      "final": "and"
+    },
+    "freeBallNomination": {
+      "prefix": " nominated the ",
+      "suffix": " free ball.",
+      "label": " nominated the {ball} free ball."
+    },
+    "passShot": {
+      "suffix": " passed the shot back."
+    },
+    "resetShot": {
+      "suffix": " reset the shot."
+    },
+    "breakOff": {
+      "suffix": " to break off."
+    },
+    "turnStarted": {
+      "suffix": ": new turn"
+    },
+    "summaryBreak": {
+      "breakAndFoul": " logged break {breakPoints}, foul {foulPoints}.",
+      "breakOnly": " logged break {breakPoints}.",
+      "foulOnly": " logged foul {foulPoints}."
+    },
+    "shotResult": {
+      "foul": " fouled for {points}.",
+      "noPot": " played a shot. No pot.",
+      "potted": " potted {pottedBalls}.",
+      "pottedPrefix": " potted ",
+      "sentenceEnd": "."
+    },
+    "visitSummary": {
+      "frameWon": ": won the frame",
+      "breakAndFoul": ": break {breakPoints}, foul {foulPoints}",
+      "breakOnly": ": break {breakPoints}",
+      "foulOnly": ": foul {foulPoints}",
+      "noScore": ": no score"
+    }
+  }
+}

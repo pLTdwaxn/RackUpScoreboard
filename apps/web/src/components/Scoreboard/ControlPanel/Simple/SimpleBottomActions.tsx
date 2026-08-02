@@ -8,6 +8,7 @@ import {
   IconNumber123,
   IconPlayerSkipForward,
 } from "@tabler/icons-react";
+import { useAppDictionary } from "@/i18n/client";
 
 export type SimpleBottomActionsProps = {
   canKeepScore: boolean;
@@ -34,12 +35,14 @@ export default function SimpleBottomActions({
   onPassShot,
   onDeclareFreeBall,
 }: SimpleBottomActionsProps) {
+  const copy = useAppDictionary().controlPanel.simpleActions;
+
   return (
     <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-4">
       <div className="justify-self-start">
         <ButtonGroup size="sm">
           <Button
-            aria-label="Concede frame"
+            aria-label={copy.concedeFrame}
             isIconOnly
             variant="danger"
             size="sm"
@@ -53,7 +56,7 @@ export default function SimpleBottomActions({
       <div className="justify-self-center">
         <ButtonGroup variant="secondary" size="sm">
           <Button
-            aria-label="Switch turn"
+            aria-label={copy.switchTurn}
             isIconOnly
             isDisabled={!canKeepScore}
             onPress={onEndTurn}
@@ -61,7 +64,7 @@ export default function SimpleBottomActions({
             <IconArrowsRightLeft stroke={2} />
           </Button>
           <Button
-            aria-label="Pass shot"
+            aria-label={copy.passShot}
             isIconOnly
             size="sm"
             isDisabled={!canUseFoulOptions}
@@ -71,7 +74,7 @@ export default function SimpleBottomActions({
             <IconPlayerSkipForward stroke={2} />
           </Button>
           <Button
-            aria-label="Declare free ball"
+            aria-label={copy.declareFreeBall}
             isIconOnly
             size="sm"
             isDisabled={!canUseFoulOptions}
@@ -81,7 +84,7 @@ export default function SimpleBottomActions({
             <IconChartCircles stroke={2} />
           </Button>
           <Button
-            aria-label="Declare foul"
+            aria-label={copy.declareFoul}
             isIconOnly
             variant="danger-soft"
             isDisabled={!canKeepScore}
@@ -96,7 +99,7 @@ export default function SimpleBottomActions({
       <div className="justify-self-end">
         <ButtonGroup variant="secondary" size="sm">
           <Button
-            aria-label="Log break by number"
+            aria-label={copy.logBreakByNumber}
             isDisabled={!canKeepScore}
             variant={isSummaryBreakMode ? "primary" : "secondary"}
             isIconOnly
@@ -106,7 +109,7 @@ export default function SimpleBottomActions({
             <IconNumber123 stroke={2} />
           </Button>
           <Button
-            aria-label="Advanced shot composer"
+            aria-label={copy.advancedShotComposer}
             isDisabled={!canKeepScore}
             variant="secondary"
             isIconOnly

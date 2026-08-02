@@ -1,5 +1,6 @@
 import { Button } from "@heroui/react";
 import { IconArrowBackUp } from "@tabler/icons-react";
+import { useAppDictionary } from "@/i18n/client";
 
 type LogEntryUndoButtonProps = {
   canUndo: boolean;
@@ -10,10 +11,12 @@ export default function LogEntryUndoButton({
   canUndo,
   onUndo,
 }: LogEntryUndoButtonProps) {
+  const copy = useAppDictionary().frameLog;
+
   return (
     <Button
       size="sm"
-      aria-label="Undo latest frame log action"
+      aria-label={copy.undoLatestAction}
       isIconOnly
       isDisabled={!canUndo}
       variant={canUndo ? "primary" : "ghost"}

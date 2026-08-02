@@ -7,6 +7,7 @@ import SummaryBreakFields from "./SummaryBreakFields";
 import { BallName } from "@/domain/balls";
 import { PlayerNameText } from "@/components/Scoreboard/shared/PlayerName";
 import type { PlayerTheme } from "@/components/Scoreboard/shared/playerIdentity";
+import { useAppDictionary } from "@/i18n/client";
 
 type SimpleScoringPanelProps = {
   redsRemaining: Frame["reds_remaining"];
@@ -120,14 +121,16 @@ function ScorekeepingMessage({
   scoreKeeper,
   target,
 }: ScorekeepingMessageProps) {
+  const copy = useAppDictionary().controlPanel.scorekeeping;
+
   if (freeBallMode) {
-    return <span className="text-center">Nominate the free ball</span>;
+    return <span className="text-center">{copy.nominateFreeBall}</span>;
   }
 
   if (isSummaryBreakMode && target) {
     return (
       <span className="text-center">
-        Manually logging the break for{" "}
+        {copy.manuallyLoggingFor}{" "}
         <PlayerNameText name={target.player.name} theme={target.theme} />
       </span>
     );
@@ -136,7 +139,7 @@ function ScorekeepingMessage({
   if (isSummaryBreakMode) {
     return (
       <span className="text-center">
-        Manually logging the break for this player
+        {copy.manuallyLoggingForThisPlayer}
       </span>
     );
   }
@@ -144,27 +147,23 @@ function ScorekeepingMessage({
   if ((scoreKeeper === "self" || scoreKeeper === "opp") && target) {
     return (
       <span className="text-center">
-        Scorekeeping for{" "}
+        {copy.scorekeepingFor}{" "}
         <PlayerNameText name={target.player.name} theme={target.theme} />
       </span>
     );
   }
 
   if (scoreKeeper === "self") {
-    return <span className="text-center">Scorekeeping for your turn</span>;
+    return <span className="text-center">{copy.scorekeepingForYourTurn}</span>;
   }
 
   if (scoreKeeper === "any") {
-    return (
-      <span className="text-center">
-        Scorekeeping is open to both players
-      </span>
-    );
+    return <span className="text-center">{copy.scorekeepingOpen}</span>;
   }
 
   if (scoreKeeper === "ref") {
-    return <span className="text-center">Scorekeeping by referee</span>;
+    return <span className="text-center">{copy.scorekeepingByReferee}</span>;
   }
 
-  return <span className="text-center">Scorekeeping for your opponent</span>;
+  return <span className="text-center">{copy.scorekeepingForOpponent}</span>;
 }

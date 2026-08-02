@@ -1,5 +1,6 @@
 import { Button } from "@heroui/react";
 import { IconArrowBackUp } from "@tabler/icons-react";
+import { useAppDictionary } from "@/i18n/client";
 
 type UndoSlotProps = {
   canUndo: boolean;
@@ -7,10 +8,12 @@ type UndoSlotProps = {
 };
 
 export default function UndoSlot({ canUndo, onUndo }: UndoSlotProps) {
+  const copy = useAppDictionary().frameLog;
+
   return (
     <div className="flex shrink-0 items-center justify-center">
       <Button
-        aria-label="Undo latest frame log action"
+        aria-label={copy.undoLatestAction}
         isIconOnly
         isDisabled={!canUndo}
         size="sm"

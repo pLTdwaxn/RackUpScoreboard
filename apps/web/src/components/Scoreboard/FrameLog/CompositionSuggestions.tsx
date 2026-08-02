@@ -10,6 +10,7 @@ import type {
   FrameLogEntry,
   SummaryBreakCompositionSuggestion,
 } from "@/types";
+import { useAppDictionary } from "@/i18n/client";
 import BallComposition from "./BallComposition";
 
 type CompositionSuggestionsProps = {
@@ -23,6 +24,7 @@ export default function CompositionSuggestions({
   onResolveBreakComposition,
   compositionFilterCounts = {},
 }: CompositionSuggestionsProps) {
+  const copy = useAppDictionary().frameLog;
   const summaryBreakShot = useMemo(() => unresolvedSummaryBreakShot(entry), [entry]);
   const suggestions: SummaryBreakCompositionSuggestion[] = useMemo(
     () => summaryBreakShot?.composition_suggestions ?? [],
@@ -46,7 +48,7 @@ export default function CompositionSuggestions({
         className="max-h-[15.25rem] overflow-y-auto pr-1"
       >
         <ListBox
-          aria-label="Summary break composition suggestions"
+          aria-label={copy.compositionSuggestions}
           selectionMode="single"
           onAction={(key) =>
             onResolveBreakComposition?.(summaryBreakShot.history_id, String(key))

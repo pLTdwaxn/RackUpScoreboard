@@ -26,10 +26,20 @@ export default function useScrollToEnd<T extends HTMLElement>({
       }
 
       if (axis === "horizontal") {
+        if (!scrollElement.scrollTo) {
+          scrollElement.scrollLeft = scrollElement.scrollWidth;
+          return;
+        }
+
         scrollElement.scrollTo({
           left: scrollElement.scrollWidth,
           behavior: "smooth",
         });
+        return;
+      }
+
+      if (!scrollElement.scrollTo) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
         return;
       }
 

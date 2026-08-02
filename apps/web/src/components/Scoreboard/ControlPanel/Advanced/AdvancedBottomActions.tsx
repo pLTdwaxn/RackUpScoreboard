@@ -1,5 +1,6 @@
 import { Button } from "@heroui/react";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import { useAppDictionary } from "@/i18n/client";
 
 export type AdvancedBottomActionsProps = {
   canKeepScore: boolean;
@@ -20,6 +21,8 @@ export default function AdvancedBottomActions({
   onChangeFoulMode,
   onSubmit,
 }: AdvancedBottomActionsProps) {
+  const copy = useAppDictionary().controlPanel.advanced;
+
   return (
     <div className="flex w-full flex-row items-center justify-between gap-4">
       <div>
@@ -30,7 +33,7 @@ export default function AdvancedBottomActions({
           }}
           size="sm"
         >
-          {foulMode ? "Foul Declaring On" : "Foul Declaring Off"}
+          {foulMode ? copy.foulDeclaringOn : copy.foulDeclaringOff}
         </Button>
       </div>
       <div></div>

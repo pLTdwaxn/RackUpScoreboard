@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import Menu from "@/components/SideDrawer/Menu";
+import { setAppLocale } from "@/i18n";
 
 vi.mock("@/lib/version", () => ({
   appVersionLabel: "test-version",
@@ -12,7 +13,10 @@ vi.mock("@/components/ThemeToggle", () => ({
 }));
 
 describe("Menu", () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    setAppLocale("en");
+    cleanup();
+  });
 
   it("opens the settings drawer with the app version", () => {
     const onLeaveRoom = vi.fn();
@@ -23,6 +27,8 @@ describe("Menu", () => {
 
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getAllByText("Theme")).toHaveLength(2);
+    expect(screen.getByText("Language")).toBeInTheDocument();
+    expect(screen.getAllByText("EN").length).toBeGreaterThan(0);
     expect(screen.getByRole("listbox", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Scorekeeping" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Players" })).toBeInTheDocument();
@@ -32,5 +38,17 @@ describe("Menu", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Leave Room/ }));
     expect(onLeaveRoom).toHaveBeenCalledOnce();
+  });
+
+  it("switches the drawer copy to simplified Chinese", async () => {
+    render(<Menu />);
+
+    fireEvent.click(screen.getByRole("button"));
+    fireEvent.click(screen.getByRole("button", { name: /Language selection/ }));
+    fireEvent.click(await screen.findByRole("option", { name: "简体中文" }));
+
+    expect(screen.getByText("设置")).toBeInTheDocument();
+    expect(screen.getByText("语言")).toBeInTheDocument();
+    expect(screen.getByRole("listbox", { name: "设置" })).toBeInTheDocument();
   });
 });

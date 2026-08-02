@@ -1,6 +1,7 @@
 "use client";
 
 import { useMatchroomFrame } from "@/hooks/useMatchroomFrame";
+import { useAppDictionary } from "@/i18n/client";
 import type { Player } from "@/types";
 
 import FrameStats from "./FrameStats";
@@ -13,20 +14,20 @@ export { default as FrameStats } from "./FrameStats";
 export { default as OverviewWrapper } from "./OverviewWrapper";
 export { default as ScoreCard } from "./ScoreCard";
 
-const WAITING_OPPONENT: Player = {
-  session_key: "__waiting_opponent__",
-  name: "Waiting",
-  type: "placeholder",
-  match_score: 0,
-  current_frame_score: 0,
-  highest_break: null,
-};
-
 export default function FrameOverview() {
+  const copy = useAppDictionary().frameOverview;
   const { me, opponent, players = [] } = useMatchroomPlayers();
   const { hasFrame, frame, isMyTurn, isOpponentTurn, winningPlayerKey } =
     useMatchroomFrame();
-  const opponentCardPlayer = opponent ?? WAITING_OPPONENT;
+  const waitingOpponent: Player = {
+    session_key: "__waiting_opponent__",
+    name: copy.waitingPlayer,
+    type: "placeholder",
+    match_score: 0,
+    current_frame_score: 0,
+    highest_break: null,
+  };
+  const opponentCardPlayer = opponent ?? waitingOpponent;
   const opponentTheme = opponent
     ? getPlayerAvatarTheme(opponent.session_key, players)
     : "blue";

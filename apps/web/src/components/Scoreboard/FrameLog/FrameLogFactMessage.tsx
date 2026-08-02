@@ -191,12 +191,21 @@ function summaryBreakSuffix(
   fact: Extract<FrameLogFact, { kind: "summary_break" }>,
 ): string {
   if (fact.foul_points && fact.break_points) {
-    return ` logged break ${fact.break_points}, foul ${fact.foul_points}.`;
+    return frameLogDictionary.summaryBreak.breakAndFoul({
+      breakPoints: fact.break_points,
+      foulPoints: fact.foul_points,
+    });
   }
   if (fact.foul_points) {
-    return ` logged foul ${fact.foul_points}.`;
+    return frameLogDictionary.summaryBreak.foulOnly({
+      breakPoints: fact.break_points,
+      foulPoints: fact.foul_points,
+    });
   }
-  return ` logged break ${fact.break_points}.`;
+  return frameLogDictionary.summaryBreak.breakOnly({
+    breakPoints: fact.break_points,
+    foulPoints: fact.foul_points,
+  });
 }
 
 function visitSummarySuffix(
@@ -289,7 +298,8 @@ function pottedBallsPhrase(
 }
 
 function ballPhrase(ball: string): string {
-  return `${frameLogDictionary.ballPhrase.article(ball)} ${ball}`;
+  const article = frameLogDictionary.ballPhrase.article(ball);
+  return article ? `${article} ${ball}` : ball;
 }
 
 function PottedBallsContent({
@@ -323,9 +333,11 @@ function PottedBallsContent({
 }
 
 function BallPhraseText({ ball }: { ball: string }) {
+  const article = frameLogDictionary.ballPhrase.article(ball);
+
   return (
     <>
-      {`${frameLogDictionary.ballPhrase.article(ball)} `}
+      {article ? `${article} ` : ""}
       <BallNameText ball={ball} />
     </>
   );
@@ -337,7 +349,7 @@ function BallNameText({ ball }: { ball: string }) {
 
 function joinPhrases(phrases: string[]): string {
   if (phrases.length <= 1) {
-    return phrases[0] ?? "nothing";
+    return phrases[0] ?? frameLogDictionary.ballPhrase.nothing;
   }
   if (phrases.length === 2) {
     return `${phrases[0]} ${frameLogDictionary.conjunction.two} ${phrases[1]}`;

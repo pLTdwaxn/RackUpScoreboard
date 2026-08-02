@@ -6,8 +6,10 @@ import { useTheme } from "next-themes";
 
 import { Switch } from "@heroui/react";
 import { IconMoon, IconSun } from "@tabler/icons-react";
+import { useAppDictionary } from "@/i18n/client";
 
 export default function ThemeToggle() {
+  const copy = useAppDictionary().theme;
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -19,7 +21,7 @@ export default function ThemeToggle() {
 
   return (
     <Switch
-      aria-label={isDarkTheme ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDarkTheme ? copy.switchToLight : copy.switchToDark}
       isSelected={isDarkTheme}
       onChange={(isSelected) => setTheme(isSelected ? "dark" : "light")}
       size="lg"
@@ -37,7 +39,9 @@ export default function ThemeToggle() {
               </Switch.Icon>
             </Switch.Thumb>
           </Switch.Control>
-          <span className="text-sm">{isSelected ? "Dark" : "Light"}</span>
+          <span className="text-sm">
+            {isSelected ? copy.dark : copy.light}
+          </span>
         </Switch.Content>
       )}
     </Switch>

@@ -6,6 +6,7 @@ import { Button, Drawer } from "@heroui/react";
 import { IconQrcode } from "@tabler/icons-react";
 import Image from "next/image";
 import QRCode from "qrcode";
+import { useAppDictionary } from "@/i18n/client";
 
 type MatchroomInviteDrawerProps = {
   defaultOpen?: boolean;
@@ -16,6 +17,7 @@ export default function MatchroomInviteDrawer({
   defaultOpen = false,
   matchroomId,
 }: MatchroomInviteDrawerProps) {
+  const copy = useAppDictionary().matchroomInvite;
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
   const [qrCodeError, setQrCodeError] = useState<string | null>(null);
 
@@ -42,7 +44,7 @@ export default function MatchroomInviteDrawer({
       } catch {
         if (isActive) {
           setQrCodeDataUrl(null);
-          setQrCodeError("Could not generate QR code.");
+          setQrCodeError(copy.qrCodeError);
         }
       }
     }
@@ -52,7 +54,7 @@ export default function MatchroomInviteDrawer({
     return () => {
       isActive = false;
     };
-  }, [matchroomId]);
+  }, [copy.qrCodeError, matchroomId]);
 
   if (!matchroomId) {
     return null;
@@ -61,7 +63,7 @@ export default function MatchroomInviteDrawer({
   return (
     <Drawer defaultOpen={defaultOpen}>
       <Button
-        aria-label="Open matchroom invite"
+        aria-label={copy.openInvite}
         isIconOnly
         variant="ghost"
         className="rounded-full"
@@ -73,12 +75,12 @@ export default function MatchroomInviteDrawer({
           <Drawer.Dialog>
             <Drawer.CloseTrigger />
             <Drawer.Header>
-              <Drawer.Heading>Invite Player</Drawer.Heading>
+              <Drawer.Heading>{copy.heading}</Drawer.Heading>
             </Drawer.Header>
             <Drawer.Body>
               <div className="flex flex-col items-center gap-4 text-center">
                 <p className="text-sm text-muted">
-                  Share this QR code or room code with your opponent.
+                  {copy.description}
                 </p>
                 <span className="font-mono text-3xl font-bold">
                   {matchroomId}
@@ -86,7 +88,7 @@ export default function MatchroomInviteDrawer({
                 {qrCodeDataUrl ? (
                   <Image
                     src={qrCodeDataUrl}
-                    alt={`QR code for matchroom ${matchroomId}`}
+                    alt={copy.qrCodeAlt(matchroomId)}
                     width={256}
                     height={256}
                     unoptimized={true}

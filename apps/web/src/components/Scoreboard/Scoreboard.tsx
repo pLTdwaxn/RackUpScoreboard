@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "@heroui/react";
 
 import { useMatchroomSession } from "@/hooks/useSocket";
+import { useAppDictionary } from "@/i18n/client";
 import { BallName } from "@/domain/balls";
 
 import { ControlPanel, FrameOverview, FrameLog } from ".";
@@ -15,6 +16,7 @@ import {
 } from "./summaryBreakCompositionFilters";
 
 export default function Scoreboard() {
+  const copy = useAppDictionary().scoreboard;
   const { connectionStatus, reconnectAttempt, reconnectDelayMs, socketError } =
     useMatchroomSession();
   const [activeCompositionFilterEntry, setActiveCompositionFilterEntry] =
@@ -84,11 +86,11 @@ export default function Scoreboard() {
           className="flex items-center justify-between gap-3 rounded-lg border border-warning-300/60 bg-warning-100 px-3 py-2 text-xs font-medium text-warning-800 shadow-sm dark:border-warning-500/30 dark:bg-warning-500/15 dark:text-warning-100"
           role="status"
         >
-          <span>Connection lost. Reconnecting...</span>
+          <span>{copy.connectionLost}</span>
           <span className="shrink-0 font-mono">
-            Try {reconnectAttempt}
+            {copy.reconnectTry(reconnectAttempt)}
             {reconnectDelaySeconds !== null
-              ? ` in ${reconnectDelaySeconds}s`
+              ? copy.reconnectIn(reconnectDelaySeconds)
               : ""}
           </span>
         </div>

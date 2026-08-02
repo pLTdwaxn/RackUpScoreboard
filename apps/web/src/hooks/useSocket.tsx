@@ -17,6 +17,7 @@ import {
   RoomClientAction,
   RoomSocketMessage,
 } from "@/types";
+import { getAppDictionary } from "@/i18n";
 import { getClientApiBase } from "@/lib/env";
 
 interface MatchroomSessionContextType {
@@ -104,6 +105,7 @@ export const MatchroomProvider = ({
   matchroomId: string;
   children: ReactNode;
 }) => {
+  const copy = getAppDictionary("en").errors;
   const [gameState, setGameState] = useState<GameStateMessage | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -182,9 +184,7 @@ export const MatchroomProvider = ({
     const apiBase = getClientApiBase();
     if (!apiBase) {
       queueMicrotask(() => {
-        setSocketError(
-          "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
-        );
+        setSocketError(copy.backendUrlNotConfigured);
         setConnectionStatus("failed");
       });
       return;
@@ -260,7 +260,7 @@ export const MatchroomProvider = ({
           const payload = JSON.parse(event.data) as RoomSocketMessage;
 
           if (!payload || typeof payload !== "object" || !("type" in payload)) {
-            setSocketError("Received invalid room update.");
+            setSocketError(copy.invalidRoomUpdate);
             return;
           }
 
@@ -284,12 +284,12 @@ export const MatchroomProvider = ({
               return;
             }
             default: {
-              setSocketError("Received invalid room update.");
+              setSocketError(copy.invalidRoomUpdate);
               return;
             }
           }
         } catch {
-          setSocketError("Failed to parse room update.");
+          setSocketError(copy.roomUpdateParseFailed);
         }
       };
 
@@ -312,7 +312,7 @@ export const MatchroomProvider = ({
         if (event.code === 4404) {
           setConnectionStatus("failed");
           setReconnectDelayMs(null);
-          setSocketError("Matchroom not found.");
+          setSocketError(copy.matchroomNotFound);
           return;
         }
 
@@ -338,16 +338,23 @@ export const MatchroomProvider = ({
       setGameState(null);
       setPlayers([]);
     };
-  }, [matchroomId, sessionKey]);
+  }, [
+    copy.backendUrlNotConfigured,
+    copy.invalidRoomUpdate,
+    copy.matchroomNotFound,
+    copy.roomUpdateParseFailed,
+    matchroomId,
+    sessionKey,
+  ]);
 
   const sendEvent = useCallback((payload: Record<string, unknown>) => {
     const socket = socketRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      setSocketError("Room connection not ready.");
+      setSocketError(copy.roomConnectionNotReady);
       return;
     }
     socket.send(JSON.stringify(payload));
-  }, []);
+  }, [copy.roomConnectionNotReady]);
 
   const sendAction = useCallback(
     (action: RoomClientAction) => {

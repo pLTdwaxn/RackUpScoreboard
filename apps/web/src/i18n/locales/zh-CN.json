@@ -1,0 +1,222 @@
+{
+  "appShell": {
+    "lobby": "大厅"
+  },
+  "common": {
+    "cancel": "取消",
+    "unknown": "unknown"
+  },
+  "errors": {
+    "backendUrlNotConfigured": "Scoreboard backend URL is not configured. Set NEXT_PUBLIC_API_BASE in your deployed frontend environment.",
+    "invalidRoomUpdate": "Received invalid room update.",
+    "roomUpdateParseFailed": "Failed to parse room update.",
+    "matchroomNotFound": "Matchroom not found.",
+    "roomConnectionNotReady": "Room connection not ready.",
+    "connectionFailed": "Could not connect to the scoreboard service.",
+    "enterName": "Enter your name to continue."
+  },
+  "health": {
+    "title": "Backend Health",
+    "missingApiBase": "(missing NEXT_PUBLIC_API_BASE)",
+    "backendUrlNotConfigured": "Backend URL is not configured for this environment. Set NEXT_PUBLIC_API_BASE in deployment settings.",
+    "requestFailed": "Request failed with status {status}",
+    "backendUnreachable": "Could not reach backend. Is FastAPI running on port {port}?",
+    "connection": "Connection",
+    "online": "Online",
+    "offline": "Offline",
+    "service": "Service:",
+    "status": "Status:"
+  },
+  "theme": {
+    "switchToLight": "切换到浅色模式",
+    "switchToDark": "切换到深色模式",
+    "dark": "深色",
+    "light": "浅色"
+  },
+  "lobby": {
+    "joinOrCreateTabs": "加入或创建比赛房间",
+    "name": "姓名",
+    "namePlaceholder": "输入你的姓名",
+    "matchroomId": "比赛房间 ID",
+    "matchroomIdPlaceholder": "输入比赛房间 ID",
+    "enterMatchroomId": "请输入要加入的比赛房间 ID。",
+    "joining": "正在加入...",
+    "join": "加入",
+    "creating": "正在创建...",
+    "create": "创建",
+    "winCondition": "获胜条件",
+    "bestOfFrames": "局数抢胜",
+    "openEnded": "不限局数",
+    "scorekeepingBy": "记分方式",
+    "scorekeepingOpponent": "对手",
+    "scorekeepingOpponentDescription": "未在击球的球员负责记分。",
+    "scorekeepingSelf": "自己",
+    "scorekeepingSelfDescription": "正在击球的球员负责记分。",
+    "scorekeepingReferee": "裁判（待定）",
+    "scorekeepingRefereeDescription": "裁判为双方球员记分。",
+    "scorekeepingAny": "任意球员",
+    "scorekeepingAnyDescription": "任意球员都可以记分。"
+  },
+  "sideDrawer": {
+    "settings": "设置",
+    "theme": "主题",
+    "language": "语言",
+    "languageSelection": "语言选择",
+    "scorekeeping": "记分",
+    "players": "球员",
+    "matchRules": "比赛规则",
+    "leaveRoom": "离开房间"
+  },
+  "matchroomOverview": {
+    "defaultPracticeMatch": "练习赛",
+    "waitingForOpponent": "等待对手...",
+    "matchroom": "比赛房间 {matchroomId}",
+    "match": "比赛",
+    "matchNotSet": "未设置比赛",
+    "club": "俱乐部",
+    "clubNotSet": "未设置俱乐部",
+    "importance": "重要性",
+    "importanceNotSet": "未设置重要性",
+    "winningCondition": "获胜条件",
+    "conditionNotSet": "未设置条件",
+    "bestOf": "{frames} 局制"
+  },
+  "matchroomInvite": {
+    "qrCodeError": "无法生成二维码。",
+    "openInvite": "打开比赛房间邀请",
+    "heading": "邀请球员",
+    "description": "将此二维码或房间码分享给你的对手。",
+    "qrCodeAlt": "比赛房间 {matchroomId} 的二维码"
+  },
+  "scoreboard": {
+    "connectionLost": "连接已断开。正在重连...",
+    "reconnectTry": "第 {attempt} 次尝试",
+    "reconnectIn": "，{seconds} 秒后"
+  },
+  "frameOverview": {
+    "waitingPlayer": "等待中",
+    "remaining": "剩余",
+    "gap": "分差",
+    "snookersNeeded": "需做障碍"
+  },
+  "controlPanel": {
+    "compositionFilter": {
+      "cancel": "取消组合解析",
+      "empty": "点击球来筛选单杆组合",
+      "showingAtLeast": "显示至少包含 {description} 的单杆",
+      "conjunction": {
+        "two": "和",
+        "final": "和"
+      },
+      "ariaLabel": "{ball} 组合筛选{countSuffix}"
+    },
+    "finishedFrame": {
+      "won": "恭喜！你赢下了这一局。",
+      "lost": "你输掉了这一局。",
+      "waitingForOpponent": "等待对手",
+      "startNextFrame": "开始下一局"
+    },
+    "concedeFrame": {
+      "heading": "认输本局",
+      "body": "确定要认输这一局吗？",
+      "concede": "认输"
+    },
+    "advanced": {
+      "foulDeclaringOn": "犯规申报开启",
+      "foulDeclaringOff": "犯规申报关闭",
+      "foul": "犯规",
+      "foulWithPoints": "犯规 {points}",
+      "legal": "合法",
+      "foulOnRedNoPot": "红球犯规（未进球）",
+      "foulWithPottedReds": "犯规并进了 {redSummary}",
+      "foulOnBallWithPottedReds": "{ball} 犯规并进了 {redSummary}",
+      "foulOnBall": "{ball} 犯规",
+      "tapFouledBall": "点击犯规目标球",
+      "pot": "进球 {summary}",
+      "tapPottedBalls": "点击进球",
+      "pottedReds": "{count} 颗 {label}"
+    },
+    "summaryBreak": {
+      "score": "得分",
+      "foul": "犯规",
+      "decreaseScore": "减少得分",
+      "increaseScore": "增加得分",
+      "decreaseFoul": "减少犯规分",
+      "increaseFoul": "增加犯规分",
+      "submit": "提交单杆记录"
+    },
+    "simpleActions": {
+      "concedeFrame": "认输本局",
+      "switchTurn": "交换击球权",
+      "passShot": "让对手继续",
+      "declareFreeBall": "申报自由球",
+      "declareFoul": "申报犯规",
+      "logBreakByNumber": "按分数记录单杆",
+      "advancedShotComposer": "高级击球记录"
+    },
+    "scorekeeping": {
+      "nominateFreeBall": "指定自由球",
+      "manuallyLoggingFor": "正在手动记录单杆：",
+      "manuallyLoggingForThisPlayer": "正在为该球员手动记录单杆",
+      "scorekeepingFor": "正在记分：",
+      "scorekeepingForYourTurn": "为你的回合记分",
+      "scorekeepingOpen": "双方球员都可以记分",
+      "scorekeepingByReferee": "由裁判记分",
+      "scorekeepingForOpponent": "为你的对手记分"
+    }
+  },
+  "frameLog": {
+    "undoLatestAction": "撤销最新记录",
+    "compositionSuggestions": "单杆组合建议",
+    "collapseEntryDetails": "收起记录详情",
+    "expandEntryDetails": "展开记录详情",
+    "shotCount": "{count} 次击球",
+    "ballPhrase": {
+      "redArticle": "",
+      "defaultArticle": "",
+      "as": "作为",
+      "nothing": "无进球"
+    },
+    "conjunction": {
+      "two": "和",
+      "final": "和"
+    },
+    "freeBallNomination": {
+      "prefix": " 指定 ",
+      "suffix": " 为自由球。",
+      "label": " 指定 {ball} 为自由球。"
+    },
+    "passShot": {
+      "suffix": " 让对手继续击球。"
+    },
+    "resetShot": {
+      "suffix": " 重置了本杆。"
+    },
+    "breakOff": {
+      "suffix": " 开球。"
+    },
+    "turnStarted": {
+      "suffix": "：新回合"
+    },
+    "summaryBreak": {
+      "breakAndFoul": " 记录单杆 {breakPoints} 分，犯规 {foulPoints} 分。",
+      "breakOnly": " 记录单杆 {breakPoints} 分。",
+      "foulOnly": " 记录犯规 {foulPoints} 分。"
+    },
+    "shotResult": {
+      "foul": " 犯规罚 {points} 分。",
+      "noPot": " 击球未进。",
+      "potted": " 击入 {pottedBalls}。",
+      "pottedPrefix": " 击入 ",
+      "sentenceEnd": "。",
+      "noArticleSpacing": true
+    },
+    "visitSummary": {
+      "frameWon": "：赢下本局",
+      "breakAndFoul": "：单杆 {breakPoints}，犯规 {foulPoints}",
+      "breakOnly": "：单杆 {breakPoints}",
+      "foulOnly": "：犯规 {foulPoints}",
+      "noScore": "：未得分"
+    }
+  }
+}

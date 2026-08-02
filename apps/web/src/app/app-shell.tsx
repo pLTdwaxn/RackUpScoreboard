@@ -12,6 +12,7 @@ import {
   useMatchroomGame,
   useMatchroomSession,
 } from "@/hooks/useSocket";
+import { useAppDictionary } from "@/i18n/client";
 import { buildScoreboardViewModel } from "@/lib/viewModel";
 
 function useMatchroomIdFromPathname() {
@@ -30,12 +31,13 @@ function useMatchroomIdFromPathname() {
 }
 
 function MatchroomTopRowContent() {
+  const copy = useAppDictionary().appShell;
   const { matchroomId } = useMatchroomSession();
   const { gameState } = useMatchroomGame();
   const viewModel = buildScoreboardViewModel({ gameState });
 
   if (!matchroomId) {
-    return <span className="text-sm font-medium">Lobby</span>;
+    return <span className="text-sm font-medium">{copy.lobby}</span>;
   }
 
   return (
