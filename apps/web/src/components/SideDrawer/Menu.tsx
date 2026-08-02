@@ -1,9 +1,14 @@
-import { Button, Drawer } from "@heroui/react";
+import { Button, Drawer, ListBox } from "@heroui/react";
 
-import { IconDotsFilled } from "@tabler/icons-react";
+import { IconDotsFilled, IconLogout } from "@tabler/icons-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { appVersionLabel } from "@/lib/version";
 
-export default function Menu() {
+type MenuProps = {
+  onLeaveRoom?: () => void;
+};
+
+export default function Menu({ onLeaveRoom }: MenuProps) {
   return (
     <Drawer>
       <Button isIconOnly={true} variant="ghost" className="rounded-full">
@@ -16,16 +21,43 @@ export default function Menu() {
             <Drawer.Header>
               <Drawer.Heading>Settings</Drawer.Heading>
             </Drawer.Header>
-            <Drawer.Body>
-              <div className="rounded-lg border border-default-200 bg-default-100/60 p-3">
+            <Drawer.Body className="flex flex-col gap-3">
+              <div className="rounded-lg bg-default-100/60 p-3">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-medium">Version</span>
-                  <span className="font-mono text-sm text-muted">
-                    {appVersionLabel}
-                  </span>
+                  <span className="text-sm font-medium">Theme</span>
+                  <ThemeToggle />
                 </div>
               </div>
+              <ListBox aria-label="Settings">
+                <ListBox.Item id="scorekeeping" textValue="Scorekeeping">
+                  Scorekeeping
+                </ListBox.Item>
+                <ListBox.Item id="players" textValue="Players">
+                  Players
+                </ListBox.Item>
+                <ListBox.Item id="match-rules" textValue="Match rules">
+                  Match rules
+                </ListBox.Item>
+              </ListBox>
             </Drawer.Body>
+            <Drawer.Footer className="items-end justify-between">
+              <div>
+                {onLeaveRoom ? (
+                  <Button
+                    className="justify-start"
+                    variant="danger-soft"
+                    size="sm"
+                    onPress={onLeaveRoom}
+                  >
+                    <IconLogout stroke={2} />
+                    Leave Room
+                  </Button>
+                ) : null}
+              </div>
+              <span className="font-mono text-xs text-muted">
+                {appVersionLabel}
+              </span>
+            </Drawer.Footer>
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>

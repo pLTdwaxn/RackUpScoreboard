@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 import { useTheme } from "next-themes";
 
-import { Button } from "@heroui/react";
+import { Switch } from "@heroui/react";
 import { IconMoon, IconSun } from "@tabler/icons-react";
 
 export default function ThemeToggle() {
@@ -18,14 +18,28 @@ export default function ThemeToggle() {
   const isDarkTheme = mounted ? resolvedTheme === "dark" : false;
 
   return (
-    <Button
-      isIconOnly
-      variant="ghost"
-      size="sm"
+    <Switch
       aria-label={isDarkTheme ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
+      isSelected={isDarkTheme}
+      onChange={(isSelected) => setTheme(isSelected ? "dark" : "light")}
+      size="lg"
     >
-      {isDarkTheme ? <IconSun stroke={2} /> : <IconMoon stroke={2} />}
-    </Button>
+      {({ isSelected }) => (
+        <Switch.Content>
+          <Switch.Control>
+            <Switch.Thumb>
+              <Switch.Icon>
+                {isSelected ? (
+                  <IconMoon stroke={2} size={12} />
+                ) : (
+                  <IconSun stroke={2} size={12} />
+                )}
+              </Switch.Icon>
+            </Switch.Thumb>
+          </Switch.Control>
+          <span className="text-sm">{isSelected ? "Dark" : "Light"}</span>
+        </Switch.Content>
+      )}
+    </Switch>
   );
 }

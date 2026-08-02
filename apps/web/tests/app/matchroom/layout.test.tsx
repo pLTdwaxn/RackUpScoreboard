@@ -4,11 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 import AppShell from "@/app/app-shell";
 
 const providerMock = vi.hoisted(() => vi.fn());
+const pushMock = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/matchroom/room-1",
   useRouter: () => ({
-    push: vi.fn(),
+    push: pushMock,
   }),
 }));
 
@@ -38,11 +39,21 @@ vi.mock("@/components/Scoreboard/MatchroomOverview", () => ({
 }));
 
 vi.mock("@/components/SideDrawer/Menu", () => ({
-  default: () => <button type="button">Menu</button>,
+  default: ({ onLeaveRoom }: { onLeaveRoom?: () => void }) => (
+    <button type="button" onClick={onLeaveRoom}>
+      Menu
+    </button>
+  ),
 }));
 
 vi.mock("@/components/ThemeToggle", () => ({
   default: () => <button type="button">Theme</button>,
+}));
+
+vi.mock("@/components/Scoreboard/MatchroomInviteDrawer", () => ({
+  default: ({ matchroomId }: { matchroomId: string }) => (
+    <div data-testid="matchroom-invite">{matchroomId}</div>
+  ),
 }));
 
 describe("App shell", () => {
@@ -61,5 +72,8 @@ describe("App shell", () => {
     expect(screen.getByTestId("matchroom-overview")).toHaveTextContent(
       "room-1",
     );
+
+    screen.getByRole("button", { name: "Menu" }).click();
+    expect(pushMock).toHaveBeenCalledWith("/");
   });
 });

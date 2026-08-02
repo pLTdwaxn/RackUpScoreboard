@@ -3,9 +3,9 @@
 import { Surface } from "@heroui/react";
 import { usePathname, useRouter } from "next/navigation";
 
+import MatchroomInviteDrawer from "@/components/Scoreboard/MatchroomInviteDrawer";
 import MatchroomOverview from "@/components/Scoreboard/MatchroomOverview";
 import Menu from "@/components/SideDrawer/Menu";
-import ThemeToggle from "@/components/ThemeToggle";
 import TopRow from "@/components/TopBar/TopBar";
 import {
   MatchroomProvider,
@@ -30,7 +30,6 @@ function useMatchroomIdFromPathname() {
 }
 
 function MatchroomTopRowContent() {
-  const router = useRouter();
   const { matchroomId } = useMatchroomSession();
   const { gameState } = useMatchroomGame();
   const viewModel = buildScoreboardViewModel({ gameState });
@@ -44,16 +43,15 @@ function MatchroomTopRowContent() {
       roomReady={viewModel.roomReady}
       playerCount={viewModel.players.length}
       matchroomId={matchroomId}
+      clubId={viewModel.matchroom.clubId}
       match={viewModel.match}
-      resetRoom={() => {
-        router.push("/");
-      }}
     />
   );
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const matchroomId = useMatchroomIdFromPathname();
+  const router = useRouter();
 
   return (
     <MatchroomProvider matchroomId={matchroomId}>
@@ -62,9 +60,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         className="flex h-full w-full flex-col overflow-hidden p-0"
       >
         <TopRow>
-          <Menu />
+          <Menu
+            onLeaveRoom={
+              matchroomId
+                ? () => {
+                    router.push("/");
+                  }
+                : undefined
+            }
+          />
           <MatchroomTopRowContent />
-          <ThemeToggle />
+          <MatchroomInviteDrawer matchroomId={matchroomId} />
         </TopRow>
         <div className="flex flex-1 min-h-0 w-full items-stretch justify-center overflow-hidden p-2">
           {children}

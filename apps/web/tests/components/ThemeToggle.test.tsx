@@ -29,7 +29,7 @@ describe("ThemeToggle", () => {
 
     render(<ThemeToggle />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Switch to dark mode" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Switch to dark mode" }));
 
     expect(setTheme).toHaveBeenCalledWith("dark");
   });
@@ -44,7 +44,7 @@ describe("ThemeToggle", () => {
     render(<ThemeToggle />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Switch to light mode" }),
+      screen.getByRole("switch", { name: "Switch to light mode" }),
     );
 
     expect(setTheme).toHaveBeenCalledWith("light");
