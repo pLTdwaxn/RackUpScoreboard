@@ -16,15 +16,12 @@ type MatchroomOverviewProps = {
 
 export default function MatchroomOverview({
   roomReady,
-  playerCount,
   matchroomId,
   clubId,
   match,
 }: MatchroomOverviewProps) {
   return (
     <MatchroomOverviewPopover
-      key={playerCount}
-      defaultOpen={playerCount === 1}
       roomReady={roomReady}
       matchroomId={matchroomId}
       clubId={clubId}
@@ -36,18 +33,15 @@ export default function MatchroomOverview({
 type MatchroomOverviewPopoverProps = Omit<
   MatchroomOverviewProps,
   "playerCount"
-> & {
-  defaultOpen: boolean;
-};
+>;
 
 function MatchroomOverviewPopover({
-  defaultOpen,
   roomReady,
   matchroomId,
   clubId,
   match,
 }: MatchroomOverviewPopoverProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Popover isOpen={isOpen} onOpenChange={setIsOpen}>

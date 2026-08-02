@@ -8,10 +8,12 @@ import Image from "next/image";
 import QRCode from "qrcode";
 
 type MatchroomInviteDrawerProps = {
+  defaultOpen?: boolean;
   matchroomId: string;
 };
 
 export default function MatchroomInviteDrawer({
+  defaultOpen = false,
   matchroomId,
 }: MatchroomInviteDrawerProps) {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export default function MatchroomInviteDrawer({
   }
 
   return (
-    <Drawer>
+    <Drawer defaultOpen={defaultOpen}>
       <Button
         aria-label="Open matchroom invite"
         isIconOnly
@@ -66,7 +68,7 @@ export default function MatchroomInviteDrawer({
       >
         <IconQrcode stroke={2} />
       </Button>
-      <Drawer.Backdrop variant="blur">
+      <Drawer.Backdrop variant="transparent">
         <Drawer.Content placement="right">
           <Drawer.Dialog>
             <Drawer.CloseTrigger />

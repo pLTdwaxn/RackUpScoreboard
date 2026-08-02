@@ -26,6 +26,7 @@ describe("MatchroomOverview", () => {
     render(
       <MatchroomOverview
         roomReady={false}
+        playerCount={1}
         matchroomId="room-1"
         match={null}
       />,
@@ -38,6 +39,7 @@ describe("MatchroomOverview", () => {
     render(
       <MatchroomOverview
         roomReady
+        playerCount={1}
         matchroomId="room 1"
         clubId="club-1"
         match={match}
@@ -45,6 +47,7 @@ describe("MatchroomOverview", () => {
     );
 
     expect(screen.getByText("Best of 5")).toBeInTheDocument();
+    expect(screen.queryByText("Practice")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Best of 5/ }));
 

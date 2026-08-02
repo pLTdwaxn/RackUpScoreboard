@@ -49,6 +49,20 @@ function MatchroomTopRowContent() {
   );
 }
 
+function MatchroomInviteTopRowContent() {
+  const { matchroomId } = useMatchroomSession();
+  const { gameState } = useMatchroomGame();
+  const viewModel = buildScoreboardViewModel({ gameState });
+
+  return (
+    <MatchroomInviteDrawer
+      key={viewModel.players.length}
+      defaultOpen={viewModel.players.length === 1}
+      matchroomId={matchroomId}
+    />
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const matchroomId = useMatchroomIdFromPathname();
   const router = useRouter();
@@ -70,7 +84,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             }
           />
           <MatchroomTopRowContent />
-          <MatchroomInviteDrawer matchroomId={matchroomId} />
+          <MatchroomInviteTopRowContent />
         </TopRow>
         <div className="flex flex-1 min-h-0 w-full items-stretch justify-center overflow-hidden p-2">
           {children}

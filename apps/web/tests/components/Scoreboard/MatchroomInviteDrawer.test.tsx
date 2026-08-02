@@ -50,4 +50,20 @@ describe("MatchroomInviteDrawer", () => {
       await screen.findByAltText("QR code for matchroom room 1"),
     ).toBeInTheDocument();
   });
+
+  it("can open by default for first-player pairing", async () => {
+    render(<MatchroomInviteDrawer defaultOpen matchroomId="room 1" />);
+
+    expect(screen.getByText("Invite Player")).toBeInTheDocument();
+    expect(screen.getByText("room 1")).toBeInTheDocument();
+    expect(
+      await screen.findByAltText("QR code for matchroom room 1"),
+    ).toBeInTheDocument();
+  });
+
+  it("stays closed when defaultOpen is false", () => {
+    render(<MatchroomInviteDrawer defaultOpen={false} matchroomId="room 1" />);
+
+    expect(screen.queryByText("Invite Player")).not.toBeInTheDocument();
+  });
 });
