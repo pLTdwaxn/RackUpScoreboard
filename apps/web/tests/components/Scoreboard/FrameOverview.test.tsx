@@ -84,6 +84,24 @@ describe("FrameOverview", () => {
     expect(screen.getByText("32")).toBeInTheDocument();
     expect(screen.getByText("18")).toBeInTheDocument();
   });
+
+  it("renders a waiting placeholder for player 2 before an opponent joins", () => {
+    playersHookMock.mockReturnValue({ me: ada, opponent: undefined });
+    frameHookMock.mockReturnValue({
+      hasFrame: true,
+      frame,
+      isMyTurn: true,
+      isOpponentTurn: false,
+      winningPlayerKey: null,
+    });
+
+    render(<FrameOverview />);
+
+    expect(screen.getByText("Ada")).toBeInTheDocument();
+    expect(screen.getByText("Waiting")).toBeInTheDocument();
+    expect(screen.getByText("32")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
 });
 
 describe("FrameOverview parts", () => {

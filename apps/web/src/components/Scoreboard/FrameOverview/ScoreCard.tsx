@@ -26,16 +26,16 @@ export default function ScoreCard({
   playerTheme = "neutral",
 }: ScoreCardProps) {
   const frameScore = player ? (frame.scores[player.session_key] ?? 0) : 0;
-  const matchScore = player?.match_score ?? 0;
+  // const matchScore = player?.match_score ?? 0;
 
   return (
     <Card
       variant="default"
-      className={`${getPlayerThemeClassName(playerTheme)} w-full min-w-0 p-2 ${
+      className={`${getPlayerThemeClassName(playerTheme)} aspect-square w-full min-w-0 overflow-visible p-2 ${
         currentTurn ? "current-break-glow" : ""
       }`}
     >
-      <Card.Content className="flex min-w-0 flex-col items-stretch gap-1 p-1">
+      <Card.Content className="flex h-full min-w-0 flex-col items-stretch justify-between gap-1 overflow-visible p-1">
         {player ? (
           <PlayerCard
             player={player}
@@ -45,7 +45,7 @@ export default function ScoreCard({
           />
         ) : null}
         <div className="score-primary">{frameScore}</div>
-        <div className="score-secondary">{matchScore}</div>
+        {/* <div className="score-secondary">{matchScore}</div> */}
       </Card.Content>
     </Card>
   );
