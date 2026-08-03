@@ -6,10 +6,7 @@ import {
   filterCompositionSuggestions,
   unresolvedSummaryBreakShot,
 } from "@/components/Scoreboard/summaryBreakCompositionFilters";
-import type {
-  FrameLogEntry,
-  SummaryBreakCompositionSuggestion,
-} from "@/types";
+import type { FrameLogEntry, SummaryBreakCompositionSuggestion } from "@/types";
 import { useAppDictionary } from "@/i18n/client";
 import BallComposition from "./BallComposition";
 
@@ -25,7 +22,10 @@ export default function CompositionSuggestions({
   compositionFilterCounts = {},
 }: CompositionSuggestionsProps) {
   const copy = useAppDictionary().frameLog;
-  const summaryBreakShot = useMemo(() => unresolvedSummaryBreakShot(entry), [entry]);
+  const summaryBreakShot = useMemo(
+    () => unresolvedSummaryBreakShot(entry),
+    [entry],
+  );
   const suggestions: SummaryBreakCompositionSuggestion[] = useMemo(
     () => summaryBreakShot?.composition_suggestions ?? [],
     [summaryBreakShot],
@@ -45,13 +45,16 @@ export default function CompositionSuggestions({
         hideScrollBar
         orientation="vertical"
         size={16}
-        className="max-h-[15.25rem] overflow-y-auto pr-1"
+        className="max-h-61 overflow-y-auto p-1"
       >
         <ListBox
           aria-label={copy.compositionSuggestions}
           selectionMode="single"
           onAction={(key) =>
-            onResolveBreakComposition?.(summaryBreakShot.history_id, String(key))
+            onResolveBreakComposition?.(
+              summaryBreakShot.history_id,
+              String(key),
+            )
           }
         >
           {filteredSuggestions.map((suggestion, index) => (
@@ -60,9 +63,7 @@ export default function CompositionSuggestions({
               id={suggestion.id}
               aria-label={suggestion.label}
               textValue={suggestion.label}
-              className={`min-h-11 rounded-lg px-0 py-0 ${
-                index > 0 ? "border-t border-warning/30" : ""
-              }`}
+              className={"bg-accent/10 rounded-lg p-0"}
             >
               <div className="flex min-w-0 px-2 py-2">
                 <BallComposition

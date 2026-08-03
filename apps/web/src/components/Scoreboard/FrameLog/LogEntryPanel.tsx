@@ -26,7 +26,7 @@ export default function LogEntryPanel({
   return (
     <Accordion.Panel
       className={`flex flex-col gap-3 rounded-lg bg-default-100/60 p-4 text-muted ${
-        isResolutionFocusMode ? "min-h-[18rem]" : ""
+        isResolutionFocusMode ? "min-h-72" : ""
       }`}
     >
       {isResolutionFocusMode ? <ResolutionFocusMessage /> : null}
