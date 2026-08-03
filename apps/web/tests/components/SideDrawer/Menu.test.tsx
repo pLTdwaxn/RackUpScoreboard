@@ -2,7 +2,6 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import Menu from "@/components/SideDrawer/Menu";
-import { setAppLocale } from "@/i18n";
 
 vi.mock("@/lib/version", () => ({
   appVersionLabel: "test-version",
@@ -13,10 +12,7 @@ vi.mock("@/components/ThemeToggle", () => ({
 }));
 
 describe("Menu", () => {
-  afterEach(() => {
-    setAppLocale("en");
-    cleanup();
-  });
+  afterEach(cleanup);
 
   it("opens the settings drawer with the app version", () => {
     const onLeaveRoom = vi.fn();
