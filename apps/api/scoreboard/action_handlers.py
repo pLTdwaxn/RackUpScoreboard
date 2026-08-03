@@ -23,6 +23,7 @@ from scoreboard.services.action_services import (
     OpponentResolver,
     ScoreKeeperPolicy,
 )
+from scoreboard.services.frame_action_policy import FrameActionPolicy
 from scoreboard.services.frame_history_service import FrameHistoryService
 from scoreboard.services.frame_reset_shot_service import FrameResetShotService
 from scoreboard.services.frame_undo_service import FrameUndoService
@@ -97,11 +98,20 @@ class ShotActionHandler:
 
 
 class LogBreakActionHandler:
-    def __init__(self, frame_history_service: FrameHistoryService | None = None) -> None:
+    def __init__(
+        self,
+        frame_history_service: FrameHistoryService | None = None,
+        frame_action_policy: FrameActionPolicy | None = None,
+    ) -> None:
         self._frame_history_service = frame_history_service or FrameHistoryService()
+        self._frame_action_policy = frame_action_policy or FrameActionPolicy()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         allowed, error = ensure_actor_can_keep_score(context)
+        if not allowed:
+            return False, error
+
+        allowed, error = self._frame_action_policy.can_start_summary_break(context.frame)
         if not allowed:
             return False, error
 

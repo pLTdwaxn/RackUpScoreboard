@@ -14,6 +14,7 @@ import { useShotComposer } from "./useShotComposer";
 export default function ControlPanel() {
   const {
     canKeepScore,
+    canLogSummaryBreak,
     canUseFoulOptions,
     coloursOnTable,
     currentPlayerKey,
@@ -47,6 +48,8 @@ export default function ControlPanel() {
     sendShot,
     sendDeclareFreeBall,
   });
+
+  const showSummaryBreakMode = isSummaryBreakMode && canLogSummaryBreak;
 
   if (!hasFrame) {
     return null;
@@ -96,6 +99,7 @@ export default function ControlPanel() {
               scoreKeeper={scoreKeeper}
               scorekeepingTarget={scorekeepingTarget}
               canKeepScore={canKeepScore}
+              canLogSummaryBreak={canLogSummaryBreak}
               canUseFoulOptions={canUseFoulOptions}
               freeBallMode={shotComposer.freeBallMode}
               selectedBalls={shotComposer.multiPotBalls}
@@ -109,10 +113,12 @@ export default function ControlPanel() {
                 setIsSummaryBreakMode(false);
                 shotComposer.startAdvancedMode();
               }}
-              isSummaryBreakMode={isSummaryBreakMode}
-              onToggleSummaryBreakMode={() =>
-                setIsSummaryBreakMode((isActive) => !isActive)
-              }
+              isSummaryBreakMode={showSummaryBreakMode}
+              onToggleSummaryBreakMode={() => {
+                if (canLogSummaryBreak) {
+                  setIsSummaryBreakMode((isActive) => !isActive);
+                }
+              }}
               onDeclareFoul={shotComposer.toggleFoulMode}
               onEndTurn={sendEndTurn}
               onPassShot={sendPassShot}

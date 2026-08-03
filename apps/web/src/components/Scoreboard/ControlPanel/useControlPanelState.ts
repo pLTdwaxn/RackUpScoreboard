@@ -4,7 +4,7 @@ import { useMatchroomFrame } from "@/hooks/useMatchroomFrame";
 import { useMatchroomPlayers } from "@/hooks/useMatchroomPlayers";
 import { useMatchroomActions } from "@/hooks/useSocket";
 import { getPlayerAvatarTheme } from "../shared/playerIdentity";
-import type { GameStateMessage, Player } from "@/types";
+import type { FrameLogEntry, GameStateMessage, Player } from "@/types";
 
 type ScorekeepingTarget = {
   player: Player;
@@ -52,9 +52,21 @@ function getScorekeepingTarget({
   };
 }
 
+function currentVisitHasDetailedLogging(
+  frameLog: FrameLogEntry[],
+  currentTurn: string,
+) {
+  const latestVisit = frameLog.at(-1);
+  if (!latestVisit || latestVisit.player_key !== currentTurn) {
+    return false;
+  }
+
+  return latestVisit.result === "in_progress" && latestVisit.shot_count > 0;
+}
+
 export function useControlPanelState() {
   const { currentPlayerKey, players = [] } = useMatchroomPlayers();
-  const { hasFrame, frame, scoreKeeper, nextFrameConfirmations } =
+  const { hasFrame, frame, frameLog = [], scoreKeeper, nextFrameConfirmations } =
     useMatchroomFrame();
   const { sendAction } = useMatchroomActions();
   const actions = useGameActions(sendAction);
@@ -76,6 +88,9 @@ export function useControlPanelState() {
     players,
     scoreKeeper,
   });
+  const canLogSummaryBreak =
+    panelState.canKeepScore &&
+    !currentVisitHasDetailedLogging(frameLog, frame.current_turn);
 
   return {
     ...panelState,
@@ -87,5 +102,6 @@ export function useControlPanelState() {
     players,
     scorekeepingTarget,
     canUseFoulOptions,
+    canLogSummaryBreak,
   };
 }

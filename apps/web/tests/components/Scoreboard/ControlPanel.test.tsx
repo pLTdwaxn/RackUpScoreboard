@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import ControlPanel from "@/components/Scoreboard/ControlPanel";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
-import type { Player } from "@/types";
+import type { FrameLogEntry, Player } from "@/types";
 
 const hookMock = vi.hoisted(() => ({
   players: vi.fn(),
@@ -56,6 +56,7 @@ const players: Player[] = [
 
 function arrangeControlPanel({
   frame = activeFrame,
+  frameLog = [],
   currentPlayerKey = "p1",
   matchroomPlayers,
   scoreKeeper = "self",
@@ -63,6 +64,7 @@ function arrangeControlPanel({
   sendAction = vi.fn(),
 }: {
   frame?: typeof activeFrame;
+  frameLog?: FrameLogEntry[];
   currentPlayerKey?: string;
   matchroomPlayers?: Player[];
   scoreKeeper?: "self" | "opp" | "ref" | "any";
@@ -76,6 +78,7 @@ function arrangeControlPanel({
   hookMock.frame.mockReturnValue({
     hasFrame: true,
     frame,
+    frameLog,
     scoreKeeper,
     nextFrameConfirmations,
   });
@@ -210,6 +213,44 @@ describe("ControlPanel", () => {
     expect(
       screen.queryByRole("textbox", { name: "Score" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("disables summary break logging after the current visit has shot detail", () => {
+    arrangeControlPanel({
+      frameLog: [
+        {
+          id: "visit-p1",
+          type: "visit",
+          player_key: "p1",
+          player_name: "Ada Lovelace",
+          history_ids: ["shot-1"],
+          shots: [
+            {
+              history_id: "shot-1",
+              action: "shot",
+              potted_balls: ["red"],
+              scored_balls: ["red"],
+              free_ball_pots: [],
+              break_points: 1,
+              foul_points: 0,
+              facts: [],
+            },
+          ],
+          potted_balls: ["red"],
+          scored_balls: ["red"],
+          free_ball_pots: [],
+          shot_count: 1,
+          break_points: 1,
+          foul_points: 0,
+          result: "in_progress",
+          facts: [],
+        },
+      ],
+    });
+
+    expect(
+      screen.getByRole("button", { name: "Log break by number" }),
+    ).toBeDisabled();
   });
 
   it("leaves summary break mode when the advanced composer opens", () => {

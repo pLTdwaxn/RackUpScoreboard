@@ -43,6 +43,7 @@ describe("Simple scoring controls", () => {
     render(
       <SimpleBottomActions
         canKeepScore={false}
+        canLogSummaryBreak={false}
         canUseFoulOptions={false}
         onConcede={vi.fn()}
         onEnterAdvancedMode={vi.fn()}
@@ -63,6 +64,7 @@ describe("Simple scoring controls", () => {
         freeBall={null}
         scoreKeeper="any"
         canKeepScore
+        canLogSummaryBreak
         canUseFoulOptions={false}
         freeBallMode={false}
         selectedBalls={[]}
@@ -86,6 +88,7 @@ describe("Simple scoring controls", () => {
         freeBall={null}
         scoreKeeper="any"
         canKeepScore
+        canLogSummaryBreak
         canUseFoulOptions={false}
         freeBallMode
         selectedBalls={[]}
@@ -120,6 +123,7 @@ describe("Simple scoring controls", () => {
           theme: "blue",
         }}
         canKeepScore
+        canLogSummaryBreak
         canUseFoulOptions={false}
         freeBallMode={false}
         selectedBalls={[]}

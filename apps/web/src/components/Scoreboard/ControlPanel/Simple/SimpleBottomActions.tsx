@@ -12,6 +12,7 @@ import { useAppDictionary } from "@/i18n/client";
 
 export type SimpleBottomActionsProps = {
   canKeepScore: boolean;
+  canLogSummaryBreak: boolean;
   canUseFoulOptions: boolean;
   isSummaryBreakMode: boolean;
   onConcede: () => void;
@@ -25,6 +26,7 @@ export type SimpleBottomActionsProps = {
 
 export default function SimpleBottomActions({
   canKeepScore,
+  canLogSummaryBreak,
   canUseFoulOptions,
   isSummaryBreakMode,
   onConcede,
@@ -100,7 +102,7 @@ export default function SimpleBottomActions({
         <ButtonGroup variant="secondary" size="sm">
           <Button
             aria-label={copy.logBreakByNumber}
-            isDisabled={!canKeepScore}
+            isDisabled={!canLogSummaryBreak}
             variant={isSummaryBreakMode ? "primary" : "secondary"}
             isIconOnly
             onPress={onToggleSummaryBreakMode}

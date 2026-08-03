@@ -17,6 +17,7 @@ type SimpleScoringPanelProps = {
   scoreKeeper: GameStateMessage["score_keeper"];
   scorekeepingTarget?: ScorekeepingTarget;
   canKeepScore: boolean;
+  canLogSummaryBreak: boolean;
   canUseFoulOptions: boolean;
   freeBallMode: boolean;
   isSummaryBreakMode: boolean;
@@ -52,6 +53,7 @@ export default function SimpleScoringPanel({
   scoreKeeper,
   scorekeepingTarget,
   canKeepScore,
+  canLogSummaryBreak,
   canUseFoulOptions,
   freeBallMode,
   isSummaryBreakMode,
@@ -100,6 +102,7 @@ export default function SimpleScoringPanel({
       actionsRow={
         <SimpleBottomActions
           canKeepScore={canKeepScore}
+          canLogSummaryBreak={canLogSummaryBreak}
           canUseFoulOptions={canUseFoulOptions}
           isSummaryBreakMode={isSummaryBreakMode}
           onConcede={onConcede}
