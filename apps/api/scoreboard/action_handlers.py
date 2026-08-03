@@ -263,21 +263,23 @@ class NextFrameActionHandler:
 
 
 class PassShotActionHandler:
-    def __init__(self, frame_history_service: FrameHistoryService | None = None) -> None:
+    def __init__(
+        self,
+        frame_history_service: FrameHistoryService | None = None,
+        frame_action_policy: FrameActionPolicy | None = None,
+    ) -> None:
         self._frame_history_service = frame_history_service or FrameHistoryService()
+        self._frame_action_policy = frame_action_policy or FrameActionPolicy()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         allowed, error = ensure_actor_can_keep_score(context)
         if not allowed:
             return False, error
 
-        lifecycle = context.frame.lifecycle_state
         turn = context.frame.turn_state
-        if lifecycle.status != FrameStatus.ACTIVE:
-            return False, "Current frame is not active."
-
-        if not turn.previously_fouled:
-            return False, "Cannot pass shot when the player has not fouled."
+        allowed, error = self._frame_action_policy.can_pass_shot(context.frame)
+        if not allowed:
+            return False, error
 
         state_before = self._frame_history_service.snapshot(context)
         passing_player_key = turn.current_turn or context.actor_key
@@ -310,9 +312,11 @@ class ResetShotActionHandler:
         self,
         frame_history_service: FrameHistoryService | None = None,
         frame_reset_shot_service: FrameResetShotService | None = None,
+        frame_action_policy: FrameActionPolicy | None = None,
     ) -> None:
         self._frame_history_service = frame_history_service or FrameHistoryService()
         self._frame_reset_shot_service = frame_reset_shot_service or FrameResetShotService()
+        self._frame_action_policy = frame_action_policy or FrameActionPolicy()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         allowed, error = ensure_actor_can_keep_score(context)
@@ -320,7 +324,7 @@ class ResetShotActionHandler:
             return False, error
 
         turn = context.frame.turn_state
-        can_reset, reset_error = self._frame_reset_shot_service.can_reset_shot(context)
+        can_reset, reset_error = self._frame_action_policy.can_reset_shot(context.frame)
         if not can_reset:
             return False, reset_error
 
@@ -348,21 +352,23 @@ class ResetShotActionHandler:
 
 
 class DeclareFreeBallActionHandler:
-    def __init__(self, frame_history_service: FrameHistoryService | None = None) -> None:
+    def __init__(
+        self,
+        frame_history_service: FrameHistoryService | None = None,
+        frame_action_policy: FrameActionPolicy | None = None,
+    ) -> None:
         self._frame_history_service = frame_history_service or FrameHistoryService()
+        self._frame_action_policy = frame_action_policy or FrameActionPolicy()
 
     def handle(self, context: ActionContext) -> tuple[bool, str | None]:
         allowed, error = ensure_actor_can_keep_score(context)
         if not allowed:
             return False, error
 
-        lifecycle = context.frame.lifecycle_state
         turn = context.frame.turn_state
-        if lifecycle.status != FrameStatus.ACTIVE:
-            return False, "Current frame is not active."
-
-        if not turn.previously_fouled:
-            return False, "Cannot declare a free ball when the player has not fouled."
+        allowed, error = self._frame_action_policy.can_declare_free_ball(context.frame)
+        if not allowed:
+            return False, error
 
         state_before = self._frame_history_service.snapshot(context)
         declaring_player_key = turn.current_turn or context.actor_key

@@ -1,21 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from scoreboard.domain.models.frame import Frame
-from scoreboard.services.frame_reset_shot_service import FrameResetShotService
-
-
-@dataclass
-class _FrameResetShotState:
-    frame: Frame
+from scoreboard.services.frame_action_policy import FrameActionPolicy
 
 
 class ActionAvailabilityProjector:
     """Projects backend action rules into UI-friendly availability flags."""
 
-    def __init__(self, frame_reset_shot_service: FrameResetShotService | None = None) -> None:
-        self._frame_reset_shot_service = frame_reset_shot_service or FrameResetShotService()
+    def __init__(self, frame_action_policy: FrameActionPolicy | None = None) -> None:
+        self._frame_action_policy = frame_action_policy or FrameActionPolicy()
 
     def project(self, frame: Frame | None) -> dict:
         return {
@@ -29,7 +22,7 @@ class ActionAvailabilityProjector:
                 "reason": "No current frame.",
             }
 
-        can_reset, reason = self._frame_reset_shot_service.can_reset_shot(_FrameResetShotState(frame))
+        can_reset, reason = self._frame_action_policy.can_reset_shot(frame)
         return {
             "available": can_reset,
             "reason": reason,

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 from scoreboard.domain.frame_calculation.rule_state import calculate_frame_rule_state
-from scoreboard.domain.models.frame_state import FrameStatus
 
 if TYPE_CHECKING:
     from scoreboard.domain.models.frame import Frame
@@ -14,36 +13,14 @@ class FrameResetShotState(Protocol):
 
 
 class FrameResetShotService:
-    def can_reset_shot(self, state: FrameResetShotState) -> tuple[bool, str | None]:
-        if state.frame.lifecycle_state.status != FrameStatus.ACTIVE:
-            return False, "Current frame is not active."
-
-        if not state.frame.turn_state.previously_fouled:
-            return False, "Cannot reset shot when the previous shot was not foul and a miss."
-
-        if not state.frame.history:
-            return False, "No shot is available to reset."
-
-        last_entry = state.frame.history[-1]
-        outcome = last_entry.get("outcome") or {}
-        if outcome.get("action") != "shot" or outcome.get("result") != "foul":
-            return False, "Only the most recent fouled shot can be reset."
-
-        state_before = last_entry.get("state_before") or {}
-        if not state_before.get("miss_rule_available", True):
-            return False, "Foul and a miss is not available when snookers are required before the shot."
-
-        if not state.frame.rule_state.miss_rule_available:
-            return False, "Foul and a miss is not available when snookers are required after the shot."
-
-        return True, None
-
     def reset_shot(self, state: FrameResetShotState) -> bool:
-        can_reset, _ = self.can_reset_shot(state)
-        if not can_reset:
+        if not state.frame.history:
             return False
 
-        state_before = state.frame.history[-1]["state_before"]
+        state_before = state.frame.history[-1].get("state_before")
+        if not state_before:
+            return False
+
         frame = state.frame
 
         frame.turn_state.current_turn = state_before["current_turn"]
