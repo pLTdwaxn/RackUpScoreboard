@@ -24,7 +24,7 @@ describe("Menu", () => {
     expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getAllByText("Theme")).toHaveLength(2);
     expect(screen.getByText("Language")).toBeInTheDocument();
-    expect(screen.getAllByText("EN").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("English").length).toBeGreaterThan(0);
     expect(screen.getByRole("listbox", { name: "Settings" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Scorekeeping" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Players" })).toBeInTheDocument();

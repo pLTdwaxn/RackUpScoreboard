@@ -59,8 +59,11 @@ export default function Menu({ onLeaveRoom }: MenuProps) {
                     <Select.Popover>
                       <ListBox items={APP_LOCALE_OPTIONS}>
                         {(locale) => (
-                          <ListBox.Item id={locale.id} textValue={locale.label}>
-                            {locale.label}
+                          <ListBox.Item
+                            id={locale.id}
+                            textValue={locale.nativeLabel}
+                          >
+                            {locale.nativeLabel}
                           </ListBox.Item>
                         )}
                       </ListBox>

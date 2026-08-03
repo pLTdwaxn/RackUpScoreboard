@@ -25,7 +25,9 @@ type LocaleChangeListener = () => void;
 
 export type LocaleOption = {
   id: AppLocale;
+  code: AppLocale;
   label: string;
+  nativeLabel: string;
 };
 
 const RAW_DICTIONARIES = {
@@ -197,6 +199,26 @@ export type AppLocale = keyof typeof RAW_DICTIONARIES;
 export type AppDictionary = ReturnType<typeof buildAppDictionary>;
 export type FrameLogDictionary = AppDictionary["frameLog"];
 
+export const APP_LOCALES: Record<
+  AppLocale,
+  {
+    code: AppLocale;
+    label: string;
+    nativeLabel: string;
+  }
+> = {
+  en: {
+    code: "en",
+    label: "English",
+    nativeLabel: "English",
+  },
+  "zh-CN": {
+    code: "zh-CN",
+    label: "Chinese (Simplified)",
+    nativeLabel: "简体中文",
+  },
+};
+
 export const APP_DICTIONARIES = Object.fromEntries(
   Object.entries(RAW_DICTIONARIES).map(([locale, raw]) => [
     locale,
@@ -209,16 +231,12 @@ const dynamicFrameLogDictionary = new Proxy({} as FrameLogDictionary, {
     getAppDictionary().frameLog[property],
 });
 
-export const APP_LOCALE_OPTIONS: LocaleOption[] = [
-  {
-    id: "en",
-    label: "EN",
-  },
-  {
-    id: "zh-CN",
-    label: "简体中文",
-  },
-];
+export const APP_LOCALE_OPTIONS: LocaleOption[] = Object.values(
+  APP_LOCALES,
+).map((locale) => ({
+  ...locale,
+  id: locale.code,
+}));
 
 export function getCurrentLocale(): AppLocale {
   return currentLocale;
