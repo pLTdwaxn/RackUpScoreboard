@@ -53,6 +53,17 @@ Test files live next to the code they exercise as `*.test.ts` or
 `*.test.tsx` under `tests/`, mirroring the `src/` structure. Shared browser
 matchers are loaded from `tests/setup.ts`.
 
+## Storybook
+
+Storybook is available for isolated UI development. Prefer stories for pure
+components and panel states that can be driven from static fixtures rather than
+live websocket state.
+
+```bash
+npm run storybook
+npm run build-storybook
+```
+
 ## Docker Build Args
 
 The Dockerfile accepts NEXT_PUBLIC_API_BASE, NEXT_PUBLIC_LOCAL_API_PORT, NEXT_PUBLIC_APP_ENV, NEXT_PUBLIC_APP_VERSION, and NEXT_PUBLIC_GIT_SHA as build args because the client needs them at build time.

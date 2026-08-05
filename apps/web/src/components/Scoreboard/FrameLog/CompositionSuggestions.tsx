@@ -57,7 +57,7 @@ export default function CompositionSuggestions({
             )
           }
         >
-          {filteredSuggestions.map((suggestion, index) => (
+          {filteredSuggestions.map((suggestion) => (
             <ListBox.Item
               key={suggestion.id}
               id={suggestion.id}
