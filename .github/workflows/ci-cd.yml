@@ -36,7 +36,7 @@ jobs:
         run: npm ci
 
       - name: Run API tests
-        run: pytest -q apps/api/tests
+        run: pytest -vv apps/api/tests --durations=20
 
       - name: Run web tests
         working-directory: apps/web

@@ -3,8 +3,8 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-os.environ.setdefault("ENV", "test")
-os.environ.setdefault("STUB_REDIS", "true")
+os.environ["ENV"] = "test"
+os.environ["STUB_REDIS"] = "true"
 
 
 @pytest.fixture
@@ -23,7 +23,8 @@ def clean_engine():
 def client(clean_engine):
     from scoreboard.main import app
 
-    return TestClient(app)
+    with TestClient(app) as test_client:
+        yield test_client
 
 
 @pytest.fixture
