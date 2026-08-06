@@ -38,7 +38,7 @@ const RAW_DICTIONARIES = {
 const LOCALE_STORAGE_KEY = "scoreboard.locale";
 const DEFAULT_LOCALE: AppLocale = "en";
 const localeChangeListeners = new Set<LocaleChangeListener>();
-let currentLocale = readStoredLocale();
+let currentLocale: AppLocale = DEFAULT_LOCALE;
 
 function isAppLocale(value: string): value is AppLocale {
   return value in RAW_DICTIONARIES;
@@ -61,6 +61,10 @@ function writeStoredLocale(locale: AppLocale): void {
   }
 
   window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+}
+
+export function readStoredAppLocale(): AppLocale {
+  return readStoredLocale();
 }
 
 function notifyLocaleChange(): void {

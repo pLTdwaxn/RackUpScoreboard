@@ -13,6 +13,7 @@ import {
 import {
   getAppDictionary,
   getCurrentLocale,
+  readStoredAppLocale,
   setAppLocale,
   type AppDictionary,
   type AppLocale,
@@ -46,6 +47,13 @@ function useI18nFallback(): I18nContextValue {
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const value = useI18nFallback();
+
+  useEffect(() => {
+    const storedLocale = readStoredAppLocale();
+    if (storedLocale !== value.locale) {
+      value.setLocale(storedLocale);
+    }
+  }, [value]);
 
   useEffect(() => {
     document.documentElement.lang = value.locale;
