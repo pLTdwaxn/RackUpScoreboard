@@ -170,11 +170,11 @@ label {
 @keyframes current-break-breathe {
   0%,
   100% {
-    box-shadow: 0 0 2px 1px var(--current-break-glow-soft);
+    box-shadow: 0 0 8px 1px var(--current-break-glow-soft);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 5px 2px var(--current-break-glow-strong);
+    box-shadow: 0 0 24px 2px var(--current-break-glow-strong);
     transform: scale(1);
   }
 }

@@ -2,10 +2,7 @@ import { ScrollShadow } from "@heroui/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useGameActions } from "@/hooks/useGameActions";
-import {
-  useMatchroomActions,
-  useMatchroomGame,
-} from "@/hooks/useSocket";
+import { useMatchroomActions, useMatchroomGame } from "@/hooks/useSocket";
 import { FrameLogEntry } from "@/types";
 import { getPlayerAvatarTheme } from "../shared/playerIdentity";
 import {
@@ -38,16 +35,14 @@ function getFrameLogEntryUpdateKey(entry?: FrameLogEntry): string {
   const latestHistoryId = entry.history_ids.at(-1) ?? "";
   const latestShotId = entry.shots?.at(-1)?.history_id ?? "";
 
-  return [
-    entry.id,
-    latestHistoryId,
-    latestShotId,
-    entry.shot_count,
-  ].join(":");
+  return [entry.id, latestHistoryId, latestShotId, entry.shot_count].join(":");
 }
 
-function getLatestUndoableEntryId(frameLog: FrameLogEntry[]): string | undefined {
-  return [...frameLog].reverse().find((entry) => entry.history_ids.length > 0)?.id;
+function getLatestUndoableEntryId(
+  frameLog: FrameLogEntry[],
+): string | undefined {
+  return [...frameLog].reverse().find((entry) => entry.history_ids.length > 0)
+    ?.id;
 }
 
 function useAutoExpandedFrameLogEntry(
@@ -63,7 +58,7 @@ function useAutoExpandedFrameLogEntry(
       ? expandedEntryOverride.id
       : latestEntryId === suppressedAutoExpandedEntryId
         ? null
-      : (latestEntryId ?? null);
+        : (latestEntryId ?? null);
 
   const handleExpandedChange = (entryId: string, isExpanded: boolean) => {
     setExpandedEntryOverride({
@@ -125,7 +120,9 @@ export default function FrameLog({
       suppressedAutoExpandedEntryId,
     );
   const expandedCompositionFilterEntry = useMemo(() => {
-    const expandedEntry = frameLog.find((entry) => entry.id === expandedEntryId);
+    const expandedEntry = frameLog.find(
+      (entry) => entry.id === expandedEntryId,
+    );
     return expandedEntry ? activeCompositionFilterEntry(expandedEntry) : null;
   }, [expandedEntryId, frameLog]);
 
@@ -142,11 +139,11 @@ export default function FrameLog({
   return (
     <ScrollShadow
       hideScrollBar
-      className="h-full min-h-0 overflow-y-auto p-1 text-muted"
+      className="h-full min-h-0 scroll-pb-6 overflow-y-auto p-3 text-muted"
     >
       <ol
         ref={listRef}
-        className={`flex min-h-full flex-col text-sm ${
+        className={`flex min-h-full flex-col pb-6 text-sm ${
           isCompositionResolutionMode ? "justify-center" : ""
         }`}
       >

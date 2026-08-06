@@ -39,7 +39,7 @@ export default function FrameOverview() {
   return (
     <OverviewWrapper>
       <FrameStats frame={frame} />
-      <div className="grid w-full grid-cols-2 gap-2 overflow-visible p-1">
+      <div className="grid w-full grid-cols-2 gap-2 overflow-visible p-0">
         <ScoreCard
           player={opponentCardPlayer}
           frame={frame}

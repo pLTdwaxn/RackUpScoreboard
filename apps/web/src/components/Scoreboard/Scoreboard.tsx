@@ -38,43 +38,49 @@ export default function Scoreboard() {
     toast.danger(socketError, { timeout: 1000 });
   }, [socketError]);
 
-  const handleActiveCompositionFilterEntryChange = useCallback((
-    nextEntry: ActiveCompositionFilterEntry | null,
-  ) => {
-    if (nextEntry) {
-      setSuppressedCompositionEntryId(null);
-    }
-
-    setActiveCompositionFilterEntry((currentEntry) => {
-      if (
-        currentEntry?.entryId === nextEntry?.entryId &&
-        currentEntry?.historyId === nextEntry?.historyId
-      ) {
-        return currentEntry;
+  const handleActiveCompositionFilterEntryChange = useCallback(
+    (nextEntry: ActiveCompositionFilterEntry | null) => {
+      if (nextEntry) {
+        setSuppressedCompositionEntryId(null);
       }
-      if (currentEntry?.entryId !== nextEntry?.entryId) {
-        setCompositionFilterCounts({});
+
+      setActiveCompositionFilterEntry((currentEntry) => {
+        if (
+          currentEntry?.entryId === nextEntry?.entryId &&
+          currentEntry?.historyId === nextEntry?.historyId
+        ) {
+          return currentEntry;
+        }
+        if (currentEntry?.entryId !== nextEntry?.entryId) {
+          setCompositionFilterCounts({});
+        }
+        return nextEntry;
+      });
+    },
+    [],
+  );
+
+  const handleCompositionFilterBallTap = useCallback(
+    (ball: BallName) => {
+      if (!activeCompositionFilterEntry) {
+        return;
       }
-      return nextEntry;
-    });
-  }, []);
 
-  const handleCompositionFilterBallTap = useCallback((ball: BallName) => {
-    if (!activeCompositionFilterEntry) {
-      return;
-    }
-
-    setCompositionFilterCounts((counts) =>
-      nextCompositionFilterCounts({
-        ball,
-        counts,
-        suggestions: activeCompositionFilterEntry.suggestions,
-      }),
-    );
-  }, [activeCompositionFilterEntry]);
+      setCompositionFilterCounts((counts) =>
+        nextCompositionFilterCounts({
+          ball,
+          counts,
+          suggestions: activeCompositionFilterEntry.suggestions,
+        }),
+      );
+    },
+    [activeCompositionFilterEntry],
+  );
 
   const handleCompositionFilterCancel = useCallback(() => {
-    setSuppressedCompositionEntryId(activeCompositionFilterEntry?.entryId ?? null);
+    setSuppressedCompositionEntryId(
+      activeCompositionFilterEntry?.entryId ?? null,
+    );
     setActiveCompositionFilterEntry(null);
     setCompositionFilterCounts({});
   }, [activeCompositionFilterEntry]);
@@ -96,11 +102,11 @@ export default function Scoreboard() {
         </div>
       ) : null}
       <div
-        className={`overflow-hidden transition-[max-height,opacity,transform] duration-200 ${
+        className={`${
           isCompositionResolutionMode
             ? "max-h-0 -translate-y-2 opacity-0"
             : "max-h-96 translate-y-0 opacity-100"
-        }`}
+        } overflow-visible transition-[max-height,opacity,transform] duration-200 p-2`}
         aria-hidden={isCompositionResolutionMode || undefined}
       >
         <FrameOverview />
@@ -116,16 +122,18 @@ export default function Scoreboard() {
           }
         />
       </div>
-      {activeCompositionFilterEntry ? (
-        <CompositionSuggestionFilterPanel
-          counts={compositionFilterCounts}
-          suggestions={activeCompositionFilterEntry.suggestions}
-          onBallTap={handleCompositionFilterBallTap}
-          onCancel={handleCompositionFilterCancel}
-        />
-      ) : (
-        <ControlPanel />
-      )}
+      <div className="mt-auto w-full p-2">
+        {activeCompositionFilterEntry ? (
+          <CompositionSuggestionFilterPanel
+            counts={compositionFilterCounts}
+            suggestions={activeCompositionFilterEntry.suggestions}
+            onBallTap={handleCompositionFilterBallTap}
+            onCancel={handleCompositionFilterCancel}
+          />
+        ) : (
+          <ControlPanel />
+        )}
+      </div>
     </div>
   );
 }

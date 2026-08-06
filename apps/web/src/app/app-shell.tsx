@@ -88,7 +88,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <MatchroomTopRowContent />
           <MatchroomInviteTopRowContent />
         </TopRow>
-        <div className="flex flex-1 min-h-0 w-full items-stretch justify-center overflow-hidden p-2">
+        <div className="flex flex-1 min-h-0 w-full items-stretch justify-center overflow-visible">
           {children}
         </div>
       </Surface>

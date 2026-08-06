@@ -58,10 +58,7 @@ export default function ControlPanel() {
   }
 
   return (
-    <Surface
-      variant="default"
-      className="mt-auto w-full items-center rounded-3xl p-3 text-center"
-    >
+    <Surface variant="default" className="rounded-3xl p-3 text-center">
       {isFrameFinished ? (
         <FinishedFramePanel
           winnerKey={frame.winner_key}

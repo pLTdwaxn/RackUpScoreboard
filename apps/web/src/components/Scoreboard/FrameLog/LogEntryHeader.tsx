@@ -37,9 +37,7 @@ export default function LogEntryHeader({
     <Accordion.Heading className="relative w-full">
       <Accordion.Trigger
         aria-label={
-          isExpanded
-            ? copy.collapseEntryDetails
-            : copy.expandEntryDetails
+          isExpanded ? copy.collapseEntryDetails : copy.expandEntryDetails
         }
         className="relative flex w-full min-w-0 items-center gap-3 rounded-3xl p-2 pr-24 text-left text-foreground"
       >
