@@ -92,7 +92,7 @@ def unresolved_table_state_history_ids(frame: Frame) -> list[str]:
     return [
         history_entry["id"]
         for history_entry in frame.history
-        if _history_action(history_entry) == "log_break" and _composition_status(history_entry) != "resolved"
+        if _history_action(history_entry) == "log_break" and _requires_composition_resolution(history_entry)
     ]
 
 
@@ -114,3 +114,21 @@ def _composition_status(history_entry: dict) -> str:
         return outcome["composition_status"]
 
     return "missing"
+
+
+def _requires_composition_resolution(history_entry: dict) -> bool:
+    return _break_points(history_entry) > 0 and _composition_status(history_entry) != "resolved"
+
+
+def _break_points(history_entry: dict) -> int:
+    outcome = history_entry.get("outcome")
+    if isinstance(outcome, dict):
+        return int(outcome.get("break_points", 0))
+
+    event = history_entry.get("event", {})
+    if isinstance(event, dict):
+        data = event.get("data", {})
+        if isinstance(data, dict):
+            return int(data.get("points", 0))
+
+    return 0

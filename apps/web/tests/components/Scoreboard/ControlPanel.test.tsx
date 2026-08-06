@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import ControlPanel from "@/components/Scoreboard/ControlPanel";
 import { DEFAULT_FRAME } from "@/lib/viewModel";
-import type { FrameLogEntry, Player } from "@/types";
+import type { Frame, FrameLogEntry, Player } from "@/types";
 
 const hookMock = vi.hoisted(() => ({
   players: vi.fn(),
@@ -23,7 +23,7 @@ vi.mock("@/hooks/useSocket", () => ({
   useMatchroomActions: hookMock.actions,
 }));
 
-const activeFrame = {
+const activeFrame: Frame = {
   ...DEFAULT_FRAME,
   status: "active" as const,
   current_turn: "p1",
@@ -288,6 +288,26 @@ describe("ControlPanel", () => {
     expect(
       screen.getByRole("button", { name: /Increase foul/ }),
     ).toBeDisabled();
+  });
+
+  it("steps summary break foul points through legal snooker penalties", () => {
+    arrangeControlPanel();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Log break by number" }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Increase foul/ }));
+    expect(screen.getByRole("textbox", { name: "Foul" })).toHaveValue("4");
+
+    fireEvent.click(screen.getByRole("button", { name: /Increase foul/ }));
+    expect(screen.getByRole("textbox", { name: "Foul" })).toHaveValue("5");
+
+    fireEvent.click(screen.getByRole("button", { name: /Decrease foul/ }));
+    expect(screen.getByRole("textbox", { name: "Foul" })).toHaveValue("4");
+
+    fireEvent.click(screen.getByRole("button", { name: /Decrease foul/ }));
+    expect(screen.getByRole("textbox", { name: "Foul" })).toHaveValue("0");
   });
 
   it("shows the themed player at the table for self scorekeeping", () => {

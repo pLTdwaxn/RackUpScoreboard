@@ -20,14 +20,17 @@ class ActionOutcomeFactory:
             )
 
         if payload.action == "log_break":
+            has_break_composition = payload.break_points > 0
             return ActionOutcome(
                 action="log_break",
-                result="summary_break",
+                result="summary_break" if has_break_composition else "foul",
                 player_key=score.player if score else None,
                 break_points=payload.break_points,
                 foul_points=foul.points_awarded if foul else 0,
-                composition_status="missing",
-                composition_suggestions=suggest_summary_break_compositions(payload.break_points),
+                composition_status="missing" if has_break_composition else None,
+                composition_suggestions=(
+                    suggest_summary_break_compositions(payload.break_points) if has_break_composition else None
+                ),
             )
 
         if foul and foul.is_foul:

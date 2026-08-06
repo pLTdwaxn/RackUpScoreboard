@@ -101,6 +101,35 @@ def test_log_break_scores_summary_visit_and_hands_turn_to_opponent(
     )
 
 
+def test_log_break_with_only_foul_points_has_no_break_composition(
+    orchestrator: FrameOrchestrator,
+    frame: Frame,
+) -> None:
+    outcome = orchestrator.orchestrate(
+        frame,
+        ActionPayload(action="log_break", break_points=0, foul=4),
+    )
+
+    assert dict(frame.scoring_state.scores) == {PLAYER_ONE: 12, PLAYER_TWO: 9}
+    assert frame.turn_state.current_turn == PLAYER_TWO
+    assert frame.turn_state.previously_fouled is True
+    assert frame.scoring_state.highest_break == 0
+    assert frame.scoring_state.current_break == 0
+    assert frame.table_state.reds_remaining == 15
+    assert outcome.to_dict() == {
+        "action": "log_break",
+        "result": "foul",
+        "player_key": PLAYER_ONE,
+        "potted_balls": [],
+        "scored_balls": [],
+        "free_ball_pots": [],
+        "break_points": 0,
+        "foul_points": 4,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
+
+
 def test_declared_foul_updates_highest_break_and_resets_current_break(
     orchestrator: FrameOrchestrator,
     frame: Frame,

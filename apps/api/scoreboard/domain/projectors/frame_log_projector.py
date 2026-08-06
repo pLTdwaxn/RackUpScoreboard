@@ -168,18 +168,22 @@ class FrameLogProjector:
         if isinstance(outcome, dict):
             action = outcome.get("action", "shot")
             potted_balls = list(outcome.get("potted_balls", []))
+            break_points = int(outcome.get("break_points", 0))
             return {
                 "action": action,
                 "potted_balls": potted_balls,
                 "scored_balls": list(outcome.get("scored_balls", potted_balls)),
                 "free_ball_pots": list(outcome.get("free_ball_pots", [])),
-                "break_points": int(outcome.get("break_points", 0)),
+                "break_points": break_points,
                 "foul_points": int(outcome.get("foul_points", 0)),
                 "nominated_colour": outcome.get("nominated_colour"),
                 "player_key": outcome.get("player_key"),
                 "result": outcome.get("result") or self._default_result_for_action(action),
                 "winner_key": outcome.get("winner_key"),
-                "composition_status": outcome.get("composition_status", "missing" if action == "log_break" else None),
+                "composition_status": outcome.get(
+                    "composition_status",
+                    "missing" if action == "log_break" and break_points > 0 else None,
+                ),
                 "composition_suggestions": list(outcome.get("composition_suggestions", [])),
             }
 
@@ -199,7 +203,7 @@ class FrameLogProjector:
             "player_key": None,
             "result": self._default_result_for_action(action, foul_points, potted_balls),
             "winner_key": None,
-            "composition_status": "missing" if action == "log_break" else None,
+            "composition_status": "missing" if action == "log_break" and data.get("points", 0) > 0 else None,
             "composition_suggestions": [],
         }
 
@@ -273,17 +277,17 @@ class FrameLogProjector:
             ]
 
         if action == "log_break":
-            return [
-                {
-                    "kind": "summary_break",
-                    "player_key": actor_key,
-                    "result": outcome["result"],
-                    "break_points": outcome["break_points"],
-                    "foul_points": outcome["foul_points"],
-                    "composition_status": outcome["composition_status"],
-                    "composition_suggestions": outcome["composition_suggestions"],
-                }
-            ]
+            fact = {
+                "kind": "summary_break",
+                "player_key": actor_key,
+                "result": outcome["result"],
+                "break_points": outcome["break_points"],
+                "foul_points": outcome["foul_points"],
+            }
+            if outcome["composition_status"] is not None:
+                fact["composition_status"] = outcome["composition_status"]
+                fact["composition_suggestions"] = outcome["composition_suggestions"]
+            return [fact]
 
         fact = {
             "kind": "shot_result",

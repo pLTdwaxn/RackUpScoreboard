@@ -49,7 +49,7 @@ export type FrameLogFact =
       result: string;
       break_points: number;
       foul_points: number;
-      composition_status: "missing" | "resolved" | "skipped";
+      composition_status?: "missing" | "resolved" | "skipped";
       composition_suggestions?: SummaryBreakCompositionSuggestion[];
     }
   | {

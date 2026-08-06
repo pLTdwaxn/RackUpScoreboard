@@ -89,7 +89,7 @@ def test_validate_event_rejects_undo_with_extra_fields(event):
         ),
         (
             {"action": "log_break", "data": {"points": 35, "foul": 8}},
-            "Log break payload requires integer 'foul' between 0 and 7.",
+            "Log break payload requires integer 'foul' of 0 or between 4 and 7.",
         ),
         (
             {"action": "log_break", "data": {"points": 0, "foul": 0}},
@@ -137,8 +137,21 @@ def test_validate_event_rejects_invalid_non_shot_messages(event, expected_error)
             {"action": "shot", "data": {"potted_balls": "red", "foul": 0}},
             "Shot payload requires list 'potted_balls'.",
         ),
+        (
+            {"action": "shot", "data": {"potted_balls": [], "foul": 3}},
+            "Shot payload requires integer 'foul' of 0 or between 4 and 7.",
+        ),
     ],
 )
 def test_validate_event_rejects_invalid_factual_messages(event, expected_error):
     with pytest.raises(ValueError, match=expected_error):
         validate_event(event)
+
+
+@pytest.mark.parametrize("foul", [1, 2, 3])
+def test_validate_event_rejects_summary_break_foul_below_minimum_penalty(foul):
+    with pytest.raises(
+        ValueError,
+        match="Log break payload requires integer 'foul' of 0 or between 4 and 7.",
+    ):
+        validate_event({"action": "log_break", "data": {"points": 35, "foul": foul}})

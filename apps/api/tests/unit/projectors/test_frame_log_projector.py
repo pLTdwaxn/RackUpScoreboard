@@ -112,7 +112,45 @@ def _summary_break_entry(
     actor: str,
     points: int,
     foul: int = 0,
+    composition_required: bool = True,
 ) -> dict:
+    outcome = {
+        "action": "log_break",
+        "result": "summary_break" if composition_required else "foul",
+        "player_key": actor,
+        "potted_balls": [],
+        "scored_balls": [],
+        "free_ball_pots": [],
+        "break_points": points,
+        "foul_points": foul,
+        "winner_key": None,
+        "nominated_colour": None,
+    }
+    if composition_required:
+        outcome.update(
+            {
+                "composition_status": "missing",
+                "composition_suggestions": [
+                    {
+                        "id": "suggestion_1",
+                        "label": "5 reds, 1 yellow, 4 blacks",
+                        "balls": [
+                            "red",
+                            "black",
+                            "red",
+                            "black",
+                            "red",
+                            "black",
+                            "red",
+                            "black",
+                            "red",
+                            "yellow",
+                        ],
+                    }
+                ],
+            }
+        )
+
     return {
         "id": id,
         "actor": actor,
@@ -120,26 +158,7 @@ def _summary_break_entry(
             "action": "log_break",
             "data": {"points": points, "foul": foul},
         },
-        "outcome": {
-            "action": "log_break",
-            "result": "summary_break",
-            "player_key": actor,
-            "potted_balls": [],
-            "scored_balls": [],
-            "free_ball_pots": [],
-            "break_points": points,
-            "foul_points": foul,
-            "winner_key": None,
-            "nominated_colour": None,
-            "composition_status": "missing",
-            "composition_suggestions": [
-                {
-                    "id": "suggestion_1",
-                    "label": "5 reds, 1 yellow, 4 blacks",
-                    "balls": ["red", "black", "red", "black", "red", "black", "red", "black", "red", "yellow"],
-                }
-            ],
-        },
+        "outcome": outcome,
         "state_before": {},
     }
 
@@ -676,6 +695,56 @@ def test_frame_log_projector_projects_summary_break_visit() -> None:
                     "balls": ["red", "black", "red", "black", "red", "black", "red", "black", "red", "yellow"],
                 }
             ],
+        }
+    ]
+
+
+def test_frame_log_projector_projects_foul_only_log_break_without_composition() -> None:
+    frame = _frame()
+    frame.lifecycle_state.status = FrameStatus.ACTIVE
+    frame.turn_state.current_turn = "p2"
+    frame.history = [_summary_break_entry("h1", "p1", points=0, foul=4, composition_required=False)]
+
+    log = FrameLogProjector().project(
+        frame,
+        [
+            _player("p1", "Player 1"),
+            _player("p2", "Player 2"),
+        ],
+    )
+
+    assert _without_facts(log[0]) == {
+        "id": "h1",
+        "type": "visit",
+        "player_key": "p1",
+        "player_name": "Player 1",
+        "history_ids": ["h1"],
+        "shots": [
+            {
+                "history_id": "h1",
+                "action": "log_break",
+                "potted_balls": [],
+                "scored_balls": [],
+                "free_ball_pots": [],
+                "break_points": 0,
+                "foul_points": 4,
+            }
+        ],
+        "potted_balls": [],
+        "scored_balls": [],
+        "free_ball_pots": [],
+        "shot_count": 1,
+        "break_points": 0,
+        "foul_points": 4,
+        "result": "foul",
+    }
+    assert log[0]["shots"][0]["facts"] == [
+        {
+            "kind": "summary_break",
+            "player_key": "p1",
+            "result": "foul",
+            "break_points": 0,
+            "foul_points": 4,
         }
     ]
 

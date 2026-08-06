@@ -8,6 +8,22 @@ type SummaryBreakFieldsProps = {
   onSubmit: (score: number, foul: number) => void;
 };
 
+function nextValidFoulPoints(nextFoul: number, currentFoul: number): number {
+  if (nextFoul <= 0) {
+    return 0;
+  }
+
+  if (currentFoul === 4 && nextFoul < 4) {
+    return 0;
+  }
+
+  if (nextFoul < 4) {
+    return 4;
+  }
+
+  return Math.min(nextFoul, 7);
+}
+
 export default function SummaryBreakFields({
   canKeepScore,
   onSubmit,
@@ -50,7 +66,11 @@ export default function SummaryBreakFields({
         minValue={0}
         maxValue={7}
         value={foul}
-        onChange={setFoul}
+        onChange={(nextFoul) =>
+          setFoul((currentFoul) =>
+            nextValidFoulPoints(nextFoul, currentFoul),
+          )
+        }
         isDisabled={!canKeepScore}
         variant="secondary"
         className="space-y-1 text-left"

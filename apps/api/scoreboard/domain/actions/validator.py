@@ -18,6 +18,7 @@ VALID_SHOT_FIELDS = {"potted_balls", "foul"}
 VALID_FREE_BALL_FIELDS = {"nominated_colour"}
 VALID_LOG_BREAK_FIELDS = {"points", "foul"}
 VALID_RESOLVE_BREAK_COMPOSITION_FIELDS = {"entry_id", "suggestion_id"}
+VALID_DECLARED_FOUL_POINTS = {0, 4, 5, 6, 7}
 
 
 def validate_event(event: dict) -> None:
@@ -102,8 +103,7 @@ def validate_shot_data(data: dict) -> None:
         if ball not in BALL_POINTS:
             raise ValueError(f"Unsupported potted ball: {ball}")
 
-    if not isinstance(shot.foul, int) or shot.foul < 0:
-        raise ValueError("Shot payload requires non-negative integer 'foul'.")
+    validate_declared_foul_points(shot.foul, "Shot payload")
 
 
 def validate_log_break_data(data: dict) -> None:
@@ -120,8 +120,7 @@ def validate_log_break_data(data: dict) -> None:
     if summary_break.points < 0 or summary_break.points > 155:
         raise ValueError("Log break payload requires integer 'points' between 0 and 155.")
 
-    if summary_break.foul < 0 or summary_break.foul > 7:
-        raise ValueError("Log break payload requires integer 'foul' between 0 and 7.")
+    validate_declared_foul_points(summary_break.foul, "Log break payload")
 
     if summary_break.points == 0 and summary_break.foul == 0:
         raise ValueError("Log break payload requires non-zero points or foul.")
@@ -141,3 +140,8 @@ def validate_resolve_break_composition_data(data: dict) -> None:
         raise ValueError("Resolve break composition payload requires non-empty 'entry_id'.")
     if not message.suggestion_id:
         raise ValueError("Resolve break composition payload requires non-empty 'suggestion_id'.")
+
+
+def validate_declared_foul_points(foul: int, payload_name: str) -> None:
+    if not isinstance(foul, int) or foul not in VALID_DECLARED_FOUL_POINTS:
+        raise ValueError(f"{payload_name} requires integer 'foul' of 0 or between 4 and 7.")
