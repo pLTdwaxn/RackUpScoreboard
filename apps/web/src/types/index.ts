@@ -7,6 +7,7 @@ export type GameStateMessage = {
   match: Match;
   current_frame: Frame;
   frame_log: FrameLogEntry[];
+  frame_summary: FrameSummary[];
   score_keeper: "self" | "opp" | "ref" | "any";
   history_depth?: number;
   next_frame_confirmations?: string[];
@@ -103,6 +104,15 @@ export type FrameLogEntry = {
   foul_points: number;
   result: "in_progress" | "ended" | "foul" | "frame_won";
   facts: FrameLogFact[];
+};
+
+export type FrameSummary = {
+  player_key: string;
+  score: number;
+  result: "won" | "lost" | "drawn";
+  visits: number;
+  highest_break: number;
+  foul_points_conceded: number;
 };
 
 export type ErrorMessage = {

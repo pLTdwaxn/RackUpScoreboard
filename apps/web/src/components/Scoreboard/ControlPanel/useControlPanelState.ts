@@ -66,8 +66,14 @@ function currentVisitHasDetailedLogging(
 
 export function useControlPanelState() {
   const { currentPlayerKey, players = [] } = useMatchroomPlayers();
-  const { hasFrame, frame, frameLog = [], scoreKeeper, nextFrameConfirmations } =
-    useMatchroomFrame();
+  const {
+    hasFrame,
+    frame,
+    frameLog = [],
+    frameSummary,
+    scoreKeeper,
+    nextFrameConfirmations,
+  } = useMatchroomFrame();
   const { sendAction } = useMatchroomActions();
   const actions = useGameActions(sendAction);
 
@@ -97,6 +103,7 @@ export function useControlPanelState() {
     ...actions,
     hasFrame,
     frame,
+    frameSummary,
     scoreKeeper,
     currentPlayerKey,
     players,

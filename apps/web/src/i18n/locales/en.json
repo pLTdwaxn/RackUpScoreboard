@@ -113,8 +113,13 @@
     "finishedFrame": {
       "won": "Congratulations! You won the frame.",
       "lost": "You lost the frame.",
+      "drawn": "The frame finished level.",
       "waitingForOpponent": "Waiting for your opponent",
-      "startNextFrame": "Start Next Frame"
+      "startNextFrame": "Start Next Frame",
+      "playerFallback": "Player",
+      "highestBreak": "High break",
+      "visits": "Visits",
+      "foulPointsAway": "Foul pts away"
     },
     "concedeFrame": {
       "heading": "Conceding Frame",

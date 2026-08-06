@@ -19,11 +19,13 @@ export default function ControlPanel() {
     coloursOnTable,
     currentPlayerKey,
     frame,
+    frameSummary,
     freeBall,
     hasConfirmedNextFrame,
     hasFrame,
     isFrameFinished,
     objectBall,
+    players,
     redsRemaining,
     scoreKeeper,
     scorekeepingTarget,
@@ -64,6 +66,8 @@ export default function ControlPanel() {
         <FinishedFramePanel
           winnerKey={frame.winner_key}
           currentPlayerKey={currentPlayerKey}
+          players={players}
+          summary={frameSummary}
           hasConfirmedNextFrame={hasConfirmedNextFrame}
           onNextFrame={sendNextFrame}
         />

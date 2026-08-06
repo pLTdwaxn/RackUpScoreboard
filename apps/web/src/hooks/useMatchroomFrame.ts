@@ -31,6 +31,7 @@ export function useMatchroomFrame() {
       opponentCurrentBreak: isOpponentTurn ? currentBreak : 0,
       scoreKeeper: gameState?.score_keeper ?? "opp",
       frameLog: gameState?.frame_log ?? [],
+      frameSummary: gameState?.frame_summary ?? [],
       nextFrameConfirmations: gameState?.next_frame_confirmations ?? [],
       myScore: frame.scores[currentPlayerKey] ?? 0,
       opponentScore: opponent ? (frame.scores[opponent.session_key] ?? 0) : 0,

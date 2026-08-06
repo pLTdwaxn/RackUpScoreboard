@@ -3,6 +3,7 @@ import type {
   Frame,
   FrameLogEntry,
   FrameLogFact,
+  FrameSummary,
   Match,
   Player,
   SummaryBreakCompositionSuggestion,
@@ -284,6 +285,25 @@ export const storyFrameLogEntries: FrameLogEntry[] = [
         result: "in_progress",
       },
     ],
+  },
+];
+
+export const storyFrameSummary: FrameSummary[] = [
+  {
+    player_key: "p1",
+    score: 35,
+    result: "won",
+    visits: 3,
+    highest_break: 20,
+    foul_points_conceded: 0,
+  },
+  {
+    player_key: "p2",
+    score: 12,
+    result: "lost",
+    visits: 4,
+    highest_break: 8,
+    foul_points_conceded: 4,
   },
 ];
 

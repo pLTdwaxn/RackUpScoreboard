@@ -4,6 +4,7 @@ import type { BallName } from "@/domain/balls";
 import {
   noop,
   storyFrame,
+  storyFrameSummary,
   storyPlayers,
   summaryBreakSuggestions,
 } from "@/stories/scoreboardFixtures";
@@ -199,23 +200,27 @@ export const CompositionFilter: Story = {
 
 export const FinishedFrame: Story = {
   render: () => (
-    <FinishedFramePanel
-      winnerKey="p1"
-      currentPlayerKey="p1"
-      hasConfirmedNextFrame={false}
-      onNextFrame={noop}
-    />
+      <FinishedFramePanel
+        winnerKey="p1"
+        currentPlayerKey="p1"
+        players={storyPlayers}
+        summary={storyFrameSummary}
+        hasConfirmedNextFrame={false}
+        onNextFrame={noop}
+      />
   ),
 };
 
 export const FinishedFrameWaiting: Story = {
   render: () => (
-    <FinishedFramePanel
-      winnerKey="p2"
-      currentPlayerKey="p1"
-      hasConfirmedNextFrame
-      onNextFrame={noop}
-    />
+      <FinishedFramePanel
+        winnerKey="p2"
+        currentPlayerKey="p1"
+        players={storyPlayers}
+        summary={storyFrameSummary}
+        hasConfirmedNextFrame
+        onNextFrame={noop}
+      />
   ),
 };
 

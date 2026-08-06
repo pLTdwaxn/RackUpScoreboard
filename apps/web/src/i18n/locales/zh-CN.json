@@ -113,8 +113,13 @@
     "finishedFrame": {
       "won": "恭喜！你赢下了这一局。",
       "lost": "你输掉了这一局。",
+      "drawn": "这一局平分结束。",
       "waitingForOpponent": "等待对手",
-      "startNextFrame": "开始下一局"
+      "startNextFrame": "开始下一局",
+      "playerFallback": "球员",
+      "highestBreak": "最高单杆",
+      "visits": "上手机会",
+      "foulPointsAway": "送出犯规分"
     },
     "concedeFrame": {
       "heading": "认输本局",
