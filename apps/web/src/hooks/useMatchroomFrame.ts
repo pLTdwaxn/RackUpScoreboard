@@ -13,9 +13,10 @@ export function useMatchroomFrame() {
     const frame = gameState?.current_frame ?? DEFAULT_FRAME;
     const winningPlayerKey =
       frame.status === "finished" ? frame.winner_key : null;
-    const isMyTurn = frame.current_turn === currentPlayerKey;
+    const isActiveFrame = frame.status === "active";
+    const isMyTurn = isActiveFrame && frame.current_turn === currentPlayerKey;
     const isOpponentTurn = Boolean(
-      opponent && frame.current_turn === opponent.session_key,
+      isActiveFrame && opponent && frame.current_turn === opponent.session_key,
     );
     const currentBreak = frame.current_break ?? 0;
 

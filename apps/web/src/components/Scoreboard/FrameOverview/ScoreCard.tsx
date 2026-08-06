@@ -3,10 +3,7 @@ import { Card } from "@heroui/react";
 import type { Frame, Player } from "@/types";
 
 import PlayerCard from "../shared/PlayerCard";
-import {
-  getPlayerThemeClassName,
-  PlayerTheme,
-} from "../shared/playerIdentity";
+import { getPlayerThemeClassName, PlayerTheme } from "../shared/playerIdentity";
 
 type ScoreCardProps = {
   player: Player | undefined;
@@ -26,13 +23,16 @@ export default function ScoreCard({
   playerTheme = "neutral",
 }: ScoreCardProps) {
   const frameScore = player ? (frame.scores[player.session_key] ?? 0) : 0;
-  // const matchScore = player?.match_score ?? 0;
+  const matchScore = player?.match_score ?? 0;
+  const scoreDirection = direction === "rtl" ? "flex-row-reverse" : "flex-row";
 
   return (
     <Card
       variant="default"
       className={`${getPlayerThemeClassName(playerTheme)} aspect-square w-full min-w-0 overflow-visible p-2 ${
         currentTurn ? "current-break-glow" : ""
+      } ${
+        isFrameWinner ? "winner-card-glow" : ""
       }`}
     >
       <Card.Content className="flex h-full min-w-0 flex-col items-stretch justify-between gap-1 overflow-visible p-1">
@@ -40,12 +40,20 @@ export default function ScoreCard({
           <PlayerCard
             player={player}
             direction={direction}
-            isFrameWinner={isFrameWinner}
             theme={playerTheme}
           />
         ) : null}
-        <div className="score-primary">{frameScore}</div>
-        {/* <div className="score-secondary">{matchScore}</div> */}
+        <div
+          className={`flex w-full items-center justify-evenly gap-2 ${scoreDirection}`}
+        >
+          <div className="score-primary">{frameScore}</div>
+          <div
+            aria-label={`Match score ${matchScore}`}
+            className="font-mono text-3xl leading-none font-bold text-(--scoreboard-screen-number)"
+          >
+            {matchScore}
+          </div>
+        </div>
       </Card.Content>
     </Card>
   );

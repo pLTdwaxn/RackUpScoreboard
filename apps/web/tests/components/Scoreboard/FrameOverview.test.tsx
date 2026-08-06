@@ -83,6 +83,8 @@ describe("FrameOverview", () => {
     expect(screen.getByText("Grace")).toBeInTheDocument();
     expect(screen.getByText("32")).toBeInTheDocument();
     expect(screen.getByText("18")).toBeInTheDocument();
+    expect(screen.getByLabelText("Match score 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Match score 0")).toBeInTheDocument();
   });
 
   it("renders a waiting placeholder for player 2 before an opponent joins", () => {
@@ -100,7 +102,7 @@ describe("FrameOverview", () => {
     expect(screen.getByText("Ada")).toBeInTheDocument();
     expect(screen.getByText("Waiting")).toBeInTheDocument();
     expect(screen.getByText("32")).toBeInTheDocument();
-    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getAllByText("0")).toHaveLength(2);
   });
 });
 
@@ -141,6 +143,8 @@ describe("FrameOverview parts", () => {
     );
 
     expect(screen.getByText("Ada")).toBeInTheDocument();
+    expect(screen.getByText("Ada").closest(".winner-card-glow")).toBeInTheDocument();
     expect(screen.getByText("32")).toBeInTheDocument();
+    expect(screen.getByLabelText("Match score 1")).toBeInTheDocument();
   });
 });

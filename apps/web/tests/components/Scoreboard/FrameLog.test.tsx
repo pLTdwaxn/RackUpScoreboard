@@ -813,6 +813,24 @@ describe("FrameLog parts", () => {
     expect(screen.getByText("Grace Hopper")).toHaveClass("player-theme-blue");
   });
 
+  it("does not show the current break aura when the frame is no longer active", () => {
+    render(
+      <LogEntry
+        entry={{
+          ...entry,
+          result: "in_progress",
+        }}
+        canUndo={false}
+        onUndo={vi.fn()}
+        players={players}
+        canShowCurrentBreakAura={false}
+      />,
+    );
+
+    expect(screen.getByLabelText("Ada Lovelace: break 9")).toBeInTheDocument();
+    expect(document.querySelector(".current-break-glow")).not.toBeInTheDocument();
+  });
+
   it("renders a break-off marker from facts", () => {
     render(
       <LogEntry

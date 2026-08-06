@@ -140,30 +140,29 @@ label {
   text-transform: uppercase;
 }
 
-@keyframes winner-avatar-pulse {
+@keyframes winner-card-breathe {
   0% {
     box-shadow:
-      0 0 0 0 rgba(250, 204, 21, 0.75),
-      0 0 0 3px rgba(255, 255, 255, 0.2);
+      0 0 8px 1px rgba(250, 204, 21, 0.38),
+      inset 0 0 0 1px rgba(250, 204, 21, 0.42);
     transform: scale(1);
   }
   50% {
     box-shadow:
-      0 0 0 14px rgba(250, 204, 21, 0.0),
-      0 0 30px 8px rgba(250, 204, 21, 0.65);
-    transform: scale(1.03);
+      0 0 24px 2px rgba(250, 204, 21, 0.72),
+      inset 0 0 0 2px rgba(250, 204, 21, 0.72);
+    transform: scale(1);
   }
   100% {
     box-shadow:
-      0 0 0 0 rgba(250, 204, 21, 0.0),
-      0 0 0 3px rgba(255, 255, 255, 0.18);
+      0 0 8px 1px rgba(250, 204, 21, 0.38),
+      inset 0 0 0 1px rgba(250, 204, 21, 0.42);
     transform: scale(1);
   }
 }
 
-.winner-avatar-glow {
-  border-radius: 9999px;
-  animation: winner-avatar-pulse 3s ease-in-out infinite;
+.winner-card-glow {
+  animation: winner-card-breathe 1.8s ease-in-out infinite;
   will-change: box-shadow, transform;
 }
 

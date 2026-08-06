@@ -2,7 +2,6 @@ import { Avatar } from "@heroui/react";
 import type { ComponentProps } from "react";
 
 type PlayerAvatarProps = {
-  isFrameWinner?: boolean;
   className?: string;
   avatarColor?: string;
   avatarColor2?: string;
@@ -13,7 +12,6 @@ type PlayerAvatarProps = {
 };
 
 export default function PlayerAvatar({
-  isFrameWinner = false,
   className = "",
   avatarColor,
   avatarColor2,
@@ -32,10 +30,7 @@ export default function PlayerAvatar({
     : "var(--player-avatar-background)";
 
   return (
-    <Avatar
-      size={size}
-      className={`${isFrameWinner ? "winner-avatar-glow" : ""} ${className}`}
-    >
+    <Avatar size={size} className={className}>
       <Avatar.Image />
       <Avatar.Fallback
         className={`relative isolate overflow-hidden font-sans font-medium transition-colors duration-500 ${fallbackTextSize}`}

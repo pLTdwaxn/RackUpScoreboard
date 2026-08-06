@@ -21,6 +21,7 @@ type LogEntryProps = {
   compositionFilterCounts?: CompositionFilterCounts;
   players?: Player[];
   playerTheme?: PlayerTheme;
+  canShowCurrentBreakAura?: boolean;
   isExpanded?: boolean;
   isResolutionFocusMode?: boolean;
   onExpandedChange?: (isExpanded: boolean) => void;
@@ -34,11 +35,13 @@ export default function LogEntry({
   compositionFilterCounts,
   players = [],
   playerTheme = "neutral",
+  canShowCurrentBreakAura = true,
   isExpanded = false,
   isResolutionFocusMode = false,
   onExpandedChange = () => {},
 }: LogEntryProps) {
-  const isCurrentBreak = entry.result === "in_progress";
+  const isCurrentBreak =
+    canShowCurrentBreakAura && entry.result === "in_progress";
   const hasShotHistory = !isSyntheticEntry(entry);
   const hasUnresolvedSummaryBreak = isUnresolvedSummaryBreakEntry(entry);
   const canUseUndo = canUndo && !isResolutionFocusMode;

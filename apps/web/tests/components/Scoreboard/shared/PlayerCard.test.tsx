@@ -19,7 +19,7 @@ describe("player display components", () => {
   afterEach(cleanup);
 
   it("renders player name and initials in a card", () => {
-    render(<PlayerCard player={player} isFrameWinner theme="red" />);
+    render(<PlayerCard player={player} theme="red" />);
 
     expect(screen.getByText("Ada Lovelace")).toHaveClass("player-theme-red");
     const blendLayer = screen.getByText("AL").previousElementSibling;

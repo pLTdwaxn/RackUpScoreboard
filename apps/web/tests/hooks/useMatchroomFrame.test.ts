@@ -106,5 +106,9 @@ describe("useMatchroomFrame", () => {
     const { result } = renderHook(() => useMatchroomFrame());
 
     expect(result.current.winningPlayerKey).toBe("p2");
+    expect(result.current.isMyTurn).toBe(false);
+    expect(result.current.isOpponentTurn).toBe(false);
+    expect(result.current.myCurrentBreak).toBe(0);
+    expect(result.current.opponentCurrentBreak).toBe(0);
   });
 });

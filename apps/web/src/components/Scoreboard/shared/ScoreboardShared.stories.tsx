@@ -23,11 +23,6 @@ export const Avatars: Story = {
     <div className="flex items-center gap-4">
       <PlayerAvatar initials="FE" className="player-theme-blue" />
       <PlayerAvatar initials="GE" className="player-theme-red" />
-      <PlayerAvatar
-        initials="WIN"
-        className="player-theme-blue"
-        isFrameWinner
-      />
     </div>
   ),
 };

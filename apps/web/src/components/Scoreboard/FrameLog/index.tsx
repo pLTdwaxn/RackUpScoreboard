@@ -113,6 +113,7 @@ export default function FrameLog({
   const canUndo = Boolean(
     latestUndoableEntryId && gameState?.current_frame.status !== "finished",
   );
+  const canShowCurrentBreakAura = gameState?.current_frame.status === "active";
   const { expandedEntryId, handleExpandedChange } =
     useAutoExpandedFrameLogEntry(
       latestEntryId,
@@ -161,6 +162,7 @@ export default function FrameLog({
             }
             players={players}
             playerTheme={getPlayerAvatarTheme(entry.player_key, players)}
+            canShowCurrentBreakAura={canShowCurrentBreakAura}
             isExpanded={entry.id === expandedEntryId}
             isResolutionFocusMode={
               isCompositionResolutionMode &&
