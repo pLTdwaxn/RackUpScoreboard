@@ -9,22 +9,119 @@ import {
   Form,
   Input,
   Label,
-  Radio,
-  RadioGroup,
+  ListBox,
   TextField,
 } from "@heroui/react";
+import { IconCheck } from "@tabler/icons-react";
 
 import { useConnection } from "@/hooks/useConnection";
 import { useAppDictionary } from "@/i18n/client";
 
+type WinConditionMode = "best-of-frames" | "open-ended";
 type ScoreKeeperMode = "opp" | "self" | "any";
+type ChoiceOption<T extends string> = {
+  id: T;
+  label: string;
+  description: string;
+};
+
+type ChoiceListProps<T extends string> = {
+  label: string;
+  options: ChoiceOption<T>[];
+  selected: T;
+  onChange: (value: T) => void;
+};
+
+function ChoiceList<T extends string>({
+  label,
+  options,
+  selected,
+  onChange,
+}: ChoiceListProps<T>) {
+  const selectedOption =
+    options.find((option) => option.id === selected) ?? options[0];
+
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <ListBox
+        aria-label={label}
+        selectedKeys={new Set([selected])}
+        onSelectionChange={(keys) => {
+          if (keys === "all") {
+            return;
+          }
+
+          const [value] = Array.from(keys);
+          const option = options.find((item) => item.id === value);
+          if (option) {
+            onChange(option.id);
+          }
+        }}
+        selectionMode="single"
+      >
+        {options.map((option) => (
+          <ListBox.Item
+            key={option.id}
+            id={option.id}
+            textValue={option.label}
+            className="data-[selected=true]:border-success/40 data-[selected=true]:bg-success/15"
+          >
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+              <span className="min-w-0 truncate">{option.label}</span>
+              <ListBox.ItemIndicator>
+                {({ isSelected }) =>
+                  isSelected ? (
+                    <IconCheck className="text-success" stroke={2} />
+                  ) : null
+                }
+              </ListBox.ItemIndicator>
+            </div>
+          </ListBox.Item>
+        ))}
+      </ListBox>
+      <Description>{selectedOption.description}</Description>
+    </div>
+  );
+}
 
 const NewMatchForm = () => {
   const copy = useAppDictionary().lobby;
   const router = useRouter();
   const { connect, isSubmitting, error, setError } = useConnection();
   const [displayName, setDisplayName] = useState("");
-  const [scoreKeeper, setScoreKeeper] = useState<ScoreKeeperMode>("opp");
+  const [winCondition, setWinCondition] =
+    useState<WinConditionMode>("best-of-frames");
+  const [scoreKeeper, setScoreKeeper] = useState<ScoreKeeperMode>("any");
+  const winConditionOptions: ChoiceOption<WinConditionMode>[] = [
+    {
+      id: "best-of-frames",
+      label: copy.bestOfFrames,
+      description: copy.bestOfFramesDescription,
+    },
+    {
+      id: "open-ended",
+      label: copy.openEnded,
+      description: copy.openEndedDescription,
+    },
+  ];
+  const scoreKeeperOptions: ChoiceOption<ScoreKeeperMode>[] = [
+    {
+      id: "any",
+      label: copy.scorekeepingAny,
+      description: copy.scorekeepingAnyDescription,
+    },
+    {
+      id: "self",
+      label: copy.scorekeepingSelf,
+      description: copy.scorekeepingSelfDescription,
+    },
+    {
+      id: "opp",
+      label: copy.scorekeepingOpponent,
+      description: copy.scorekeepingOpponentDescription,
+    },
+  ];
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,72 +149,20 @@ const NewMatchForm = () => {
           }}
         />
       </TextField>
-      <RadioGroup defaultValue="best-of-frames" variant="secondary">
-        <Label>{copy.winCondition}</Label>
-        <Radio value="best-of-frames">
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            {copy.bestOfFrames}
-          </Radio.Content>
-        </Radio>
-        <Radio value="open-ended">
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            {copy.openEnded}
-          </Radio.Content>
-        </Radio>
-      </RadioGroup>
-      <RadioGroup
-        value={scoreKeeper}
-        onChange={(value) => setScoreKeeper(value as ScoreKeeperMode)}
-        variant="secondary"
-      >
-        <Label>{copy.scorekeepingBy}</Label>
-        <Radio value="opp">
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            {copy.scorekeepingOpponent}
-          </Radio.Content>
-          <Description>
-            {copy.scorekeepingOpponentDescription}
-          </Description>
-        </Radio>
-        <Radio value="self">
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            {copy.scorekeepingSelf}
-          </Radio.Content>
-          <Description>{copy.scorekeepingSelfDescription}</Description>
-        </Radio>
-        <Radio value="referee" isDisabled>
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            {copy.scorekeepingReferee}
-          </Radio.Content>
-          <Description>{copy.scorekeepingRefereeDescription}</Description>
-        </Radio>
-        <Radio value="any">
-          <Radio.Content>
-            <Radio.Control>
-              <Radio.Indicator />
-            </Radio.Control>
-            {copy.scorekeepingAny}
-          </Radio.Content>
-          <Description>{copy.scorekeepingAnyDescription}</Description>
-        </Radio>
-      </RadioGroup>
+      <ChoiceList
+        label={copy.winCondition}
+        options={winConditionOptions}
+        selected={winCondition}
+        onChange={setWinCondition}
+      />
+      <ChoiceList
+        label={copy.scorekeepingBy}
+        options={scoreKeeperOptions}
+        selected={scoreKeeper}
+        onChange={setScoreKeeper}
+      />
       {error ? <p className="text-sm text-danger">{error}</p> : null}
-      <Button className="rounded-2xl" type="submit" isDisabled={isSubmitting}>
+      <Button type="submit" isDisabled={isSubmitting}>
         {isSubmitting ? copy.creating : copy.create}
       </Button>
     </Form>

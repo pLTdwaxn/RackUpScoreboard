@@ -31,7 +31,7 @@ describe("NewMatchForm", () => {
     sessionStorage.clear();
   });
 
-  it("creates a match with opponent scorekeeping by default", async () => {
+  it("creates a match with free-for-all scorekeeping by default", async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({
@@ -62,7 +62,7 @@ describe("NewMatchForm", () => {
       },
       body: JSON.stringify({
         display_name: "Ada",
-        score_keeper: "opp",
+        score_keeper: "any",
       }),
     });
   });
@@ -84,7 +84,30 @@ describe("NewMatchForm", () => {
     fireEvent.change(screen.getByPlaceholderText("Enter your name"), {
       target: { value: "Ada" },
     });
-    fireEvent.click(screen.getByText("Self"));
+    const bestOfFramesOption = screen.getByRole("option", {
+      name: "Best of Frames",
+    });
+    expect(bestOfFramesOption).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    expect(bestOfFramesOption.className).toContain(
+      "data-[selected=true]:bg-success/15",
+    );
+    expect(
+      screen.getByText("Play until one player wins the required number of frames."),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: "Open Ended" }));
+    expect(
+      screen.getByText("Play without a fixed frame target."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Any player can scorekeep."),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("option", { name: "Self" }));
+    expect(
+      screen.getByText("The player at the table is scorekeeping."),
+    ).toBeInTheDocument();
     fireEvent.submit(
       screen.getByRole("button", { name: "Create" }).closest("form")!,
     );
